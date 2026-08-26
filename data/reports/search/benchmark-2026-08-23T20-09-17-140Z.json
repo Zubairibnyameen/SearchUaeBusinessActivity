@@ -1,0 +1,129 @@
+{
+  "generatedAt": "2026-08-23T20:09:17.138Z",
+  "runsPerQuery": 5,
+  "datasetSize": 9109,
+  "queries": [
+    {
+      "query": "digital marketing agency",
+      "runs": [
+        393,
+        389,
+        400,
+        387,
+        367
+      ],
+      "p50": 389,
+      "p95": 400,
+      "total": 91,
+      "candidates": 322
+    },
+    {
+      "query": "software development company",
+      "runs": [
+        361,
+        359,
+        365,
+        377,
+        362
+      ],
+      "p50": 362,
+      "p95": 377,
+      "total": 156,
+      "candidates": 355
+    },
+    {
+      "query": "restaurant",
+      "runs": [
+        189,
+        181,
+        167,
+        172,
+        171
+      ],
+      "p50": 172,
+      "p95": 189,
+      "total": 81,
+      "candidates": 152
+    },
+    {
+      "query": "jewellery trading",
+      "runs": [
+        179,
+        178,
+        278,
+        185,
+        186
+      ],
+      "p50": 185,
+      "p95": 278,
+      "total": 84,
+      "candidates": 237
+    },
+    {
+      "query": "general trading",
+      "runs": [
+        150,
+        153,
+        154,
+        174,
+        163
+      ],
+      "p50": 154,
+      "p95": 174,
+      "total": 104,
+      "candidates": 296
+    },
+    {
+      "query": "logistics services",
+      "runs": [
+        356,
+        362,
+        336,
+        341,
+        386
+      ],
+      "p50": 356,
+      "p95": 386,
+      "total": 22,
+      "candidates": 270
+    },
+    {
+      "query": "dental clinic",
+      "runs": [
+        186,
+        175,
+        188,
+        183,
+        182
+      ],
+      "p50": 183,
+      "p95": 188,
+      "total": 46,
+      "candidates": 155
+    },
+    {
+      "query": "ecommerce business",
+      "runs": [
+        290,
+        293,
+        290,
+        313,
+        287
+      ],
+      "p50": 290,
+      "p95": 313,
+      "total": 193,
+      "candidates": 352
+    }
+  ],
+  "summary": {
+    "overallP50Ms": 290,
+    "overallP95MaxMs": 400
+  },
+  "explainSummaries": {
+    "tier3_name_contains": "Limit  (cost=340.97..340.97 rows=1 width=20) (actual time=1.593..1.600 rows=63 loops=1)\n  ->  Sort  (cost=340.97..340.97 rows=1 width=20) (actual time=1.592..1.595 rows=63 loops=1)\n        ->  Bitmap Heap Scan on activities a  (cost=336.94..340.96 rows=1 width=20) (actual time=1.192..1.561 rows=63 loops=1)\n              ->  Bitmap Index Scan on gin_activities_normalized_name_trgm  (cost=0.00..336.94 rows=1 width=0) (actual time=1.168..1.169 rows=63 loops=1)\nPlanning Time: 8.382 ms\nExecution Time: 2.235 ms",
+    "tier6_category_group": "Limit  (cost=0.00..884.18 rows=33 width=16) (actual time=0.236..14.805 rows=24 loops=1)\n  ->  Seq Scan on activities a  (cost=0.00..884.18 rows=33 width=16) (actual time=0.235..14.796 rows=24 loops=1)\n        Rows Removed by Filter: 9085\nPlanning Time: 0.685 ms\nExecution Time: 14.821 ms",
+    "tier7_description": "Limit  (cost=199.95..442.68 rows=85 width=16) (actual time=0.983..9.024 rows=145 loops=1)\n  ->  Bitmap Heap Scan on activities a  (cost=199.95..442.68 rows=85 width=16) (actual time=0.982..8.982 rows=145 loops=1)\n        ->  BitmapOr  (cost=199.95..199.95 rows=85 width=0) (actual time=0.919..0.920 rows=0 loops=1)\n              ->  Bitmap Index Scan on gin_activities_description_trgm  (cost=0.00..134.52 rows=1 width=0) (actual time=0.476..0.476 rows=9 loops=1)\n              ->  Bitmap Index Scan on gin_activities_description_trgm  (cost=0.00..65.39 rows=84 width=0) (actual time=0.442..0.442 rows=154 loops=1)\nPlanning Time: 6.465 ms\nExecution Time: 9.164 ms"
+  },
+  "recommendationNotes": "Indexes are added only if these measurements justify them. See phase report."
+}

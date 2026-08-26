@@ -1,0 +1,22 @@
+{
+  "file": "ifza-business-activities.json",
+  "discoveryId": "ifza-business-activities",
+  "label": "IFZA Business Activities register (official public API response)",
+  "sourceUrl": "https://one.ifza.com/api/utils/getBusinessActivities",
+  "finalUrl": "https://one.ifza.com/api/utils/getBusinessActivities",
+  "httpStatus": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-08-23T19:04:12.570Z",
+  "bytes": 1207417,
+  "sha256": "0778d7df1a8add715fa68ff86232d78f2b14614ab89316f216c995a3c492f809",
+  "jurisdiction": {
+    "slug": "ifza",
+    "name": "IFZA",
+    "emirate": "dubai",
+    "type": "free_zone",
+    "authority": "International Free Zone Authority",
+    "authorityWebsite": "https://www.ifza.com/",
+    "sourceType": "free_zone_authority"
+  },
+  "notes": "Complete response body of the single unauthenticated GET endpoint consumed by activities.ifza.com itself (identified from the site bundle /assets/index-IuK805-d.js). 826 records x 31 fields, no pagination."
+}

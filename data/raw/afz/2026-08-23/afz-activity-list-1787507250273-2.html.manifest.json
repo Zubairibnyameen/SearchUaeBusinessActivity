@@ -1,0 +1,22 @@
+{
+  "file": "afz-activity-list-1787507250273-2.html",
+  "discoveryId": "afz-activity-list",
+  "label": "AFZ Business Activities List (official website table)",
+  "sourceUrl": "https://afz.gov.ae/activity-list/",
+  "finalUrl": "https://afz.gov.ae/activity-list/",
+  "httpStatus": 200,
+  "contentType": "text/html; charset=UTF-8",
+  "fetchedAt": "2026-08-23T17:47:30.271Z",
+  "bytes": 615670,
+  "sha256": "b8b6fee3ae79f1246b426187fec4ba6f98b52f862fbaf61f15004eb7fef37c67",
+  "jurisdiction": {
+    "slug": "afz",
+    "name": "Ajman Free Zone",
+    "emirate": "ajman",
+    "type": "free_zone",
+    "authority": "Ajman Free Zone",
+    "authorityWebsite": "https://www.afz.gov.ae/",
+    "sourceType": "free_zone_authority"
+  },
+  "notes": "Server-rendered #activitiesTable; DataTables is client-side only so all rows are in the initial HTML. Open Data portal dataset rejected (company-license snapshots, no activity codes)."
+}

@@ -1,0 +1,31 @@
+{
+  "adapter": "dmcc",
+  "sourcesProcessed": [
+    {
+      "id": "dmcc-activities",
+      "label": "DMCC Approved List of Activities (October 2025)",
+      "url": "https://dmcc.ae/hubfs/website%20support%20documents/License%20Activity%2015%20OCT%202025.xlsx",
+      "format": "xlsx",
+      "notes": "Official DMCC XLSX; first sheet, headers in row 1, data from row 2 (__EMPTY_N columns)."
+    }
+  ],
+  "artifacts": [
+    {
+      "relativePath": "data\\raw\\dmcc\\2026-08-23\\dmcc-activities.xlsx",
+      "absolutePath": "D:\\skills - uae\\uae-activity-intelligence\\data\\raw\\dmcc\\2026-08-23\\dmcc-activities.xlsx",
+      "sha256": "ba9ed3fec4fb91b021136c679889b0156957660deae93476ccd1f7a1da7934e4",
+      "bytes": 255034
+    }
+  ],
+  "counters": {
+    "sourceRecords": 1006,
+    "imported": 1002,
+    "skippedInvalid": 0,
+    "duplicatesInBatch": 4,
+    "duplicatesExisting": 0,
+    "reviewFlagged": 0
+  },
+  "errors": [],
+  "warnings": [],
+  "reviewItems": []
+}

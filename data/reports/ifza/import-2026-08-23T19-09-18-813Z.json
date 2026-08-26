@@ -1,0 +1,51 @@
+{
+  "adapter": "ifza",
+  "sourcesProcessed": [
+    {
+      "id": "ifza-business-activities",
+      "label": "IFZA Business Activities register (official public API)",
+      "url": "https://one.ifza.com/api/utils/getBusinessActivities",
+      "format": "json",
+      "notes": "Single unauthenticated GET consumed by activities.ifza.com itself; full dataset, no pagination."
+    }
+  ],
+  "artifacts": [
+    {
+      "relativePath": "data\\raw\\ifza\\2026-08-23\\ifza-business-activities-1787512155311-2.json",
+      "absolutePath": "D:\\skills - uae\\uae-activity-intelligence\\data\\raw\\ifza\\2026-08-23\\ifza-business-activities-1787512155311-2.json",
+      "sha256": "0778d7df1a8add715fa68ff86232d78f2b14614ab89316f216c995a3c492f809",
+      "bytes": 1207417
+    }
+  ],
+  "counters": {
+    "sourceRecords": 826,
+    "imported": 825,
+    "skippedInvalid": 0,
+    "duplicatesInBatch": 1,
+    "duplicatesExisting": 0,
+    "reviewFlagged": 1
+  },
+  "errors": [],
+  "warnings": [],
+  "reviewItems": [
+    "Batch-duplicate code queued for review (not imported): \"4759007\" — \"Household Utensils Trading\" (source row 354)"
+  ],
+  "audit": {
+    "totalActivities": 825,
+    "missingCode": 0,
+    "missingName": 0,
+    "missingDescription": 0,
+    "duplicateCodesInDb": 0,
+    "duplicateNamesInDb": 0,
+    "invalidLicenceRefs": 0,
+    "sourceLinkedPct": 100,
+    "rawHashRecorded": true,
+    "approvalSignals": {
+      "no_signal": 579,
+      "third_party_approval_indicated": 246
+    },
+    "pricesRecorded": 0,
+    "reconciliationDelta": 1,
+    "scorePct": 100
+  }
+}

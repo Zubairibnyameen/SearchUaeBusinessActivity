@@ -1,0 +1,764 @@
+{
+  "generatedAt": "2026-08-23T19:40:34.349Z",
+  "datasetTotalsExpected": {
+    "dmcc": 1002,
+    "afz": 1689,
+    "spc": 1979,
+    "rakez": 3614,
+    "ifza": 825
+  },
+  "metrics": {
+    "queries": 15,
+    "passRate": 53,
+    "top1RelevanceRate": 100,
+    "top3RelevanceRate": 100,
+    "falsePositiveCount": 17,
+    "falsePositiveRatePct": 0.95,
+    "avgLatencyMs": 377,
+    "maxLatencyMs": 725,
+    "licenceBindingViolations": 0,
+    "nullApprovalSignals": 0
+  },
+  "perQuery": [
+    {
+      "query": "digital marketing agency",
+      "total": 102,
+      "tookMs": 725,
+      "candidatesEvaluated": 322,
+      "jurisdictionsMatched": [
+        "rakez",
+        "spc",
+        "dmcc",
+        "afz",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Conducting marketing campaigns and services to attract and retain customers, including product promotion, point-of-sale marketing, direct mail advertising, and marketing consulting.",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [
+        {
+          "id": "08633570-d32e-4993-a151-178bb8a9341f",
+          "name": "Crypto Mining Facility Operator",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: marketing + qualifier (via expansion)"
+        }
+      ],
+      "pass": false,
+      "failures": [
+        "1 low-confidence/false-positive results (first: \"Crypto Mining Facility Operator\")"
+      ]
+    },
+    {
+      "query": "software development company",
+      "total": 168,
+      "tookMs": 439,
+      "candidatesEvaluated": 355,
+      "jurisdictionsMatched": [
+        "rakez",
+        "spc",
+        "afz",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Computer Systems & Communication Equipment Software Design",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "restaurant",
+      "total": 83,
+      "tookMs": 254,
+      "candidatesEvaluated": 152,
+      "jurisdictionsMatched": [
+        "rakez",
+        "afz",
+        "dmcc",
+        "ifza",
+        "spc"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Restaurant",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "accounting consultancy",
+      "total": 54,
+      "tookMs": 356,
+      "candidatesEvaluated": 119,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "spc",
+        "afz",
+        "rakez",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Accounting & Bookkeeping",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [
+        {
+          "id": "2a1a15c4-76c5-48c1-a73d-933af4610dd9",
+          "name": "Cooking Consultant",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: accounting + qualifier (via expansion)"
+        },
+        {
+          "id": "c3eeb938-4c29-4c27-a546-41095a98bff4",
+          "name": "Environmental Consultants & Studies",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: accounting + qualifier (via expansion)"
+        }
+      ],
+      "pass": false,
+      "failures": [
+        "2 low-confidence/false-positive results (first: \"Cooking Consultant\")"
+      ]
+    },
+    {
+      "query": "real estate brokerage",
+      "total": 71,
+      "tookMs": 365,
+      "candidatesEvaluated": 168,
+      "jurisdictionsMatched": [
+        "rakez",
+        "spc",
+        "dmcc",
+        "ifza",
+        "afz"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Real Estate Buying & Selling Brokerage",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "jewellery trading",
+      "total": 151,
+      "tookMs": 379,
+      "candidatesEvaluated": 237,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "afz",
+        "rakez",
+        "spc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Jewellery Trading",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "clothing trading",
+      "total": 182,
+      "tookMs": 372,
+      "candidatesEvaluated": 260,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "spc",
+        "rakez",
+        "afz",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Fabrics, Textiles & Readymade Garments Screen Printing",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "logistics company",
+      "total": 77,
+      "tookMs": 347,
+      "candidatesEvaluated": 148,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "ifza",
+        "spc",
+        "rakez",
+        "afz"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Logistics & Transportation",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "medical clinic",
+      "total": 141,
+      "tookMs": 352,
+      "candidatesEvaluated": 353,
+      "jurisdictionsMatched": [
+        "rakez",
+        "dmcc",
+        "afz",
+        "spc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "(Nursery)Medical Secondary Education",
+      "top1Type": "related",
+      "top1Score": 0.75,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [
+        {
+          "id": "d68d97ce-0084-4815-99ee-ae8693620319",
+          "name": "Cosmetic and Beauty, Health and Personal Care, Food Supplements Trading",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: clinic + qualifier (via expansion)"
+        },
+        {
+          "id": "466bf40e-2a45-4e2b-9153-cea74835d488",
+          "name": "Digital Health Record Management System Development",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: clinic + qualifier (via expansion)"
+        },
+        {
+          "id": "a633098f-16f2-4ba1-b38f-f084e6f72bca",
+          "name": "Food, Health Food & Dairy Consultant",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: clinic + qualifier (via expansion)"
+        }
+      ],
+      "pass": false,
+      "failures": [
+        "3 low-confidence/false-positive results (first: \"Cosmetic and Beauty, Health and Personal Care, Food Supplements Trading\")"
+      ]
+    },
+    {
+      "query": "dental clinic",
+      "total": 125,
+      "tookMs": 349,
+      "candidatesEvaluated": 155,
+      "jurisdictionsMatched": [
+        "afz",
+        "rakez",
+        "dmcc",
+        "spc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Dental Surgery Clinic",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [
+        {
+          "id": "72b62895-6327-403d-ad19-9e1695b3f6e5",
+          "name": "(Nursery)Medical Secondary Education",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: dental + qualifier (via expansion)"
+        },
+        {
+          "id": "3537404c-87a6-4639-bd62-41c636a7037a",
+          "name": "Activities of organizations whose members’ interests centre chiefly on a particular scientific discipline, professional practice or technical field, such as medical associations, legal associations, accounting associations, engineering associations, architects associations etc.",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: dental + qualifier (via expansion)"
+        },
+        {
+          "id": "cfb55443-b388-40ab-82a1-4f9fcf46b350",
+          "name": "Activities of organizations whose members’ interests centre chiefly on a particular scientific discipline, professional practice or technical field, such as medical associations, legal associations, accounting associations, engineering associations, architects associations etc.",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: dental + qualifier (via expansion)"
+        },
+        {
+          "id": "ce0f95d4-78c2-4790-973c-141569eb5d54",
+          "name": "Brain–Computer Interface (BCI) Apps (Non-Medical)",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: dental + qualifier (via expansion)"
+        },
+        {
+          "id": "7f0c8cee-bc01-4ee8-98ea-da37dc6b5123",
+          "name": "Development and innovation in medical instruments and supplies",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: dental + qualifier (via expansion)"
+        }
+      ],
+      "pass": false,
+      "failures": [
+        "5 low-confidence/false-positive results (first: \"(Nursery)Medical Secondary Education\")"
+      ]
+    },
+    {
+      "query": "ecommerce business",
+      "total": 10,
+      "tookMs": 290,
+      "candidatesEvaluated": 352,
+      "jurisdictionsMatched": [
+        "spc",
+        "dmcc",
+        "afz",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "rakez",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Online Retail Sale of Books, Newspapers and Stationary in Specialized Stores",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [
+        {
+          "id": "df2098b5-0120-4a8e-93e2-b348225c418c",
+          "name": "Business Council",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: retail + qualifier (via expansion)"
+        },
+        {
+          "id": "2e70272a-26cb-4ecf-a20f-1b4313e24a56",
+          "name": "Business men & women Services",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: retail + qualifier (via expansion)"
+        },
+        {
+          "id": "0d5e6f33-b12d-4093-bed3-a034c9d230a9",
+          "name": "Businessmen Forum",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: retail + qualifier (via expansion)"
+        }
+      ],
+      "pass": false,
+      "failures": [
+        "3 low-confidence/false-positive results (first: \"Business Council\")"
+      ]
+    },
+    {
+      "query": "online electronics store",
+      "total": 134,
+      "tookMs": 370,
+      "candidatesEvaluated": 160,
+      "jurisdictionsMatched": [
+        "spc",
+        "rakez",
+        "afz",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Repair and maintenance of consumer electronics: • Television, radio receivers • Video cassette recorders (VCR) • CD players • Household-type video cameras",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [
+        {
+          "id": "0cfe839c-01fa-442c-a4b5-6a515f4cf62f",
+          "name": "Activities of those involved in bringing sellers and buyers together or undertaking commercial transactions on behalf of a principal, including on the internet",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: electronics + qualifier (via expansion)"
+        }
+      ],
+      "pass": false,
+      "failures": [
+        "1 low-confidence/false-positive results (first: \"Activities of those involved in bringing sellers and buyers together or undertaking commercial transactions on behalf of a principal, including on the internet\")"
+      ]
+    },
+    {
+      "query": "advertising agency",
+      "total": 59,
+      "tookMs": 358,
+      "candidatesEvaluated": 201,
+      "jurisdictionsMatched": [
+        "spc",
+        "rakez",
+        "afz",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Advertising Agency",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "web development agency",
+      "total": 206,
+      "tookMs": 368,
+      "candidatesEvaluated": 289,
+      "jurisdictionsMatched": [
+        "rakez",
+        "spc",
+        "afz",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "Designing the structure and content of, and/or writing the computer code necessary to create and implement: • Systems software (including updates and patches) • Software applications (including updates and patches) • Databases • Web pages",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "general trading",
+      "total": 233,
+      "tookMs": 329,
+      "candidatesEvaluated": 296,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "rakez",
+        "spc",
+        "ifza",
+        "afz"
+      ],
+      "jurisdictionsUnmatched": [
+        "ajman-free-zone",
+        "shams",
+        "meydan-free-zone",
+        "jafza",
+        "fujairah-free-zone",
+        "adgm",
+        "kezad",
+        "masdar-city",
+        "abu-dhabi-airports-free-zone",
+        "twofour54",
+        "dubai-mainland",
+        "abu-dhabi-mainland",
+        "sharjah-mainland",
+        "ajman-mainland",
+        "ras-al-khaimah-mainland",
+        "fujairah-mainland",
+        "umm-al-quwain-mainland"
+      ],
+      "top1Name": "General Trading",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [
+        {
+          "id": "ecd38025-0058-4e65-8761-a04232fc25d9",
+          "name": "Activities of commission agents and all other wholesalers who trade on behalf and on the account of others",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: general + qualifier (via expansion)"
+        },
+        {
+          "id": "00735c24-fd48-4f08-a97d-f41dc0862a25",
+          "name": "Activities of organizations whose members’ interests centre on the development and prosperity of enterprises in a particular line of business or trade, including farming, or on the economic growth and climate of a particular geographical area without regard for the line of business.",
+          "matchType": "related",
+          "score": 0.75,
+          "reason": "Intent match: general + qualifier (via expansion)"
+        }
+      ],
+      "pass": false,
+      "failures": [
+        "2 low-confidence/false-positive results (first: \"Activities of commission agents and all other wholesalers who trade on behalf and on the account of others\")"
+      ]
+    }
+  ]
+}

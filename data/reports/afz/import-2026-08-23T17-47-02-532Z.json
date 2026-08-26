@@ -1,0 +1,34 @@
+{
+  "adapter": "afz",
+  "sourcesProcessed": [
+    {
+      "id": "afz-activity-list",
+      "label": "AFZ Business Activities List (official website table)",
+      "url": "https://afz.gov.ae/activity-list/",
+      "format": "html",
+      "notes": "Server-rendered #activitiesTable; DataTables is client-side only so all rows are in the initial HTML. Open Data portal dataset rejected (company-license snapshots, no activity codes)."
+    }
+  ],
+  "artifacts": [
+    {
+      "relativePath": "data\\raw\\afz\\2026-08-23\\afz-activity-list.html",
+      "absolutePath": "D:\\skills - uae\\uae-activity-intelligence\\data\\raw\\afz\\2026-08-23\\afz-activity-list.html",
+      "sha256": "b8b6fee3ae79f1246b426187fec4ba6f98b52f862fbaf61f15004eb7fef37c67",
+      "bytes": 615670
+    }
+  ],
+  "counters": {
+    "sourceRecords": 1689,
+    "imported": 1689,
+    "skippedInvalid": 0,
+    "duplicatesInBatch": 0,
+    "duplicatesExisting": 0,
+    "reviewFlagged": 2
+  },
+  "errors": [],
+  "warnings": [],
+  "reviewItems": [
+    "Same normalized name with different codes — kept both, requires review: \"wholesale of cosmetics and makeup trading import export\" (rows 653/1154)",
+    "Same normalized name with different codes — kept both, requires review: \"jewellery trading import export\" (rows 1211/1687)"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "adapter": "spc",
+  "sourcesProcessed": [
+    {
+      "id": "spc-activities-api",
+      "label": "SPC Free Zone official business activities API",
+      "url": "https://www.spcfz.ae/wp-json/spc/v1/activities",
+      "format": "json",
+      "notes": "WordPress REST endpoint exposed by the site's activity table (window.FTABLE_CONFIG). Full dataset in one response; rows repeat per price category — merged by SubCode, per-category fees kept as separate source_activity_price records."
+    }
+  ],
+  "artifacts": [
+    {
+      "relativePath": "data\\raw\\spc\\2026-08-23\\spc-activities-api.json",
+      "absolutePath": "D:\\skills - uae\\uae-activity-intelligence\\data\\raw\\spc\\2026-08-23\\spc-activities-api.json",
+      "sha256": "cb836566e9f45fd322ed55d6f7ec66e6d7e276504ba2591504bd6462cc28b109",
+      "bytes": 1262631
+    }
+  ],
+  "counters": {
+    "sourceRecords": 1979,
+    "imported": 1979,
+    "skippedInvalid": 0,
+    "duplicatesInBatch": 0,
+    "duplicatesExisting": 0,
+    "reviewFlagged": 25
+  },
+  "errors": [],
+  "warnings": [],
+  "reviewItems": [
+    "Same normalized name with different codes — kept both, requires review: \"collection of recyclable materials\" (rows 83/84)",
+    "Same normalized name with different codes — kept both, requires review: \"remediation activities and other waste management services\" (rows 86/87)",
+    "Same normalized name with different codes — kept both, requires review: \"electrical plumbing and other construction installation activities\" (rows 94/95)",
+    "Same normalized name with different codes — kept both, requires review: \"retail sale in non specialized stores\" (rows 544/545)",
+    "Same normalized name with different codes — kept both, requires review: \"retail sale of food and beverages in specialized stores\" (rows 562/563)",
+    "Same normalized name with different codes — kept both, requires review: \"electronic cigarettes and accessories trading\" (rows 589/590)",
+    "Same normalized name with different codes — kept both, requires review: \"retail sale of curtains and net curtains\" (rows 691/693)",
+    "Same normalized name with different codes — kept both, requires review: \"online retail sale of books newspapers and stationary in specialized stores\" (rows 723/728)",
+    "Same normalized name with different codes — kept both, requires review: \"retail sale via stalls and markets\" (rows 869/870)",
+    "Same normalized name with different codes — kept both, requires review: \"retail trade not in stores stalls or markets\" (rows 881/882)",
+    "Same normalized name with different codes — kept both, requires review: \"other passenger land transport\" (rows 896/897)",
+    "Same normalized name with different codes — kept both, requires review: \"publishing of books periodicals and other publishing activities\" (rows 959/960)",
+    "Same normalized name with different codes — kept both, requires review: \"motion picture video and television programme production activities\" (rows 1019/1020)",
+    "Same normalized name with different codes — kept both, requires review: \"computer programming consultancy and related activities\" (rows 1109/1110)",
+    "Same normalized name with different codes — kept both, requires review: \"data processing hosting and related activities web portals\" (rows 1154/1155)",
+    "Same normalized name with different codes — kept both, requires review: \"digital wallet for electronic payments\" (rows 1205/1206)",
+    "Same normalized name with different codes — kept both, requires review: \"insurance consultancies\" (rows 1224/1225)",
+    "Same normalized name with different codes — kept both, requires review: \"brokerage in commodities listed in foreign markets\" (rows 1228/1229)",
+    "Same normalized name with different codes — kept both, requires review: \"travel agency and tour operator activities\" (rows 1613/1614)",
+    "Same normalized name with different codes — kept both, requires review: \"health and lifestyle coaching and consultancy\" (rows 1808/1809)",
+    "Same normalized name with different codes — kept both, requires review: \"botanical and zoological gardens and nature reserves activities\" (rows 1870/1871)",
+    "Same normalized name with different codes — kept both, requires review: \"sports activities\" (rows 1872/1873)",
+    "Same normalized name with different codes — kept both, requires review: \"activities of organizations whose members interests centre chiefly on a particular scientific discipline professional practice or technical field such as medical associations legal associations accounting associations engineering associations architects associations etc\" (rows 1909/1910)",
+    "Same normalized name with different codes — kept both, requires review: \"repair of computers and communication equipment\" (rows 1925/1926)",
+    "Same normalized name with different codes — kept both, requires review: \"other personal service activities\" (rows 1956/1957)"
+  ]
+}

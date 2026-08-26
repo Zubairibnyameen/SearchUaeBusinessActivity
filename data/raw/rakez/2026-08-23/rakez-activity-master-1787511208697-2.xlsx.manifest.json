@@ -1,0 +1,22 @@
+{
+  "file": "rakez-activity-master-1787511208697-2.xlsx",
+  "discoveryId": "rakez-activity-master",
+  "label": "RAKEZ Activity Master register (official XLSX export)",
+  "sourceUrl": "https://rakez.com/en/start-a-business/license-activity-list",
+  "finalUrl": "https://rakez.com/en/start-a-business/license-activity-list",
+  "httpStatus": 200,
+  "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "fetchedAt": "2026-08-23T18:53:28.695Z",
+  "bytes": 747223,
+  "sha256": "8bc9f6385741d8758a7e98c1cc51fd48bd65ddaeb88b63a1bda1b5126178b33d",
+  "jurisdiction": {
+    "slug": "rakez",
+    "name": "RAKEZ",
+    "emirate": "ras_al_khaimah",
+    "type": "free_zone",
+    "authority": "Ras Al Khaimah Economic Zone",
+    "authorityWebsite": "https://rakez.com/",
+    "sourceType": "free_zone_authority"
+  },
+  "notes": "Official register export shared by RAKEZ (3,615 activities across Freezone / Non-Freezone / Freelance Permit zones). Public site pagination is non-functional server-side; see adapter header for verification details."
+}

@@ -1,0 +1,22 @@
+{
+  "file": "rakez-activity-register-1787509379600-2.html",
+  "discoveryId": "rakez-activity-register",
+  "label": "RAKEZ official License Activity Register (WebForms grid crawl)",
+  "sourceUrl": "https://rakez.com/en/start-a-business/license-activity-list",
+  "finalUrl": "https://rakez.com/en/start-a-business/license-activity-list",
+  "httpStatus": 200,
+  "contentType": "application/x-ndjson",
+  "fetchedAt": "2026-08-23T18:22:59.599Z",
+  "bytes": 350797,
+  "sha256": "9f27f25d64dcc309e23fde3eaecffc09ad5cd4855ebff3f8eb47232cd7a975ba",
+  "jurisdiction": {
+    "slug": "rakez",
+    "name": "RAKEZ",
+    "emirate": "ras_al_khaimah",
+    "type": "free_zone",
+    "authority": "Ras Al Khaimah Economic Zone",
+    "authorityWebsite": "https://rakez.com/",
+    "sourceType": "free_zone_authority"
+  },
+  "notes": "No JSON API or current downloadable file exists (published PDFs are from 2020). Data extracted through the site's own public search/pager postbacks; every response preserved in an NDJSON bundle. Zone classification (Freezone / Non-Freezone) kept verbatim."
+}

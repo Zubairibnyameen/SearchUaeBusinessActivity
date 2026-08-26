@@ -1,0 +1,2627 @@
+{
+  "requestedLimit": 120,
+  "candidates": 2534,
+  "inserted": 120,
+  "selected": [
+    {
+      "id": "1b5a8069-8667-418c-b701-7cdaa0e19604",
+      "code": "7020.23",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 120,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "36005626-33a3-4aa4-ae4b-7ad526261816",
+      "code": "4669210",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 120,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "079b3548-65fd-4b8b-a498-237709b4b4ca",
+      "code": "515948",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 120,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "e3be68f7-1343-44f5-956e-d91f1b834f42",
+      "code": "4630.14",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "b41a1636-ec00-4175-b171-d1b46502729b",
+      "code": "4630.15",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "9066e2ee-448c-4419-8483-d5284ba19b60",
+      "code": "4721.70",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "2380ee8e-63c7-4eb9-b8d4-d14e4aed27a8",
+      "code": "4721.72",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "6d31a509-811f-491e-8015-b120afe5d2cc",
+      "code": "4721.73",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "aa353482-082c-4512-baad-6298a2614a2a",
+      "code": "4721.76",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "cd87c461-2020-4e41-98e0-529b4cec4b65",
+      "code": "4722.98",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "fa90bd16-9e46-483e-8910-4b0d64c52e6e",
+      "code": "6510",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "b6efe8f9-6db3-4d28-8807-eb887a7350b7",
+      "code": "6510.01",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "120f3cc8-3e25-4e23-bab3-a8150123319c",
+      "code": "6619.23",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "463cc1d5-1069-4d4e-80f8-3f94e17f84a7",
+      "code": "5122-02",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "96d03a48-4745-47f5-9c6d-51722b86ed19",
+      "code": "5122-15",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "f8a9b4be-423f-40e0-9ca8-c900770b1d6d",
+      "code": "5122-05",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "22f7a722-db4d-4d66-8c92-037f66e2f598",
+      "code": "5122-13",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "4a6286b5-3b83-4328-aa0c-9e60c287c791",
+      "code": "512201",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "7e8dd938-5d40-49c8-932c-8021c0201d0e",
+      "code": "5122-06",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "d474c27d-3b6d-4f38-87d2-2b727baec5d5",
+      "code": "5122-07",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "63dd01fe-0bd2-4232-8abe-8979ea102ba1",
+      "code": "5122-25",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "d5dcab4d-bd66-4617-bc58-35d3be1dd0d7",
+      "code": "5122-08",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "968de1f9-ed70-447d-827f-c1331648b85c",
+      "code": "5122-03",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "327faeaf-f5b3-44d2-bd3b-60ea02e420fe",
+      "code": "4721017",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "28526465-3180-43bc-9c3c-110b98311605",
+      "code": "4721013",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "e5bef8fd-9430-4d17-a3de-ae42713d6cca",
+      "code": "4721032",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "5ec71967-964b-4ba6-8bd5-5edd9cd25bb4",
+      "code": "4721012",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "2702130a-fd7c-4fb3-80ba-e920da6f1dc6",
+      "code": "8549012",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "c993706d-291c-472b-ac3a-8257cd031184",
+      "code": "8542007",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "04133763-ef65-49a9-b22b-118ef8096e49",
+      "code": "4721004",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "e53c02a3-dfe0-40ad-84ee-2d9a79462682",
+      "code": "4721007",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "0f0c0d5c-99f6-4932-acf5-79a646c4b25e",
+      "code": "4722002",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "67c27079-16f5-4d9e-b668-dd9c69ebabc4",
+      "code": "4721008",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "4d863767-b733-4152-bbd9-16792d565395",
+      "code": "4721037",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "3b7c26b6-3a30-4a6c-90f8-8c5602d69206",
+      "code": "8549043",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 115,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "85930811-4791-4c53-86ec-19085c407b08",
+      "code": "4649.29",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "57c5fc6d-e9d0-487d-bb44-4bf1f2ef07dc",
+      "code": "7110.14",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "738b5fb9-7759-4b8d-9fa4-bc62d1b637e0",
+      "code": "6301-05",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "96f8bf53-1375-4bc9-82ce-44467dfd6614",
+      "code": "5229012",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "d4185188-0bd6-4a19-97e7-38cbbb11b893",
+      "code": "RAKEZ /2017/20",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "8997bd0e-e359-431b-8ce0-a32d237c6bd2",
+      "code": "8610001",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "c03c902b-3250-4312-816b-890f12d20cab",
+      "code": "7411-06",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: real estate",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "real estate"
+    },
+    {
+      "id": "fcc6f765-4483-48bf-adc0-927522601ad3",
+      "code": "513957",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "23719ec3-2b15-4084-b15b-b6aae294d110",
+      "code": "5139-55",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "67d4bdc8-99d4-4a96-8421-4bd2c9b76e76",
+      "code": "70100-11",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "cbc27b42-a170-43fb-ab9a-fa16cf62c08b",
+      "code": "4772001",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "18cdc803-0c65-430e-82c8-8926d0827068",
+      "code": "5224003",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "34f22623-7652-4969-92d6-6437faa7ef21",
+      "code": "5229012",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "4f361c77-9e5a-4bd6-8269-e07fa87a325e",
+      "code": "809026",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "44e04624-62e9-4328-9539-d1a2389cedf5",
+      "code": "4772003",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "febed1a0-befe-4afe-a7f3-5ce6a3d7937f",
+      "code": "7010011",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "9460de52-e964-417f-8f32-1bc1881cfea3",
+      "code": "7490017",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 110,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: security",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "security"
+    },
+    {
+      "id": "0a0e15cd-6186-4da7-b21b-c45bac452832",
+      "code": "6511",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "84c30179-24b1-4dbf-9a09-c614f4148340",
+      "code": "6619",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "654d5966-cd4d-4744-aced-c377d992aa0c",
+      "code": "7220.97",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "b3e88786-3833-4aeb-be58-f0de5e9d1c49",
+      "code": "5610001",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "34a17c58-1072-4ae9-8bca-054583fb9766",
+      "code": "5520-01",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "d1009160-f88e-4aac-bad1-af468143c796",
+      "code": "4630104",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "56f346d3-2260-4d16-8495-9cc84979263b",
+      "code": "4630104",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "840be48a-fe8d-424a-89f3-a20493de920c",
+      "code": "8550006",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "64512e56-faad-47fe-b71a-79757930b83c",
+      "code": "8541011",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "aad5eafa-d66e-440b-8c1d-3407bbfb15bf",
+      "code": "8549031",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "c4e6edcf-435b-4e47-8236-3f068e37e709",
+      "code": "8549029",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "5c55cee0-f795-4ec4-95cf-26805176a84c",
+      "code": "8549013",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: education",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "education"
+    },
+    {
+      "id": "590ee523-973e-4fce-8e17-8be8bef87227",
+      "code": "4741021",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: telecom",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "telecom"
+    },
+    {
+      "id": "0ca35dd7-6865-4392-ba92-cff6e68a87cb",
+      "code": "6920016",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: crypto / virtual assets",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "crypto / virtual assets"
+    },
+    {
+      "id": "b8634088-f685-457b-880f-3f54f8328bfa",
+      "code": "6920010",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: crypto / virtual assets",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "crypto / virtual assets"
+    },
+    {
+      "id": "c1267874-ea84-48e2-a8ad-4269e0799121",
+      "code": "6920015",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: crypto / virtual assets",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "crypto / virtual assets"
+    },
+    {
+      "id": "ff629468-764d-4a38-984d-575048fc7d84",
+      "code": "6920012",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: crypto / virtual assets",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "crypto / virtual assets"
+    },
+    {
+      "id": "bcbea1a1-20dd-441c-a678-27fdc48ec142",
+      "code": "6920013",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: crypto / virtual assets",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "crypto / virtual assets"
+    },
+    {
+      "id": "6ae19fb2-7d3c-4a83-9d7a-2ae23843f246",
+      "code": "6920014",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 105,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "0d2c3d46-ce49-4422-bc16-a7ccb9c01cb0",
+      "code": "4772",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "3b04b514-f0e4-4df3-afba-f25aafda0227",
+      "code": "4772.09",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "d163b94a-3931-4731-b37b-13acadc5ee0a",
+      "code": "5229.83",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: logistics",
+          "points": 20
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "logistics"
+    },
+    {
+      "id": "e18f78eb-1daa-4d72-87ff-566e717bfd56",
+      "code": "7020.15",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: logistics",
+          "points": 20
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "logistics"
+    },
+    {
+      "id": "be257bfe-ac2e-4853-9a61-404ad89365ea",
+      "code": "7020.49",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "8b7b3260-c84a-4aea-bb2c-85237dd98183",
+      "code": "7490.24",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: professional regulated services",
+          "points": 20
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "professional regulated services"
+    },
+    {
+      "id": "bbf561d7-2b69-4f6b-a06b-c6e0082623cf",
+      "code": "5149-02",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "e3ec84ce-57ef-4feb-ae06-0929a117b050",
+      "code": "7911003",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "f681b7e3-523b-4d7b-b312-19012d26e053",
+      "code": "6304-10",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "d3333db6-d5e7-4b6e-8b69-a83fc0fcc65d",
+      "code": "7730020",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "4c6905a3-5bca-4445-a7eb-0b69c675a4b3",
+      "code": "5159-70",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "36166d65-4718-4346-9a33-c883b00c3b42",
+      "code": "6309-03",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "43252309-bd9e-4784-9f62-4620f2973184",
+      "code": "6303-11",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "a1f1e1c4-139e-490f-bde6-ae873670afbf",
+      "code": "7020013",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "0f4c9d08-d998-4791-a933-84ebe892ac9c",
+      "code": "8610004",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "0de9c751-ef11-41ee-9b46-986b6837db57",
+      "code": "8810002",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "dc5f1abc-7640-49a2-b1dd-0c7cda02e5b1",
+      "code": "9249-07",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "745ae991-12e6-46f8-a15c-2f36cf2b9c65",
+      "code": "7499-27",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: professional regulated services",
+          "points": 20
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "professional regulated services"
+    },
+    {
+      "id": "d9998cb9-95ee-407d-9ed2-2cd3d1a6a396",
+      "code": "515947",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "08c5020e-02fb-4823-9823-98a27a15d73e",
+      "code": "8620021",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "a02face6-bba7-4b63-9854-3c8a97f37d3f",
+      "code": "86200-21",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "81d68917-1587-477a-965e-3590f3718d05",
+      "code": "4649063",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "1bb80efe-6a35-410e-9473-58a6be9cb15a",
+      "code": "2423-03",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "64e5be3f-3d59-45ba-891e-eb4cf68f0338",
+      "code": "2100101",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "89b1607b-d9d6-480d-99b3-7e7555d79baa",
+      "code": "2100101",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "99f2d78d-30ff-4cb2-989f-20f42adef1b7",
+      "code": "8610002",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "f38935cd-fec7-43d8-bfb3-fd831a17b5ba",
+      "code": "8610006",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "1cc089db-148f-4230-8c78-b8930b0a252f",
+      "code": "9319004",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: real estate",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "real estate"
+    },
+    {
+      "id": "07d21ada-e9cb-42d3-b445-1624e807f0a4",
+      "code": "4659930",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "9eaf5ad2-b101-4b6a-993a-794ce555a88d",
+      "code": "2100106",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "a99f63db-1204-49eb-a36d-4b29a8e34970",
+      "code": "4669201",
+      "jurisdictionId": "c79df2ac-6250-4a23-8507-7f3d5a2fac4f",
+      "slug": "rakez",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: healthcare",
+          "points": 40
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "healthcare"
+    },
+    {
+      "id": "25271e23-4098-43cd-aff3-fd1d12188d9d",
+      "code": "5229018",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "6abd0e7b-54e1-45c3-972e-4199baf0615d",
+      "code": "7730020",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "69b57bf9-067b-4d3b-b025-8a3d492f65a5",
+      "code": "4773708",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "ae4ba110-f1d6-4413-8ea1-a820fcb0ea3e",
+      "code": "5223006",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "ae7b0f50-8930-4561-8c55-e59fadfab010",
+      "code": "5223004",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "6f06c319-b241-40ca-89f7-ded1e2880e4e",
+      "code": "5229101",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: logistics",
+          "points": 20
+        },
+        {
+          "factor": "same normalized activity in 5 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "logistics"
+    },
+    {
+      "id": "4dc72c75-a65a-491e-ad9e-e565378be8c3",
+      "code": "5110002",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: aviation",
+          "points": 30
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "aviation"
+    },
+    {
+      "id": "696baba8-759b-4307-8ea5-33896d20d84b",
+      "code": "7490005",
+      "jurisdictionId": "f485f8c6-4d14-422b-961e-5481bedd94fa",
+      "slug": "ifza",
+      "score": 100,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: professional regulated services",
+          "points": 20
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "professional regulated services"
+    },
+    {
+      "id": "48a390f2-503c-425a-8f40-a3de2f59986a",
+      "code": "4659.61",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "c510e4e0-8935-4ff1-91a6-007990c11ef3",
+      "code": "4721.71",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: food",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "food"
+    },
+    {
+      "id": "5059edd5-583a-49a2-9d5e-df5cda5596da",
+      "code": "5229.10",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: marine",
+          "points": 25
+        },
+        {
+          "factor": "same normalized activity in 3 indexed jurisdictions",
+          "points": 20
+        }
+      ],
+      "categoryLabel": "marine"
+    },
+    {
+      "id": "05ead27b-545c-46e8-927a-14909a23a581",
+      "code": "5911.13",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: media",
+          "points": 15
+        },
+        {
+          "factor": "same normalized activity in 4 indexed jurisdictions",
+          "points": 30
+        }
+      ],
+      "categoryLabel": "media"
+    },
+    {
+      "id": "35302cec-aa67-47a1-92d4-5c5005a8fa2d",
+      "code": "6020",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: telecom",
+          "points": 35
+        },
+        {
+          "factor": "same normalized activity in 2 indexed jurisdictions",
+          "points": 10
+        }
+      ],
+      "categoryLabel": "telecom"
+    },
+    {
+      "id": "629001e6-7fd5-4b9f-906f-5579ed2349e1",
+      "code": "6512",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "151b2019-5502-43e0-b316-6fd733706ff1",
+      "code": "6619.02",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "7a742822-1bcc-4273-ace4-8d2265c587ff",
+      "code": "6619.14",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "478c9870-f4a2-49e8-84db-3366567aafd4",
+      "code": "6619.20",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        }
+      ],
+      "categoryLabel": "financial services"
+    },
+    {
+      "id": "a633dd7b-6738-4e37-97dd-e164194b84ff",
+      "code": "6619.21",
+      "jurisdictionId": "d964e5b8-2812-4a00-9eab-af51ad3721be",
+      "slug": "spc",
+      "score": 95,
+      "reasons": [
+        {
+          "factor": "third-party approval signal in official source",
+          "points": 50
+        },
+        {
+          "factor": "priority category: financial services",
+          "points": 45
+        }
+      ],
+      "categoryLabel": "financial services"
+    }
+  ]
+}

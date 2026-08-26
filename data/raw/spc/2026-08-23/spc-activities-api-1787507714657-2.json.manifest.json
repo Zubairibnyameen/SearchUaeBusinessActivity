@@ -1,0 +1,22 @@
+{
+  "file": "spc-activities-api-1787507714657-2.json",
+  "discoveryId": "spc-activities-api",
+  "label": "SPC Free Zone official business activities API",
+  "sourceUrl": "https://www.spcfz.ae/wp-json/spc/v1/activities",
+  "finalUrl": "https://www.spcfz.ae/wp-json/spc/v1/activities",
+  "httpStatus": 200,
+  "contentType": "application/json; charset=UTF-8",
+  "fetchedAt": "2026-08-23T17:55:14.656Z",
+  "bytes": 1262631,
+  "sha256": "cb836566e9f45fd322ed55d6f7ec66e6d7e276504ba2591504bd6462cc28b109",
+  "jurisdiction": {
+    "slug": "spc",
+    "name": "SPC Free Zone",
+    "emirate": "sharjah",
+    "type": "free_zone",
+    "authority": "Sharjah Publishing City Free Zone",
+    "authorityWebsite": "https://www.spcfz.ae/",
+    "sourceType": "free_zone_authority"
+  },
+  "notes": "WordPress REST endpoint exposed by the site's activity table (window.FTABLE_CONFIG). Full dataset in one response; rows repeat per price category — merged by SubCode, per-category fees kept as separate source_activity_price records."
+}

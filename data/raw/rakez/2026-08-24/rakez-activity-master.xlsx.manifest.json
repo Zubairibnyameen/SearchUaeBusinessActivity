@@ -1,0 +1,22 @@
+﻿{
+    "file":  "rakez-activity-master.xlsx",
+    "discoveryId":  "rakez-activity-master",
+    "label":  "RAKEZ Activity Master register (official export, provided by Mohd Zubair)",
+    "sourceUrl":  "https://rakez.com/en/start-a-business/license-activity-list",
+    "finalUrl":  null,
+    "httpStatus":  200,
+    "contentType":  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "fetchedAt":  "2026-08-23T18:51:35.857Z",
+    "bytes":  747223,
+    "sha256":  "8bc9f6385741d8758a7e98c1cc51fd48bd65ddaeb88b63a1bda1b5126178b33d",
+    "jurisdiction":  {
+                         "slug":  "rakez",
+                         "name":  "RAKEZ",
+                         "emirate":  "ras_al_khaimah",
+                         "type":  "free_zone",
+                         "authority":  "Ras Al Khaimah Economic Zone",
+                         "authorityWebsite":  "https://rakez.com/",
+                         "sourceType":  "free_zone_authority"
+                     },
+    "notes":  "Official RAKEZ Activity Master export (3,615 rows x 15 cols: AM number, Zone, Activity Code, names EN/AR, Status, Minimum Share Capital, License Type, ESR flag, Is Special, Activity Price, Activity Group, Description, Qualification Requirement, Documents Required). Provenance: exported from the authority\u0027s internal register system and shared directly for this research project on 2026-08-24 after the public site\u0027s WebForms pagination proved non-functional server-side. Preserved byte-for-byte."
+}

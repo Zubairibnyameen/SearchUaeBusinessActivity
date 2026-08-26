@@ -1,0 +1,31 @@
+{
+  "adapter": "ifza",
+  "sourcesProcessed": [
+    {
+      "id": "ifza-business-activities",
+      "label": "IFZA Business Activities register (official public API)",
+      "url": "https://one.ifza.com/api/utils/getBusinessActivities",
+      "format": "json",
+      "notes": "Single unauthenticated GET consumed by activities.ifza.com itself; full dataset, no pagination."
+    }
+  ],
+  "artifacts": [
+    {
+      "relativePath": "data\\raw\\ifza\\2026-08-23\\ifza-business-activities.json",
+      "absolutePath": "D:\\skills - uae\\uae-activity-intelligence\\data\\raw\\ifza\\2026-08-23\\ifza-business-activities.json",
+      "sha256": "0778d7df1a8add715fa68ff86232d78f2b14614ab89316f216c995a3c492f809",
+      "bytes": 1207417
+    }
+  ],
+  "counters": {
+    "sourceRecords": 826,
+    "imported": 825,
+    "skippedInvalid": 0,
+    "duplicatesInBatch": 1,
+    "duplicatesExisting": 0,
+    "reviewFlagged": 0
+  },
+  "errors": [],
+  "warnings": [],
+  "reviewItems": []
+}
