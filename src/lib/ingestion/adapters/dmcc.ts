@@ -6,7 +6,7 @@
  * refreshes go through the common pipeline instead of a one-off script.
  */
 
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { fetchOfficial } from "../http";
 import { cleanText, isTruthyFlag, normalizeName, parseAmount } from "../normalize";
 import type {
@@ -98,9 +98,28 @@ export const dmccAdapter: OfficialActivitySourceAdapter = {
   },
 
   async parse(payload: FetchedPayload): Promise<ParsedActivity[]> {
-    const wb = XLSX.read(payload.body);
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[];
+    const wb = new ExcelJS.Workbook();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await wb.xlsx.load(payload.body as any);
+    const sheet = wb.worksheets[0];
+    if (!sheet) throw new Error("DMCC XLSX has no worksheets");
+
+    const rows: Record<string, unknown>[] = [];
+    const headers: string[] = [];
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) {
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          headers[colNumber - 1] = String(cell.value ?? "");
+        });
+        return;
+      }
+      const obj: Record<string, unknown> = {};
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        const key = headers[colNumber - 1] ?? `__EMPTY_${colNumber - 1}`;
+        obj[key] = cell.value;
+      });
+      rows.push(obj);
+    });
 
     const out: ParsedActivity[] = [];
     for (const r of rows.slice(1)) {

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { approvalFees, approvals } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(
   _request: NextRequest,
@@ -9,27 +11,30 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  // Get all approvals for this activity
-  const activityApprovals = await db
-    .select({ id: approvals.id })
-    .from(approvals)
-    .where(eq(approvals.activityId, id));
-
-  if (activityApprovals.length === 0) {
-    return NextResponse.json([]);
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json({ error: "Invalid activity ID" }, { status: 400 });
   }
 
-  const approvalIds = activityApprovals.map((a) => a.id);
+  try {
+    const activityApprovals = await db
+      .select({ id: approvals.id })
+      .from(approvals)
+      .where(eq(approvals.activityId, id));
 
-  // Get fees for all approvals
-  const fees = await db
-    .select()
-    .from(approvalFees)
-    .where(
-      approvalIds.length === 1
-        ? eq(approvalFees.approvalId, approvalIds[0])
-        : undefined
-    );
+    if (activityApprovals.length === 0) {
+      return NextResponse.json([]);
+    }
 
-  return NextResponse.json(fees);
+    const approvalIds = activityApprovals.map((a) => a.id);
+
+    const fees = await db
+      .select()
+      .from(approvalFees)
+      .where(inArray(approvalFees.approvalId, approvalIds));
+
+    return NextResponse.json(fees);
+  } catch (error) {
+    console.error("Failed to fetch fees:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

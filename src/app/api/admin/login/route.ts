@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   ADMIN_COOKIE,
   checkRateLimit,
-  clearRateLimit,
   createSessionToken,
   logAdminEvent,
   verifyAdminPassword,
@@ -13,12 +12,21 @@ const BodySchema = z.object({
   password: z.string().min(1).max(500),
 });
 
+const PRIVATE_IP_RE = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.|169\.254\.|::1|fc|fd|fe80)/i;
+
 function clientIp(req: NextRequest): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
-  );
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const firstIp = forwarded.split(",")[0]?.trim();
+    if (firstIp && !PRIVATE_IP_RE.test(firstIp)) {
+      return firstIp;
+    }
+  }
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp && !PRIVATE_IP_RE.test(realIp)) {
+    return realIp;
+  }
+  return "unknown";
 }
 
 export async function POST(req: NextRequest) {
@@ -59,11 +67,9 @@ export async function POST(req: NextRequest) {
       userAgent,
       details: { reason: "invalid_password" },
     });
-    // Uniform response — do not reveal whether the account exists
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
-  clearRateLimit(ip);
   const { token, maxAge } = createSessionToken();
   await logAdminEvent({ event: "admin_login", outcome: "success", ip, userAgent });
 

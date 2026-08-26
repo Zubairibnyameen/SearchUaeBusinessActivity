@@ -6,7 +6,7 @@
  * Source: https://dmcc.ae/hubfs/website%20support%20documents/License%20Activity%2015%20OCT%202025.xlsx
  */
 
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import path from "path";
@@ -60,14 +60,28 @@ interface ImportReport {
 
 // ===== PARSER =====
 
-function parseDmccXlsx(filePath: string): RawDmccActivity[] {
-  const workbook = XLSX.readFile(filePath);
-  const sheetName = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[sheetName];
-  const rawData = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[];
+async function parseDmccXlsx(filePath: string): Promise<RawDmccActivity[]> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(filePath);
+  const sheet = workbook.worksheets[0];
+  if (!sheet) throw new Error("No worksheet found");
 
-  // First row is header row (columns have __EMPTY names)
-  // Data starts from row 2
+  const headers: string[] = [];
+  const rawData: Record<string, unknown>[] = [];
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) {
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        headers[colNumber - 1] = String(cell.value ?? "");
+      });
+      return;
+    }
+    const obj: Record<string, unknown> = {};
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      obj[headers[colNumber - 1] ?? `__EMPTY_${colNumber - 1}`] = cell.value;
+    });
+    rawData.push(obj);
+  });
+
   const dataRows = rawData.slice(1);
 
   return dataRows.map((row) => ({
@@ -154,7 +168,7 @@ async function importDmccActivities(): Promise<ImportReport> {
   // 1. Parse XLSX
   const xlsxPath = path.join(process.cwd(), "data", "dmcc-activities.xlsx");
   console.log(`Parsing: ${xlsxPath}`);
-  const rawActivities = parseDmccXlsx(xlsxPath);
+  const rawActivities = await parseDmccXlsx(xlsxPath);
   report.totalSourceRecords = rawActivities.length;
   console.log(`Parsed ${rawActivities.length} activities\n`);
 

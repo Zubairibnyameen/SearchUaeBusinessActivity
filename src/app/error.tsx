@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
@@ -18,11 +17,6 @@ export default function GlobalError({
         An unexpected error occurred while rendering this page. You can retry,
         or return home.
       </p>
-      {error.digest && (
-        <p className="mt-2 font-mono text-xs text-neutral-400">
-          Reference: {error.digest}
-        </p>
-      )}
       <div className="mt-6 flex gap-3">
         <button
           onClick={reset}

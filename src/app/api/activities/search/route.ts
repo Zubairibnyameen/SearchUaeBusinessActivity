@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchUnified, type SearchOptions } from "@/lib/search/engine";
 
+const MAX_QUERY_LENGTH = 2000;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
+  const q = (searchParams.get("q") || "").trim();
+
+  if (!q) {
+    return NextResponse.json(
+      { error: "Query parameter 'q' is required" },
+      { status: 400 }
+    );
+  }
+
+  if (q.length > MAX_QUERY_LENGTH) {
+    return NextResponse.json(
+      { error: `Query exceeds maximum length of ${MAX_QUERY_LENGTH} characters` },
+      { status: 400 }
+    );
+  }
+
   const options: SearchOptions = {
-    q: searchParams.get("q") || "",
+    q,
     emirate: searchParams.get("emirate") || undefined,
     jurisdictionType: (searchParams.get("jurisdictionType") as "mainland" | "free_zone") || undefined,
     jurisdictionId: searchParams.get("jurisdictionId") || undefined,
@@ -16,20 +34,13 @@ export async function GET(request: NextRequest) {
     offset: Number(searchParams.get("offset")) || 0,
   };
 
-  if (!options.q || options.q.trim().length === 0) {
-    return NextResponse.json(
-      { error: "Query parameter 'q' is required" },
-      { status: 400 }
-    );
-  }
-
   try {
     const response = await searchUnified(options);
     return NextResponse.json(response);
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Search error:", error);
     return NextResponse.json(
-      { error: "Search failed", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Search failed" },
       { status: 500 }
     );
   }

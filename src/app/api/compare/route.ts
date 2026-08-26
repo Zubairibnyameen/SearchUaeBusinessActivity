@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { activities, jurisdictions, licenceTypes, approvals, approvalAuthorities, approvalFees } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import type { ComparisonRow } from "@/types";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -23,112 +25,127 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Search for the activity in each jurisdiction
-  const rows: ComparisonRow[] = [];
-
-  for (const jid of jurisdictionIds) {
-    // Find activity in jurisdiction
-    const activityResults = await db
-      .select({
-        activity: activities,
-        jurisdiction: jurisdictions,
-        licenceType: licenceTypes,
-      })
-      .from(activities)
-      .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))
-      .leftJoin(licenceTypes, eq(activities.licenceTypeId, licenceTypes.id))
-      .where(
-        and(
-          eq(activities.jurisdictionId, jid),
-          sql`${activities.normalizedName} ILIKE ${"%" + activityName.toLowerCase() + "%"}`
-        )
-      )
-      .limit(1);
-
-    // Get approvals and fees
-    type ApprovalRow = {
-      approval: typeof approvals.$inferSelect;
-      authority: typeof approvalAuthorities.$inferSelect | null;
-    };
-    let approvalData: ApprovalRow[] = [];
-    let feeData: (typeof approvalFees.$inferSelect)[] = [];
-
-    if (activityResults.length > 0) {
-      const actId = activityResults[0].activity.id;
-
-      approvalData = await db
-        .select({
-          approval: approvals,
-          authority: approvalAuthorities,
-        })
-        .from(approvals)
-        .leftJoin(
-          approvalAuthorities,
-          eq(approvals.approvalAuthorityId, approvalAuthorities.id)
-        )
-        .where(eq(approvals.activityId, actId));
-
-      // Get fees for all approvals
-      if (approvalData.length > 0) {
-        const approvalIds = approvalData.map((a) => a.approval.id);
-        feeData = await db
-          .select()
-          .from(approvalFees)
-          .where(sql`${approvalFees.approvalId} IN ${sql.join(approvalIds.map(id => sql`${id}`), sql`, `)}`);
-      }
-    }
-
-    // Build comparison row
-    const jurisdiction = activityResults[0]?.jurisdiction || 
-      (await db.select().from(jurisdictions).where(eq(jurisdictions.id, jid)).limit(1))[0];
-
-    rows.push({
-      jurisdiction: {
-        id: jurisdiction.id,
-        name: jurisdiction.name,
-        slug: jurisdiction.slug,
-        emirate: jurisdiction.emirate,
-        jurisdictionType: jurisdiction.jurisdictionType,
-      },
-      activity: activityResults[0]
-        ? {
-            id: activityResults[0].activity.id,
-            officialName: activityResults[0].activity.officialName,
-            activityCode: activityResults[0].activity.activityCode,
-            approvalStatus: activityResults[0].activity.approvalStatus,
-            verificationStatus: activityResults[0].activity.verificationStatus,
-          }
-        : null,
-      licenceType: activityResults[0]?.licenceType
-        ? {
-            name: activityResults[0].licenceType.name,
-            code: activityResults[0].licenceType.code,
-          }
-        : null,
-      approvals: approvalData.map((a) => ({
-        id: a.approval.id,
-        name: a.approval.name,
-        approvalType: a.approval.approvalType,
-        status: a.approval.status,
-        authority: a.authority
-          ? {
-              name: a.authority.name,
-              officialWebsite: a.authority.officialWebsite,
-            }
-          : null,
-        description: a.approval.description,
-        conditions: a.approval.conditions,
-        requiredDocuments: a.approval.requiredDocuments,
-        inspectionRequired: a.approval.inspectionRequired ?? false,
-        nocRequired: a.approval.nocRequired ?? false,
-        lastVerified: a.approval.lastVerified?.toString() ?? null,
-      })),
-      totalApprovalCost: null,
-      totalRenewalCost: null,
-      restrictions: [],
-      dataConfidence: activityResults[0]?.activity.verificationStatus === "verified" ? "high" : "none",
-    });
+  const invalidIds = jurisdictionIds.filter((id) => !UUID_RE.test(id));
+  if (invalidIds.length > 0) {
+    return NextResponse.json(
+      { error: "Invalid jurisdiction ID format" },
+      { status: 400 }
+    );
   }
 
-  return NextResponse.json(rows);
+  if (activityName.length > 500) {
+    return NextResponse.json(
+      { error: "Activity name too long" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const rows: ComparisonRow[] = [];
+
+    for (const jid of jurisdictionIds) {
+      const activityResults = await db
+        .select({
+          activity: activities,
+          jurisdiction: jurisdictions,
+          licenceType: licenceTypes,
+        })
+        .from(activities)
+        .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))
+        .leftJoin(licenceTypes, eq(activities.licenceTypeId, licenceTypes.id))
+        .where(
+          and(
+            eq(activities.jurisdictionId, jid),
+            eq(activities.normalizedName, activityName.toLowerCase())
+          )
+        )
+        .limit(1);
+
+      type ApprovalRow = {
+        approval: typeof approvals.$inferSelect;
+        authority: typeof approvalAuthorities.$inferSelect | null;
+      };
+      let approvalData: ApprovalRow[] = [];
+      let feeData: (typeof approvalFees.$inferSelect)[] = [];
+
+      if (activityResults.length > 0) {
+        const actId = activityResults[0].activity.id;
+
+        approvalData = await db
+          .select({
+            approval: approvals,
+            authority: approvalAuthorities,
+          })
+          .from(approvals)
+          .leftJoin(
+            approvalAuthorities,
+            eq(approvals.approvalAuthorityId, approvalAuthorities.id)
+          )
+          .where(eq(approvals.activityId, actId));
+
+        if (approvalData.length > 0) {
+          const approvalIds = approvalData.map((a) => a.approval.id);
+          feeData = await db
+            .select()
+            .from(approvalFees)
+            .where(inArray(approvalFees.approvalId, approvalIds));
+        }
+      }
+
+      const jurisdiction = activityResults[0]?.jurisdiction ||
+        (await db.select().from(jurisdictions).where(eq(jurisdictions.id, jid)).limit(1))[0];
+
+      rows.push({
+        jurisdiction: {
+          id: jurisdiction.id,
+          name: jurisdiction.name,
+          slug: jurisdiction.slug,
+          emirate: jurisdiction.emirate,
+          jurisdictionType: jurisdiction.jurisdictionType,
+        },
+        activity: activityResults[0]
+          ? {
+              id: activityResults[0].activity.id,
+              officialName: activityResults[0].activity.officialName,
+              activityCode: activityResults[0].activity.activityCode,
+              approvalStatus: activityResults[0].activity.approvalStatus,
+              verificationStatus: activityResults[0].activity.verificationStatus,
+            }
+          : null,
+        licenceType: activityResults[0]?.licenceType
+          ? {
+              name: activityResults[0].licenceType.name,
+              code: activityResults[0].licenceType.code,
+            }
+          : null,
+        approvals: approvalData.map((a) => ({
+          id: a.approval.id,
+          name: a.approval.name,
+          approvalType: a.approval.approvalType,
+          status: a.approval.status,
+          authority: a.authority
+            ? {
+                name: a.authority.name,
+                officialWebsite: a.authority.officialWebsite,
+              }
+            : null,
+          description: a.approval.description,
+          conditions: a.approval.conditions,
+          requiredDocuments: a.approval.requiredDocuments,
+          inspectionRequired: a.approval.inspectionRequired ?? false,
+          nocRequired: a.approval.nocRequired ?? false,
+          lastVerified: a.approval.lastVerified?.toString() ?? null,
+        })),
+        totalApprovalCost: null,
+        totalRenewalCost: null,
+        restrictions: [],
+        dataConfidence: activityResults[0]?.activity.verificationStatus === "verified" ? "high" : "none",
+      });
+    }
+
+    return NextResponse.json(rows);
+  } catch (error) {
+    console.error("Comparison failed:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

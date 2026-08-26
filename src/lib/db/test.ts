@@ -5,7 +5,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { jurisdictions, licensingAuthorities, licenceTypes } from "./schema";
-import { eq, count } from "drizzle-orm";
+import { eq, count, sql } from "drizzle-orm";
 
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString, { max: 1 });
@@ -70,10 +70,10 @@ async function test() {
     "approval_fees",
     "sources",
     "activity_synonyms",
-  ];
+  ] as const;
   console.log(`\n=== Fake Data Check ===`);
   for (const table of tables) {
-    const result = await client.unsafe(`SELECT count(*) as count FROM ${table}`);
+    const result = await db.execute(sql`SELECT count(*) as count FROM ${sql.identifier(table)}`);
     console.log(`${table}: ${result[0].count} records (should be 0)`);
   }
 

@@ -50,7 +50,6 @@ export default async function AdminAuditPage({
                 <th className="px-4 py-2.5 font-medium">Time</th>
                 <th className="px-4 py-2.5 font-medium">Event</th>
                 <th className="px-4 py-2.5 font-medium">Outcome</th>
-                <th className="px-4 py-2.5 font-medium">IP</th>
                 <th className="px-4 py-2.5 font-medium">Details</th>
               </tr>
             </thead>
@@ -71,9 +70,6 @@ export default async function AdminAuditPage({
                     >
                       {r.outcome}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-500">
-                    {r.ip ?? "—"}
                   </td>
                   <td className="max-w-[280px] truncate px-4 py-3 text-xs text-neutral-500" title={r.details ? JSON.stringify(r.details) : ""}>
                     {r.details ? JSON.stringify(r.details) : "—"}

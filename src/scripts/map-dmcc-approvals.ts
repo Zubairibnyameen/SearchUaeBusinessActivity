@@ -3,7 +3,7 @@
  * Creates a review queue for activities requiring regulatory research.
  */
 
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import path from "path";
@@ -19,9 +19,26 @@ async function main() {
 
   // Parse XLSX to get regulated flags
   const xlsxPath = path.join(process.cwd(), "data", "dmcc-activities.xlsx");
-  const workbook = XLSX.readFile(xlsxPath);
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rawData = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[];
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(xlsxPath);
+  const sheet = workbook.worksheets[0];
+  if (!sheet) throw new Error("No worksheet found");
+
+  const headers: string[] = [];
+  const rawData: Record<string, unknown>[] = [];
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) {
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        headers[colNumber - 1] = String(cell.value ?? "");
+      });
+      return;
+    }
+    const obj: Record<string, unknown> = {};
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      obj[headers[colNumber - 1] ?? `__EMPTY_${colNumber - 1}`] = cell.value;
+    });
+    rawData.push(obj);
+  });
   const dataRows = rawData.slice(1);
 
   // Get DMCC jurisdiction

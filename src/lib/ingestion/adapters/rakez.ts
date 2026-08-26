@@ -22,7 +22,7 @@
  * row (AED) — never merged into approval signals.
  */
 
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import fs from "fs";
 import path from "path";
 import { cleanText, normalizeName, parseAmount } from "../normalize";
@@ -157,12 +157,20 @@ export const rakezAdapter: OfficialActivitySourceAdapter = {
   },
 
   async parse(payload: FetchedPayload): Promise<ParsedActivity[]> {
-    const wb = XLSX.read(payload.body);
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, {
-      header: 1,
-      raw: false,
-    }) as unknown[][];
+    const wb = new ExcelJS.Workbook();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await wb.xlsx.load(payload.body as any);
+    const sheet = wb.worksheets[0];
+    if (!sheet) throw new Error("RAKEZ XLSX has no worksheets");
+
+    const rows: unknown[][] = [];
+    sheet.eachRow((row) => {
+      const rowData: unknown[] = [];
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        rowData[colNumber - 1] = cell.value;
+      });
+      rows.push(rowData);
+    });
 
     // Locate columns by header text so column order changes stay harmless.
     const headerRow = rows[0] ?? [];

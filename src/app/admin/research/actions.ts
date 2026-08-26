@@ -25,17 +25,16 @@ import { isAdminAuthenticated, logAdminEvent } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import crypto from "node:crypto";
 
-/**
- * Hostname allowlist for VERIFIED claims, mirroring Part 3's authority
- * priority order: UAE federal/emirate government domains, official
- * regulators, and the five indexed free-zone authorities' own domains.
- */
 const OFFICIAL_HOST_PATTERNS = [
   /\.gov\.ae$/,
   /\.(gov|mil)$/,
   /^(www\.)?(dmcc|ifza|rakez|spcfz|spcfreezone|ajmanfreezones|afz)\./,
   /^(www\.)?(mohap|dha|tdra|khda|dcaa|sira|ded|municipality|centralbank|vara|scasec|uiae)\./,
 ];
+
+const PRIVATE_IP_RE = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.|169\.254\.|::1|fc|fd|fe80)/i;
+const MAX_FETCH_BYTES = 512 * 1024;
+const FETCH_TIMEOUT_MS = 10_000;
 
 function looksOfficial(url: string): boolean {
   try {
@@ -44,6 +43,57 @@ function looksOfficial(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    if (PRIVATE_IP_RE.test(host)) return false;
+    if (host === "localhost" || host.endsWith(".localhost")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function safeFetch(url: string): Promise<{ ok: boolean; body: string | null }> {
+  if (!isSafeUrl(url)) return { ok: false, body: null };
+  try {
+    const res = await fetch(url, {
+      redirect: "error",
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+    if (!res.ok) return { ok: false, body: null };
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.includes("text/html") && !contentType.includes("text/plain") && !contentType.includes("application/json")) {
+      return { ok: false, body: null };
+    }
+    const reader = res.body?.getReader();
+    if (!reader) return { ok: false, body: null };
+    const chunks: Uint8Array[] = [];
+    let totalBytes = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.length;
+      if (totalBytes > MAX_FETCH_BYTES) {
+        reader.cancel();
+        return { ok: false, body: null };
+      }
+      chunks.push(value);
+    }
+    const text = new TextDecoder().decode(Buffer.concat(chunks));
+    return { ok: true, body: text };
+  } catch {
+    return { ok: false, body: null };
+  }
+}
+
+async function getAdminIdentity(): Promise<string> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "admin";
 }
 
 async function requireAdmin(): Promise<void> {
@@ -82,14 +132,14 @@ export async function saveResearchNotes(formData: FormData): Promise<void> {
   revalidatePath("/admin/research");
 }
 
-/** Move an item into active research without making any regulatory claim. */
 export async function startResearch(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
+  const adminId = await getAdminIdentity();
 
   await db
     .update(regulatoryResearchQueue)
-    .set({ researchStatus: "researching", reviewerAdmin: "admin", lastUpdatedAt: new Date() })
+    .set({ researchStatus: "researching", reviewerAdmin: adminId, lastUpdatedAt: new Date() })
     .where(eq(regulatoryResearchQueue.id, id));
 
   await audit("research.started", { researchId: id });
@@ -97,14 +147,6 @@ export async function startResearch(formData: FormData): Promise<void> {
   revalidatePath("/admin/research");
 }
 
-/**
- * Resolve a research item as VERIFIED.
- *
- * Requires an official source URL (government/authority domain). The source
- * is stored with retrieved date + content hash of a HEAD-level fetch result
- * when practical; the approval record is created with verification_status =
- * 'verified' and linked back to the queue item.
- */
 export async function resolveVerified(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
@@ -117,6 +159,7 @@ export async function resolveVerified(formData: FormData): Promise<void> {
   const applicationProcess = String(formData.get("applicationProcess") ?? "").trim() || null;
   const conditionsRaw = String(formData.get("conditions") ?? "").trim();
   const documentsRaw = String(formData.get("requiredDocuments") ?? "").trim();
+  const adminId = await getAdminIdentity();
 
   if (!sourceUrl || !looksOfficial(sourceUrl)) {
     await audit("research.verify_rejected_non_official_source", { researchId: id, sourceUrl });
@@ -138,14 +181,12 @@ export async function resolveVerified(formData: FormData): Promise<void> {
   const today = new Date().toISOString().split("T")[0];
   let contentHash: string | null = null;
   try {
-    // Practical traceability: hash the fetched page content when reachable.
-    const res = await fetch(sourceUrl, { redirect: "follow", signal: AbortSignal.timeout(15000) });
-    if (res.ok) {
-      const body = await res.text();
+    const { ok, body } = await safeFetch(sourceUrl);
+    if (ok && body) {
       contentHash = `sha256:${crypto.createHash("sha256").update(body).digest("hex")}`;
     }
   } catch {
-    contentHash = null; // recorded as null — never fabricated
+    contentHash = null;
   }
 
   const [source] = await db
@@ -161,7 +202,6 @@ export async function resolveVerified(formData: FormData): Promise<void> {
     })
     .returning({ id: sources.id });
 
-  // Upsert authority by slug so repeated verifications reuse it.
   let approvalAuthorityId: string | null = null;
   if (authorityName) {
     const slug = authorityName
@@ -228,7 +268,7 @@ export async function resolveVerified(formData: FormData): Promise<void> {
     entityId: approval.id,
     sourceId: source.id,
     verificationStatus: "verified",
-    verifiedBy: "admin",
+    verifiedBy: adminId,
     notes: `Verified via research queue item ${id}`,
   });
 
@@ -238,7 +278,7 @@ export async function resolveVerified(formData: FormData): Promise<void> {
       researchStatus: "verified",
       verifiedSourceId: source.id,
       verificationDate: today,
-      reviewerAdmin: "admin",
+      reviewerAdmin: adminId,
       resolutionApprovalId: approval.id,
       lastUpdatedAt: new Date(),
       possibleAuthority: authorityName || item.possibleAuthority,
@@ -257,15 +297,12 @@ export async function resolveVerified(formData: FormData): Promise<void> {
   revalidatePath("/admin/research");
 }
 
-/**
- * Resolve as NOT REQUIRED — must still cite an official basis (e.g. the
- * free-zone source itself stating no third-party approval applies).
- */
 export async function resolveNotRequired(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const sourceUrl = String(formData.get("notRequiredSourceUrl") ?? "").trim();
   const rationale = String(formData.get("rationale") ?? "").trim();
+  const adminId = await getAdminIdentity();
 
   if (!sourceUrl || !looksOfficial(sourceUrl)) {
     await audit("research.not_required_rejected_non_official_source", { researchId: id, sourceUrl });
@@ -312,7 +349,7 @@ export async function resolveNotRequired(formData: FormData): Promise<void> {
       verifiedSourceId: source.id,
       verificationDate: today,
       resolutionApprovalId: approval.id,
-      reviewerAdmin: "admin",
+      reviewerAdmin: adminId,
       lastUpdatedAt: new Date(),
       notes: rationale || item.notes,
     })
@@ -328,17 +365,17 @@ export async function resolveNotRequired(formData: FormData): Promise<void> {
   revalidatePath("/admin/research");
 }
 
-/** Conflicting sources found — keep unresolved, never delete. */
 export async function markConflicting(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const conflictNotes = String(formData.get("conflictNotes") ?? "").trim();
+  const adminId = await getAdminIdentity();
 
   await db
     .update(regulatoryResearchQueue)
     .set({
       researchStatus: "conflicting_sources",
-      reviewerAdmin: "admin",
+      reviewerAdmin: adminId,
       notes: conflictNotes || undefined,
       lastUpdatedAt: new Date(),
     })
@@ -349,17 +386,17 @@ export async function markConflicting(formData: FormData): Promise<void> {
   revalidatePath("/admin/research");
 }
 
-/** Escalate for manual review. */
 export async function flagManualReview(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const reviewNotes = String(formData.get("reviewNotes") ?? "").trim();
+  const adminId = await getAdminIdentity();
 
   await db
     .update(regulatoryResearchQueue)
     .set({
       researchStatus: "needs_manual_review",
-      reviewerAdmin: "admin",
+      reviewerAdmin: adminId,
       notes: reviewNotes || undefined,
       lastUpdatedAt: new Date(),
     })
