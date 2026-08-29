@@ -1,0 +1,716 @@
+{
+  "generatedAt": "2026-08-29T16:47:13.240Z",
+  "queriesTotal": 33,
+  "latencyMs": {
+    "p50": 1754,
+    "p95": 2446,
+    "sampleCount": 99
+  },
+  "domain": {
+    "queries": 14,
+    "top1ExactOrStrong": 14,
+    "top1ExactOrStrongRatePct": 100,
+    "zeroResultQueries": []
+  },
+  "jurisdiction": {
+    "queries": 5,
+    "allResultsWithinRequestedZone": 5,
+    "zoneAccuracyPct": 100,
+    "violations": []
+  },
+  "typo": {
+    "queries": 5,
+    "flaggedCorrected": 5,
+    "returnedResults": 5
+  },
+  "intent": {
+    "queries": 4,
+    "flaggedExpected": 4,
+    "intentAccuracyPct": 100
+  },
+  "emptyResults": {
+    "queries": 3,
+    "honestlyZero": 3
+  },
+  "generic": {
+    "queries": 2,
+    "flaggedGenericWithResults": 2
+  },
+  "perQuery": [
+    {
+      "total": 89,
+      "topName": "Restaurant",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "afz",
+        "dmcc",
+        "rakez",
+        "rakez",
+        "spc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1920,
+      "q": "restaurant",
+      "kind": "domain"
+    },
+    {
+      "total": 94,
+      "topName": "Jewellery Trading",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "dmcc",
+        "ifza",
+        "rakez",
+        "spc",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1654,
+      "q": "jewellery trading",
+      "kind": "domain"
+    },
+    {
+      "total": 97,
+      "topName": "(Nursery)Medical Secondary Education",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "rakez",
+        "spc",
+        "spc",
+        "rakez",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1819,
+      "q": "medical clinic",
+      "kind": "domain"
+    },
+    {
+      "total": 77,
+      "topName": "Activities of sea freight forwarders and air cargo agents",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "spc",
+        "dmcc",
+        "ifza",
+        "rakez",
+        "rakez"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1540,
+      "q": "logistics company",
+      "kind": "domain"
+    },
+    {
+      "total": 34,
+      "topName": "Car Rental",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "dmcc",
+        "ifza",
+        "dmcc",
+        "ifza",
+        "rakez"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1849,
+      "q": "car rental",
+      "kind": "domain"
+    },
+    {
+      "total": 114,
+      "topName": "Babies’ Garments and Sports Wears Manufacturing",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "rakez",
+        "rakez",
+        "rakez",
+        "afz",
+        "afz"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1642,
+      "q": "online clothing store",
+      "kind": "domain"
+    },
+    {
+      "total": 193,
+      "topName": "Content portal - Online booking platform",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "rakez",
+        "rakez",
+        "ifza",
+        "afz",
+        "ifza"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 2281,
+      "q": "ecommerce business",
+      "kind": "domain"
+    },
+    {
+      "total": 16,
+      "topName": "Accounting & Bookkeeping",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "afz",
+        "dmcc",
+        "ifza",
+        "rakez",
+        "spc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1247,
+      "q": "accounting and bookkeeping",
+      "kind": "domain"
+    },
+    {
+      "total": 91,
+      "topName": "Conducting marketing campaigns and services to attract and retain customers, including product promotion, point-of-sale marketing, direct mail advertising, and marketing consulting.",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "spc",
+        "spc",
+        "spc",
+        "spc",
+        "spc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1572,
+      "q": "digital marketing agency",
+      "kind": "domain"
+    },
+    {
+      "total": 43,
+      "topName": "Real Estate Buying & Selling Brokerage",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "dmcc",
+        "rakez",
+        "rakez",
+        "spc",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1601,
+      "q": "real estate brokerage",
+      "kind": "domain"
+    },
+    {
+      "total": 189,
+      "topName": "(Nursery)Medical Secondary Education",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "rakez",
+        "spc",
+        "rakez",
+        "afz",
+        "spc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 2253,
+      "q": "training institute",
+      "kind": "domain"
+    },
+    {
+      "total": 49,
+      "topName": "Coffee Shop",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "dmcc",
+        "rakez",
+        "spc",
+        "spc",
+        "afz"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1936,
+      "q": "coffee shop",
+      "kind": "domain"
+    },
+    {
+      "total": 84,
+      "topName": "Building Cleaning Services",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "dmcc",
+        "afz",
+        "dmcc",
+        "ifza",
+        "rakez"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 2202,
+      "q": "cleaning services",
+      "kind": "domain"
+    },
+    {
+      "total": 28,
+      "topName": "Women Beauty Salon Works Training",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "afz",
+        "dmcc",
+        "ifza",
+        "rakez",
+        "afz"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1457,
+      "q": "beauty salon",
+      "kind": "domain"
+    },
+    {
+      "total": 43,
+      "topName": "Restaurant",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "rakez",
+        "rakez",
+        "rakez",
+        "rakez",
+        "rakez"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1784,
+      "q": "restaurant in RAKEZ",
+      "kind": "jurisdiction"
+    },
+    {
+      "total": 33,
+      "topName": "Cardiac Clinic",
+      "topType": "related",
+      "topScore": 0.7,
+      "slugs": [
+        "dmcc",
+        "dmcc",
+        "dmcc",
+        "dmcc",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1847,
+      "q": "clinic in DMCC",
+      "kind": "jurisdiction"
+    },
+    {
+      "total": 9,
+      "topName": "Car Rental",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "ifza",
+        "ifza",
+        "ifza",
+        "ifza",
+        "ifza"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1731,
+      "q": "car rental ifza",
+      "kind": "jurisdiction"
+    },
+    {
+      "total": 16,
+      "topName": "Activities of sea freight forwarders and air cargo agents",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "spc",
+        "spc",
+        "spc",
+        "spc",
+        "spc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1346,
+      "q": "logistics company SPC Free Zone",
+      "kind": "jurisdiction"
+    },
+    {
+      "total": 4,
+      "topName": "sports brokerage service",
+      "topType": "related",
+      "topScore": 0.7,
+      "slugs": [
+        "afz",
+        "afz",
+        "afz",
+        "afz"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1587,
+      "q": "brokerage in Ajman Free Zone",
+      "kind": "jurisdiction"
+    },
+    {
+      "total": 94,
+      "topName": "Jewellery Trading",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "dmcc",
+        "ifza",
+        "rakez",
+        "spc",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": true,
+      "isGeneric": false,
+      "tookMs": 1491,
+      "q": "jewlery trading",
+      "kind": "typo"
+    },
+    {
+      "total": 12,
+      "topName": "Restaurant",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "dmcc",
+        "dmcc",
+        "dmcc",
+        "dmcc",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": true,
+      "isGeneric": false,
+      "tookMs": 1858,
+      "q": "restarant in DMCC",
+      "kind": "typo"
+    },
+    {
+      "total": 29,
+      "topName": "Accounting & Bookkeeping",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "afz",
+        "dmcc",
+        "ifza",
+        "rakez",
+        "spc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": true,
+      "isGeneric": false,
+      "tookMs": 1335,
+      "q": "accountng firm",
+      "kind": "typo"
+    },
+    {
+      "total": 77,
+      "topName": "Activities of sea freight forwarders and air cargo agents",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "spc",
+        "dmcc",
+        "ifza",
+        "rakez",
+        "rakez"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": true,
+      "isGeneric": false,
+      "tookMs": 1542,
+      "q": "logistcs company",
+      "kind": "typo"
+    },
+    {
+      "total": 97,
+      "topName": "(Nursery)Medical Secondary Education",
+      "topType": "strong",
+      "topScore": 0.92,
+      "slugs": [
+        "rakez",
+        "spc",
+        "spc",
+        "rakez",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": true,
+      "isGeneric": false,
+      "tookMs": 1661,
+      "q": "medcial clinic",
+      "kind": "typo"
+    },
+    {
+      "total": 11,
+      "topName": "Air-Condition Trading",
+      "topType": "related",
+      "topScore": 0.66,
+      "slugs": [
+        "ifza",
+        "ifza",
+        "ifza",
+        "ifza",
+        "ifza"
+      ],
+      "intents": [
+        "LICENCE_SEARCH",
+        "FEE_SEARCH",
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1330,
+      "q": "how much is the licence fee for a restaurant in IFZA",
+      "kind": "intent"
+    },
+    {
+      "total": 89,
+      "topName": "Restaurant",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "afz",
+        "dmcc",
+        "rakez",
+        "rakez",
+        "spc"
+      ],
+      "intents": [
+        "APPROVAL_SEARCH",
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1319,
+      "q": "do I need an approval to open a restaurant",
+      "kind": "intent"
+    },
+    {
+      "total": 0,
+      "topName": null,
+      "topType": null,
+      "topScore": null,
+      "slugs": [],
+      "intents": [
+        "JURISDICTION_SEARCH",
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": true,
+      "tookMs": 308,
+      "q": "what can I do in DMCC",
+      "kind": "intent"
+    },
+    {
+      "total": 4,
+      "topName": "Floating Restaurant",
+      "topType": "related",
+      "topScore": 0.7,
+      "slugs": [
+        "rakez",
+        "rakez",
+        "rakez",
+        "rakez"
+      ],
+      "intents": [
+        "COMPARISON_INTENT",
+        "JURISDICTION_SEARCH",
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1419,
+      "q": "compare RAKEZ and DMCC restaurant activities",
+      "kind": "intent"
+    },
+    {
+      "total": 0,
+      "topName": null,
+      "topType": null,
+      "topScore": null,
+      "slugs": [],
+      "intents": [
+        "APPROVAL_SEARCH",
+        "FEE_SEARCH",
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": true,
+      "tookMs": 305,
+      "q": "how much does this approval cost",
+      "kind": "empty"
+    },
+    {
+      "total": 0,
+      "topName": null,
+      "topType": null,
+      "topScore": null,
+      "slugs": [],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 1968,
+      "q": "nuclear power plant",
+      "kind": "empty"
+    },
+    {
+      "total": 0,
+      "topName": null,
+      "topType": null,
+      "topScore": null,
+      "slugs": [],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": false,
+      "tookMs": 951,
+      "q": "asdfqwer zxcv",
+      "kind": "empty"
+    },
+    {
+      "total": 539,
+      "topName": "Air water generators Trading Import & Export",
+      "topType": "related",
+      "topScore": 0.66,
+      "slugs": [
+        "afz",
+        "afz",
+        "dmcc",
+        "afz",
+        "dmcc"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": true,
+      "tookMs": 1754,
+      "q": "trading",
+      "kind": "generic"
+    },
+    {
+      "total": 403,
+      "topName": "Consultancy",
+      "topType": "exact",
+      "topScore": 1,
+      "slugs": [
+        "spc",
+        "dmcc",
+        "dmcc",
+        "ifza",
+        "rakez"
+      ],
+      "intents": [
+        "ACTIVITY_SEARCH"
+      ],
+      "typoCorrected": false,
+      "isGeneric": true,
+      "tookMs": 2195,
+      "q": "consultancy",
+      "kind": "generic"
+    }
+  ]
+}

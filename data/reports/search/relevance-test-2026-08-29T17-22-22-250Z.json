@@ -1,0 +1,355 @@
+{
+  "generatedAt": "2026-08-29T17:22:22.248Z",
+  "datasetTotalsExpected": {
+    "dmcc": 1002,
+    "afz": 1689,
+    "spc": 1979,
+    "rakez": 3614,
+    "ifza": 825
+  },
+  "metrics": {
+    "queries": 15,
+    "passRate": 100,
+    "top1RelevanceRate": 100,
+    "top3RelevanceRate": 100,
+    "falsePositiveCount": 0,
+    "falsePositiveRatePct": 0,
+    "avgLatencyMs": 961,
+    "maxLatencyMs": 4042,
+    "licenceBindingViolations": 0,
+    "nullApprovalSignals": 0
+  },
+  "perQuery": [
+    {
+      "query": "digital marketing agency",
+      "total": 89,
+      "tookMs": 4042,
+      "candidatesEvaluated": 257,
+      "jurisdictionsMatched": [
+        "rakez",
+        "spc",
+        "afz",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Conducting marketing campaigns and services to attract and retain customers, including product promotion, point-of-sale marketing, direct mail advertising, and marketing consulting.",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "software development company",
+      "total": 121,
+      "tookMs": 811,
+      "candidatesEvaluated": 257,
+      "jurisdictionsMatched": [
+        "rakez",
+        "spc",
+        "afz",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "AI-Powered Diagnostic Tools Development",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "restaurant",
+      "total": 87,
+      "tookMs": 455,
+      "candidatesEvaluated": 147,
+      "jurisdictionsMatched": [
+        "rakez",
+        "afz",
+        "dmcc",
+        "ifza",
+        "spc"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Restaurant",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "accounting consultancy",
+      "total": 24,
+      "tookMs": 428,
+      "candidatesEvaluated": 119,
+      "jurisdictionsMatched": [
+        "spc",
+        "dmcc",
+        "afz",
+        "rakez",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Accounting & Bookkeeping",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "real estate brokerage",
+      "total": 43,
+      "tookMs": 697,
+      "candidatesEvaluated": 168,
+      "jurisdictionsMatched": [
+        "spc",
+        "ifza",
+        "rakez",
+        "dmcc",
+        "afz"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Real Estate Buying & Selling Brokerage",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "jewellery trading",
+      "total": 90,
+      "tookMs": 616,
+      "candidatesEvaluated": 225,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "rakez",
+        "afz",
+        "spc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Jewellery Trading",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "clothing trading",
+      "total": 81,
+      "tookMs": 622,
+      "candidatesEvaluated": 232,
+      "jurisdictionsMatched": [
+        "spc",
+        "rakez",
+        "dmcc",
+        "afz",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Babies’ Garments and Sports Wears Manufacturing",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "logistics company",
+      "total": 77,
+      "tookMs": 386,
+      "candidatesEvaluated": 148,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "ifza",
+        "spc",
+        "rakez",
+        "afz"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Activities of sea freight forwarders and air cargo agents",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "medical clinic",
+      "total": 85,
+      "tookMs": 1017,
+      "candidatesEvaluated": 314,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "rakez",
+        "afz",
+        "spc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "(Nursery)Medical Secondary Education",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "dental clinic",
+      "total": 46,
+      "tookMs": 716,
+      "candidatesEvaluated": 150,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "afz",
+        "rakez",
+        "spc"
+      ],
+      "jurisdictionsUnmatched": [
+        "ifza"
+      ],
+      "top1Name": "Dental Surgery Clinic",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "ecommerce business",
+      "total": 113,
+      "tookMs": 605,
+      "candidatesEvaluated": 128,
+      "jurisdictionsMatched": [
+        "spc",
+        "afz",
+        "rakez",
+        "ifza",
+        "dmcc"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Content portal - Online booking platform",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "online electronics store",
+      "total": 65,
+      "tookMs": 725,
+      "candidatesEvaluated": 157,
+      "jurisdictionsMatched": [
+        "spc",
+        "rakez",
+        "dmcc",
+        "afz",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Computer Training",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "advertising agency",
+      "total": 45,
+      "tookMs": 925,
+      "candidatesEvaluated": 193,
+      "jurisdictionsMatched": [
+        "spc",
+        "rakez",
+        "afz",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Advertising Agency",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "web development agency",
+      "total": 132,
+      "tookMs": 1048,
+      "candidatesEvaluated": 270,
+      "jurisdictionsMatched": [
+        "rakez",
+        "afz",
+        "spc",
+        "dmcc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "Designing the structure and content of, and/or writing the computer code necessary to create and implement: • Systems software (including updates and patches) • Software applications (including updates and patches) • Databases • Web pages",
+      "top1Type": "strong",
+      "top1Score": 0.92,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    },
+    {
+      "query": "general trading",
+      "total": 93,
+      "tookMs": 1317,
+      "candidatesEvaluated": 276,
+      "jurisdictionsMatched": [
+        "dmcc",
+        "afz",
+        "rakez",
+        "spc",
+        "ifza"
+      ],
+      "jurisdictionsUnmatched": [],
+      "top1Name": "General Trading",
+      "top1Type": "exact",
+      "top1Score": 1,
+      "top1Relevant": true,
+      "top3Relevant": true,
+      "falsePositives": [],
+      "pass": true,
+      "failures": []
+    }
+  ]
+}

@@ -15,23 +15,18 @@
  */
 
 import { db } from "@/lib/db";
-import {
-  activities,
-  jurisdictions,
-  licenceTypes,
-  sources,
-  activitySources,
-} from "@/lib/db/schema";
-import { eq, or, ilike, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import type {
   MatchType,
   BusinessIntent,
   SearchResultItem,
   JurisdictionGroup,
+  ApprovalSignalValue,
   SearchAvailability,
   UnifiedSearchResponse,
   SearchOptions,
 } from "./types";
+import { parseQuery, type ParsedQuery } from "./query-parser";
 
 export type { SearchOptions, MatchType } from "./types";
 
@@ -91,6 +86,8 @@ const WORD_WEIGHTS: Record<string, number> = {
   pharmacy: 0.85, pharmacies: 0.85, drug: 0.60,
   petrol: 0.80, fuel: 0.55,
   supermarket: 0.80, retail: 0.45, wholesale: 0.40,
+  store: 0.35, shop: 0.35, outlet: 0.35, outlets: 0.35, marketplace: 0.40,
+  ecommerce: 0.45, "e-commerce": 0.45, dropshipping: 0.45, dropship: 0.45,
   warehouse: 0.50, warehousing: 0.50, storage: 0.35,
   freight: 0.50, cargo: 0.50,
   pastry: 0.70,
@@ -137,7 +134,7 @@ function isGenericWord(word: string): boolean {
 const WORD_VARIATIONS: Record<string, string[]> = {
   consulting: ["consultancy", "consultancies", "consultant", "consultants", "consulting"],
   consultancy: ["consultancy", "consultancies", "consultant", "consultants", "consulting"],
-  marketing: ["marketing", "market", "marketed"],
+  marketing: ["marketing", "market", "marketed", "marketer", "marketers"],
   trading: ["trading", "trade", "trader", "traders"],
   advertising: ["advertising", "advertisement", "advert", "advertisements"],
   clothing: ["garment", "garments", "apparel", "textile", "textiles", "clothing", "fashion"],
@@ -167,7 +164,46 @@ const WORD_VARIATIONS: Record<string, string[]> = {
   electronics: ["electronics", "electronic", "electrical", "computer", "devices"],
   interior: ["interior", "interior design", "decoration"],
   event: ["event", "events", "management"],
+  store: ["store", "stores", "shop", "shops", "retail", "outlet", "outlets"],
+  shop: ["shop", "shops", "store", "stores", "retail", "outlet", "outlets"],
+  retail: ["retail", "retailer", "retailers", "retailing", "store", "shop"],
+  ecommerce: ["e-commerce", "ecommerce", "online", "retail", "marketplace", "internet"],
+  organisation: ["organisation", "organisations", "organization", "organizations"],
+  organization: ["organization", "organizations", "organisation", "organisations"],
+  licence: ["licence", "licences", "license", "licenses"],
+  license: ["license", "licenses", "licence", "licences"],
+  programme: ["programme", "programmes", "program", "programs"],
+  program: ["program", "programs", "programme", "programmes"],
+  advisor: ["advisor", "advisors", "adviser", "advisers", "advisory"],
+  restaurant: ["restaurant", "restaurants", "food outlet", "food outlets", "eatery", "eateries"],
+  wholesale: ["wholesale", "wholesaler", "wholesalers", "import", "exports", "distributor", "distributors"],
 };
+
+/**
+ * Semantic family of a concept: the word itself plus the members of the
+ * variation family keyed by that word; if the word has no family of its own,
+ * the first family that contains it is used (e.g. the concept "garment"
+ * borrows the "clothing" family). This bridges Headword → official wording
+ * (query "online clothing store" matches an activity named "Clothing
+ * Trading") WITHOUT letting a concept balloon into sibling domains (e.g.
+ * "clinic" never matches on "health"/"hospital" alone).
+ */
+function primaryConceptTerms(primaryNoun: string): Set<string> {
+  const lower = primaryNoun.toLowerCase();
+  const terms = new Set<string>([lower]);
+  const own = WORD_VARIATIONS[lower];
+  if (own) {
+    own.forEach((v) => terms.add(v));
+    return terms;
+  }
+  for (const family of Object.values(WORD_VARIATIONS)) {
+    if (family.includes(lower)) {
+      family.forEach((v) => terms.add(v));
+      break;
+    }
+  }
+  return terms;
+}
 
 // ============================================================
 // SECTION 3: STOP WORDS
@@ -314,10 +350,10 @@ const INTENT_PATTERNS: IntentPattern[] = [
   {
     pattern: /^online\s+(electronics|store|retail|shop|shopping)|^ecommerce|^e-commerce|^online\s+business/i,
     intent: {
-      primaryNoun: "retail",
-      qualifiers: ["online", "ecommerce", "internet", "digital", "marketplace"],
+      primaryNoun: "ecommerce",
+      qualifiers: ["online", "ecommerce", "retail", "internet", "digital", "marketplace"],
       industryDomain: "retail",
-      requiredTerms: ["trading", "retail", "marketplace"],
+      requiredTerms: ["ecommerce", "e-commerce", "trading", "retail", "marketplace"],
       excludedTerms: ["gaming", "sports"],
     },
   },
@@ -392,13 +428,17 @@ const INTENT_PATTERNS: IntentPattern[] = [
     },
   },
   {
-    pattern: /^restaurant|^cafe|^coffee\s+shop/i,
+    pattern: /^restaurant\b|^cafe\b|^coffee\s+shop|\brestaurant\b/i,
     intent: {
       primaryNoun: "restaurant",
       qualifiers: ["cafe", "food", "beverage", "catering"],
       industryDomain: "food",
       requiredTerms: ["restaurant"],
-      excludedTerms: ["equipment", "supplies", "fitout", "consultancy"],
+      // Equipment/supply trading names are NOT excluded — they are capped to
+      // "related" by the goods-context downgrade so they never surface as
+      // strong/exact unless the query explicitly asks for equipment. Pure
+      // consultancy for restaurants is a different line of business.
+      excludedTerms: ["consultancy", "consultation", "consulting"],
     },
   },
   {
@@ -481,6 +521,119 @@ const INTENT_PATTERNS: IntentPattern[] = [
       excludedTerms: [],
     },
   },
+  {
+    // "online clothing store" / "start an online clothing shop" / "online shop for clothes"
+    pattern:
+      /^online\s+(clothing|garments?|apparel|fashion|clothes)|^online\s+(store|shop)s?\s+(for\s+|and\s+)?(clothing|garments?|apparel|fashion|clothes)/i,
+    intent: {
+      primaryNoun: "garment",
+      qualifiers: ["clothing", "apparel", "fashion", "textile", "online", "retail"],
+      industryDomain: "retail",
+      requiredTerms: ["garment", "garments", "clothing", "apparel", "fashion", "textile", "clothes"],
+      excludedTerms: [],
+    },
+  },
+  {
+    pattern: /^clothing\s+(store|shop|retail|line|brand)|^garments?\s+(store|shop|retail)/i,
+    intent: {
+      primaryNoun: "garment",
+      qualifiers: ["clothing", "apparel", "fashion", "textile", "store", "retail"],
+      industryDomain: "retail",
+      requiredTerms: ["garment", "garments", "clothing", "apparel", "fashion", "textile"],
+      excludedTerms: [],
+    },
+  },
+  {
+    pattern:
+      /^(womens?|ladies?|mens?|kids?|childrens?|babys?)\s+(clothing|garments?|apparel|fashion|clothes)(\s+(store|shop|outlet|studio|brand|line))?/i,
+    intent: {
+      primaryNoun: "garment",
+      qualifiers: ["clothing", "apparel", "fashion", "textile", "store", "retail"],
+      industryDomain: "retail",
+      requiredTerms: ["garment", "garments", "clothing", "apparel", "fashion", "textile"],
+      excludedTerms: [],
+    },
+  },
+  {
+    pattern: /^(jewellery|jewelry)\s+(store|shop|retail)/i,
+    intent: {
+      primaryNoun: "jewellery",
+      qualifiers: ["store", "shop", "retail", "gold", "diamond", "precious"],
+      industryDomain: "precious metals",
+      requiredTerms: ["jewellery", "jewelry", "gold", "precious"],
+      excludedTerms: [],
+    },
+  },
+  {
+    pattern: /^(property|real\s+estate)\s+brokerage/i,
+    intent: {
+      primaryNoun: "brokerage",
+      qualifiers: ["property", "real estate", "estate", "sales purchase"],
+      industryDomain: "real estate",
+      requiredTerms: ["brokerage", "broker", "broking"],
+      excludedTerms: ["mortgage", "consultancy", "development", "leasing", "promotion", "survey", "valuation", "supervision", "representative"],
+    },
+  },
+  {
+    pattern: /^(car|vehicle|automobile)s?\s+rental|^rental\s+(of\s+)?(car|vehicle|automobile)s?/i,
+    intent: {
+      primaryNoun: "rental",
+      qualifiers: ["car", "vehicle", "automobile"],
+      industryDomain: "transport",
+      requiredTerms: ["rental"],
+      excludedTerms: ["equipment", "machinery"],
+    },
+  },
+  {
+    pattern: /^(training|education|learning)\s+(institute|centre|center|academy|courses?)/i,
+    intent: {
+      primaryNoun: "training",
+      qualifiers: ["education", "institute", "academy", "courses"],
+      industryDomain: "education",
+      requiredTerms: ["training", "education", "institute", "academy"],
+      excludedTerms: ["badminton", "basketball", "ping pong", "squash", "tennis", "volleyball", "wrestling", "swimming", "ice skating", "football", "cricket", "chess", "gaming", "sports"],
+    },
+  },
+  {
+    pattern: /^shipping\s+(company|lines?|services|agents?)|^shipping\s+and?\s+(logistics|freight|cargo)/i,
+    intent: {
+      primaryNoun: "logistics",
+      qualifiers: ["shipping", "freight", "cargo", "transport"],
+      industryDomain: "logistics",
+      requiredTerms: ["logistics", "shipping", "freight", "cargo"],
+      excludedTerms: [],
+    },
+  },
+  {
+    pattern: /^import(ing)?\s+(of\s+)?(electronics|electronic\s+goods|consumer\s+electronics|mobile|phones)/i,
+    intent: {
+      primaryNoun: "electronics",
+      qualifiers: ["import", "electronic", "electrical", "computer", "mobile"],
+      industryDomain: "consumer electronics",
+      requiredTerms: ["electronics", "electronic", "mobile"],
+      excludedTerms: ["waste", "scrap"],
+    },
+  },
+  {
+    pattern: /^marketing\s+(agency|company|firm|services|consultancy)/i,
+    intent: {
+      primaryNoun: "marketing",
+      qualifiers: ["digital", "online", "advertising", "branding"],
+      industryDomain: "media",
+      requiredTerms: ["marketing"],
+      excludedTerms: ["travel", "insurance", "shipping"],
+    },
+  },
+  {
+    pattern: /^(food|restaurant|coffee|beverage)\s+(outlet|franchise|chain)/i,
+    intent: {
+      primaryNoun: "restaurant",
+      qualifiers: ["cafe", "food", "beverage", "catering", "outlet"],
+      industryDomain: "food",
+      requiredTerms: ["restaurant", "food", "coffee"],
+      excludedTerms: ["consultancy"],
+    },
+  },
 ];
 
 function detectBusinessIntent(query: string): BusinessIntent {
@@ -495,6 +648,19 @@ function detectBusinessIntent(query: string): BusinessIntent {
   }
 
   const words = extractOriginalWords(q);
+
+  if (words.length === 0) {
+    return {
+      primaryNoun: q,
+      qualifiers: [],
+      industryDomain: "general",
+      requiredTerms: [],
+      excludedTerms: [],
+      isGenericQuery: true,
+      specificityLevel: "broad",
+    };
+  }
+
   let primaryNoun: string;
   let qualifiers: string[];
   if (words.length >= 2) {
@@ -502,7 +668,7 @@ function detectBusinessIntent(query: string): BusinessIntent {
     primaryNoun = specificWord;
     qualifiers = words.filter(w => w !== specificWord);
   } else {
-    primaryNoun = words[0] || q;
+    primaryNoun = words[0];
     qualifiers = [];
   }
 
@@ -618,7 +784,17 @@ interface ScoreInput {
 function termAppearsUnnegated(haystack: string, term: string): boolean {
   const esc = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const re = new RegExp(`\\b${esc}\\b`, "i");
-  if (!re.test(haystack)) return false;
+  if (!re.test(haystack)) {
+    // e-commerce / ecommerce equivalence: retry with internal hyphens stripped
+    // on BOTH sides so word-boundary matching works for either spelling.
+    const flatEsc = esc.replace(/-/g, "");
+    const flatHaystack = haystack.replace(/-/g, "");
+    if (flatEsc === esc && flatHaystack === haystack) return false;
+    const flatRe = new RegExp(`\\b${flatEsc}\\b`, "i");
+    if (!flatRe.test(flatHaystack)) return false;
+    const flatNegRe = new RegExp(`\\b(?:non|not)[-\\s]?${flatEsc}\\b`, "i");
+    return !flatNegRe.test(flatHaystack);
+  }
   const negRe = new RegExp(`\\b(?:non[-\\s]?|not[-\\s])${esc}\\b`, "i");
   return !negRe.test(haystack);
 }
@@ -650,7 +826,7 @@ function scoreActivity(
 
   // LEVEL 1: EXACT NAME MATCH (1.0)
   if (nn === nq) {
-    return { activityId: activity.id, matchType: "exact", score: 1.0, reasons: ["Exact official activity name match"] };
+    return { activityId: activity.id, matchType: "exact", score: 1.0, reasons: [`Exact official activity match: "${activity.officialName}"`] };
   }
 
   // LEVEL 2: EXACT CODE MATCH (0.98)
@@ -662,7 +838,7 @@ function scoreActivity(
   // Primary noun in the name + a qualifier (or a term from the qualifier's own
   // variation family) also present. A "Cardiac Clinic" satisfies the medical
   // qualifier because "clinic" belongs to the same concept family.
-  const primaryInName = nn.includes(intent.primaryNoun.toLowerCase());
+  const primaryInName = [...primaryConceptTerms(intent.primaryNoun)].some(t => t.length > 2 && nn.includes(t));
   const qualifierFamilyTerms = new Set<string>();
   for (const q of intent.qualifiers) {
     const ql = q.toLowerCase();
@@ -675,12 +851,12 @@ function scoreActivity(
     intent.qualifiers.some(q => nn.includes(q.toLowerCase())) ||
     [...qualifierFamilyTerms].some(t => nn.includes(t));
 
-  if (primaryInName && qualifierInName) {
+  if (!isGenericWord(intent.primaryNoun) && primaryInName && qualifierInName) {
     return {
       activityId: activity.id,
       matchType: "strong",
       score: 0.92,
-      reasons: [`Business concept match: ${intent.primaryNoun} + qualifier in "${activity.officialName}"`],
+      reasons: [`Matched: ${intent.qualifiers[0] ?? intent.primaryNoun} ${intent.primaryNoun} — "${activity.officialName}"`],
     };
   }
 
@@ -690,6 +866,15 @@ function scoreActivity(
   const avgWeight = matchedWeights.length > 0 ? matchedWeights.reduce((a, b) => a + b, 0) / matchedWeights.length : 0;
 
   if (matchedOriginals.length >= 2) {
+    // Generic-only terms (e.g. "trading company") must never rank as strong.
+    if (matchedOriginals.every(w => isGenericWord(w))) {
+      return {
+        activityId: activity.id,
+        matchType: "related",
+        score: 0.70,
+        reasons: [`Related match on generic terms "${matchedOriginals.join(", ")}" — "${activity.officialName}"`],
+      };
+    }
     const hasStrongWord = matchedWeights.some(w => w >= 0.40);
     const baseScore = hasStrongWord ? 0.85 : 0.78;
     const countBonus = Math.min((matchedOriginals.length - 2) * 0.02, 0.05);
@@ -701,7 +886,7 @@ function scoreActivity(
         activityId: activity.id,
         matchType: "strong",
         score: Math.round(score * 100) / 100,
-        reasons: [`Multi-term match: ${matchedOriginals.join(", ")} in "${activity.officialName}"`],
+        reasons: [`Matched: ${matchedOriginals.join(" + ")} — "${activity.officialName}"`],
       };
     }
   }
@@ -712,8 +897,7 @@ function scoreActivity(
   // a single incidental token (e.g. "health", "business") from satisfying
   // both sides of the intent.
   const pnLower = intent.primaryNoun.toLowerCase();
-  const primaryTerms = new Set<string>([pnLower]);
-  for (const v of WORD_VARIATIONS[pnLower] ?? []) primaryTerms.add(v);
+  const primaryTerms = primaryConceptTerms(pnLower);
 
   const namePrimary = [...primaryTerms].some(t => t.length > 2 && nn.includes(t));
   const nameQualifierDistinct = intent.qualifiers.some(q => {
@@ -728,7 +912,7 @@ function scoreActivity(
       activityId: activity.id,
       matchType: "related",
       score: 0.75,
-      reasons: [`Intent match: ${intent.primaryNoun} + qualifier (via expansion)`],
+      reasons: [`Matched: ${intent.primaryNoun} (+ ${intent.qualifiers.slice(0, 2).join(", ")}) — "${activity.officialName}"`],
     };
   }
 
@@ -753,7 +937,7 @@ function scoreActivity(
         activityId: activity.id,
         matchType: "related",
         score: Math.round(score * 100) / 100,
-        reasons: [`Expanded term match: ${expandedInName.slice(0, 3).join(", ")} in "${activity.officialName}"`],
+        reasons: [`Related term match: ${expandedInName.slice(0, 3).join(", ")} — "${activity.officialName}"`],
       };
     }
   }
@@ -766,13 +950,12 @@ function scoreActivity(
     const phraseInDesc = nq.length > 2 && desc.includes(nq);
     const originalsInDesc = keywords.originalWords.filter(w => desc.includes(w));
     if (phraseInDesc || originalsInDesc.length >= 2) {
-      const matchedList = phraseInDesc ? [nq] : originalsInDesc.slice(0, 3);
       const score = phraseInDesc ? 0.66 : 0.62 + Math.min(originalsInDesc.length * 0.01, 0.04);
       return {
         activityId: activity.id,
         matchType: "related",
         score: Math.round(score * 100) / 100,
-        reasons: [`Authority description mentions: ${matchedList.join(", ")}`],
+        reasons: [`Listed by the authority: "${activity.officialName}" (${nq} appears in the official description)`],
       };
     }
   }
@@ -795,7 +978,7 @@ function scoreActivity(
         activityId: activity.id,
         matchType: "related",
         score: Math.round(score * 100) / 100,
-        reasons: [`Category/domain match: ${activity.officialCategory ?? activity.activityGroup} + keyword "${matchedOriginals[0]}"`],
+        reasons: [`Matches the ${intent.industryDomain} category behind "${matchedOriginals[0]}"`],
       };
     }
   }
@@ -815,7 +998,7 @@ function scoreActivity(
         activityId: activity.id,
         matchType: "related",
         score,
-        reasons: [`Single domain word match: "${word}" (weight: ${weight})`],
+        reasons: [`Related match on "${word}" (a ${intent.industryDomain} concept)`],
       };
     }
 
@@ -828,7 +1011,7 @@ function scoreActivity(
           activityId: activity.id,
           matchType: "related",
           score: Math.round(score * 100) / 100,
-          reasons: [`Generic query match: "${word}" in "${activity.officialName}"`],
+          reasons: [`Matched "${word}" in "${activity.officialName}"`],
         };
       }
     }
@@ -845,125 +1028,246 @@ function scoreActivity(
 const MIN_RELEVANCE = 0.62;
 
 type CandidateRow = {
-  activity: typeof activities.$inferSelect;
-  jurisdiction: typeof jurisdictions.$inferSelect;
-  licenceType: typeof licenceTypes.$inferSelect | null;
-  source: typeof sources.$inferSelect | null;
+  activity: {
+    id: string;
+    officialName: string;
+    normalizedName: string;
+    activityCode: string | null;
+    description: string | null;
+    officialCategory: string | null;
+    activityGroup: string | null;
+    approvalSignal: ApprovalSignalValue;
+    approvalStatus: string;
+    verificationStatus: string;
+    lastVerified: string | null;
+  };
+  jurisdiction: {
+    id: string;
+    name: string;
+    slug: string;
+    emirate: string;
+    jurisdictionType: string;
+  };
+  licenceType: { id: string; name: string; code: string } | null;
+  source: { id: string; url: string; title: string; lastVerified: string | null } | null;
 };
+
+type AvailabilityRow = {
+  id: string;
+  slug: string;
+  name: string;
+  emirate: string;
+  jurisdictionType: string;
+};
+
+/**
+ * Performance (STEP 6.1): all seven retrieval tiers are executed in a SINGLE
+ * UNION ALL query. On the remote Neon database each round trip costs ~290ms of
+ * WAN latency, so the historical "7 queries in parallel" pattern serialized to
+ * ~1900ms/p50. One parenthesised UNION (per-branch ORDER BY/LIMIT preserved)
+ * keeps every tier's exact candidate semantics while collapsing to a single
+ * network round trip (~300ms).
+ *
+ * Each branch mirrors the previous drizzle chain EXACTLY:
+ *   - same WHERE predicates, same ORDER BY length(normalized_name), same LIMIT
+ *   - identical joins (jurisdiction inner, licenceType + source left)
+ * Only the column projection is narrowed to the fields the scorer and the
+ * response actually consume (activity payload drops ~40% of row width).
+ */
+const CANDIDATE_SELECT = `
+  activities.id AS a_id,
+  activities.official_name AS a_official_name,
+  activities.normalized_name AS a_normalized_name,
+  activities.activity_code AS a_activity_code,
+  activities.description AS a_description,
+  activities.official_category AS a_official_category,
+  activities.activity_group AS a_activity_group,
+  activities.approval_signal AS a_approval_signal,
+  activities.approval_status AS a_approval_status,
+  activities.verification_status AS a_verification_status,
+  activities.last_verified AS a_last_verified,
+  jurisdictions.id AS j_id,
+  jurisdictions.name AS j_name,
+  jurisdictions.slug AS j_slug,
+  jurisdictions.emirate AS j_emirate,
+  jurisdictions.jurisdiction_type AS j_jurisdiction_type,
+  licence_types.id AS lt_id,
+  licence_types.name AS lt_name,
+  licence_types.code AS lt_code,
+  sources.id AS s_id,
+  sources.url AS s_url,
+  sources.title AS s_title,
+  sources.last_verified AS s_last_verified`;
+
+const CANDIDATE_FROM = `
+  FROM activities
+  INNER JOIN jurisdictions ON jurisdictions.id = activities.jurisdiction_id
+  LEFT JOIN licence_types ON licence_types.id = activities.licence_type_id
+  LEFT JOIN sources ON EXISTS (
+    SELECT 1 FROM activity_sources
+    WHERE activity_sources.activity_id = activities.id
+      AND activity_sources.source_id = sources.id
+  )`;
+
+/** SQL string literal (quotes escaped). ILIKE wildcards are intentional. */
+function sqlLit(s: string): string {
+  return `'${s.replace(/'/g, "''")}'`;
+}
+function likeLit(term: string): string {
+  return `'%${term.replace(/'/g, "''")}%'`;
+}
+
+function mapCandidateRow(r: Record<string, unknown>): CandidateRow {
+  const d = (v: unknown): string | null => (v == null ? null : String(v));
+  return {
+    activity: {
+      id: String(r.a_id),
+      officialName: String(r.a_official_name),
+      normalizedName: String(r.a_normalized_name),
+      activityCode: r.a_activity_code == null ? null : String(r.a_activity_code),
+      description: d(r.a_description),
+      officialCategory: d(r.a_official_category),
+      activityGroup: d(r.a_activity_group),
+      approvalSignal: String(r.a_approval_signal) as ApprovalSignalValue,
+      approvalStatus: String(r.a_approval_status),
+      verificationStatus: String(r.a_verification_status),
+      lastVerified: d(r.a_last_verified),
+    },
+    jurisdiction: {
+      id: String(r.j_id),
+      name: String(r.j_name),
+      slug: String(r.j_slug),
+      emirate: String(r.j_emirate),
+      jurisdictionType: String(r.j_jurisdiction_type),
+    },
+    licenceType:
+      r.lt_id == null
+        ? null
+        : { id: String(r.lt_id), name: String(r.lt_name), code: String(r.lt_code) },
+    source:
+      r.s_id == null
+        ? null
+        : {
+            id: String(r.s_id),
+            url: String(r.s_url),
+            title: String(r.s_title),
+            lastVerified: d(r.s_last_verified),
+          },
+  };
+}
 
 async function fetchCandidates(
   q: string,
   intent: BusinessIntent,
-  keywords: ExtractedKeywords
-): Promise<{ rows: CandidateRow[]; evaluated: number }> {
+  keywords: ExtractedKeywords,
+  includeAvailability = false
+): Promise<{ rows: CandidateRow[]; evaluated: number; availability: AvailabilityRow[] }> {
   const nq = keywords.originalWords.join(" ");
   const trimmed = q.trim();
-
-  const baseSelect = () =>
-    db
-      .select({
-        activity: activities,
-        jurisdiction: jurisdictions,
-        licenceType: licenceTypes,
-        source: sources,
-      })
-      .from(activities)
-      .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))
-      .leftJoin(licenceTypes, eq(activities.licenceTypeId, licenceTypes.id))
-      .leftJoin(
-        sources,
-        sql`EXISTS (SELECT 1 FROM ${activitySources} WHERE ${activitySources.activityId} = ${activities.id} AND ${activitySources.sourceId} = ${sources.id})`
-      );
 
   const nonGenericExpanded = keywords.expandedTerms
     .filter(t => t.length > 3 && !isGenericWord(t))
     .slice(0, 4);
 
-  const nameLen = sql`length(${activities.normalizedName})`;
+  const branches: string[] = [];
 
-  const [
-    exactName,
-    exactCode,
-    nameContains,
-    primaryNounMatches,
-    expandedTermMatches,
-    categoryMatches,
-    descriptionMatches,
-  ] = await Promise.all([
-    // Tier 1: exact normalised name
-    baseSelect().where(eq(activities.normalizedName, nq)).limit(50),
-    // Tier 2: exact activity code
-    trimmed.length <= 20
-      ? baseSelect().where(eq(activities.activityCode, trimmed)).limit(20)
-      : Promise.resolve([] as CandidateRow[]),
-    // Tier 3: name contains full query phrase (shortest names first = most specific)
-    nq.length >= 3
-      ? baseSelect()
-          .where(ilike(activities.normalizedName, `%${nq}%`))
-          .orderBy(nameLen)
-          .limit(300)
-      : Promise.resolve([] as CandidateRow[]),
-    // Tier 4: name contains primary noun (skipped for generic words)
-    intent.primaryNoun.length > 2 && !isGenericWord(intent.primaryNoun)
-      ? baseSelect()
-          .where(ilike(activities.normalizedName, `%${intent.primaryNoun}%`))
-          .orderBy(nameLen)
-          .limit(250)
-      : Promise.resolve([] as CandidateRow[]),
-    // Tier 5: name contains expanded domain terms
-    nonGenericExpanded.length > 0
-      ? baseSelect()
-          .where(
-            or(
-              ...nonGenericExpanded.map(t =>
-                ilike(activities.normalizedName, `%${t}%`)
-              )
-            )
-          )
-          .orderBy(nameLen)
-          .limit(200)
-      : Promise.resolve([] as CandidateRow[]),
-    // Tier 6: official category or activity group mentions an original word / primary noun
-    nq.length >= 3
-      ? baseSelect()
-          .where(
-            or(
-              ...keywords.originalWords.slice(0, 4).map(w =>
-                or(
-                  ilike(activities.officialCategory, `%${w}%`),
-                  ilike(activities.activityGroup, `%${w}%`)
-                )
-              ),
-              ilike(activities.officialCategory, `%${intent.primaryNoun}%`),
-              ilike(activities.activityGroup, `%${intent.primaryNoun}%`)
-            )
-          )
-          .limit(150)
-      : Promise.resolve([] as CandidateRow[]),
-    // Tier 7: authority's own description mentions the phrase or primary noun
-    nq.length >= 3
-      ? baseSelect()
-          .where(
-            or(
-              ilike(activities.description, `%${nq}%`),
-              ilike(activities.description, `%${intent.primaryNoun}%`)
-            )
-          )
-          .limit(150)
-      : Promise.resolve([] as CandidateRow[]),
-  ]);
+  // Tier 1: exact normalised name
+  branches.push(
+    `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.normalized_name = ${sqlLit(nq)}\nLIMIT 20`
+  );
+  // Tier 2: exact activity code
+  if (trimmed.length <= 20) {
+    branches.push(
+      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.activity_code = ${sqlLit(trimmed)}\nLIMIT 10`
+    );
+  }
+  // Tier 3: name contains full query phrase (shortest names first = most specific)
+  if (nq.length >= 3) {
+    branches.push(
+      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.normalized_name ILIKE ${likeLit(nq)}\nORDER BY length(activities.normalized_name)\nLIMIT 200`
+    );
+  }
+  // Tier 4: name contains primary noun (skipped for generic words)
+  if (intent.primaryNoun.length > 2 && !isGenericWord(intent.primaryNoun)) {
+    branches.push(
+      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.normalized_name ILIKE ${likeLit(intent.primaryNoun)}\nORDER BY length(activities.normalized_name)\nLIMIT 150`
+    );
+  }
+  // Tier 5: name contains expanded domain terms
+  if (nonGenericExpanded.length > 0) {
+    branches.push(
+      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE (${nonGenericExpanded
+        .map(t => `activities.normalized_name ILIKE ${likeLit(t)}`)
+        .join(" OR ")})\nORDER BY length(activities.normalized_name)\nLIMIT 120`
+    );
+  }
+  // Tier 6: official category or activity group mentions an original word / primary noun
+  if (nq.length >= 3) {
+    const categoryConjs = keywords.originalWords.slice(0, 4).map(
+      w => `(activities.official_category ILIKE ${likeLit(w)} OR activities.activity_group ILIKE ${likeLit(w)})`
+    );
+    categoryConjs.push(
+      `activities.official_category ILIKE ${likeLit(intent.primaryNoun)} OR activities.activity_group ILIKE ${likeLit(intent.primaryNoun)}`
+    );
+    branches.push(
+      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE (${categoryConjs.join(" OR ")})\nLIMIT 80`
+    );
+  }
+  // Tier 7: authority's own description mentions the phrase or primary noun
+  if (nq.length >= 3) {
+    branches.push(
+      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE (activities.description ILIKE ${likeLit(nq)} OR activities.description ILIKE ${likeLit(intent.primaryNoun)})\nLIMIT 80`
+    );
+  }
 
-  const all = [
-    ...exactName,
-    ...exactCode,
-    ...nameContains,
-    ...primaryNounMatches,
-    ...expandedTermMatches,
-    ...categoryMatches,
-    ...descriptionMatches,
-  ];
+  if (branches.length === 0 && !includeAvailability) {
+    return { rows: [], evaluated: 0, availability: [] };
+  }
 
-  return { rows: all, evaluated: all.length };
+  // STEP 6.1: when searchUnified needs jurisdiction availability, fold the
+  // (previously separate) DISTINCT query into the SAME union so the whole
+  // response costs exactly ONE network round trip instead of two.
+  if (includeAvailability) {
+    branches.push(
+      `(SELECT DISTINCT
+        NULL::uuid AS a_id, NULL::text AS a_official_name, NULL::text AS a_normalized_name,
+        NULL::varchar AS a_activity_code, NULL::text AS a_description,
+        NULL::varchar AS a_official_category, NULL::varchar AS a_activity_group,
+        NULL::approval_signal AS a_approval_signal, NULL::approval_status AS a_approval_status,
+        NULL::verification_status AS a_verification_status, NULL::date AS a_last_verified,
+        jurisdictions.id AS j_id, jurisdictions.name AS j_name, jurisdictions.slug AS j_slug,
+        jurisdictions.emirate AS j_emirate, jurisdictions.jurisdiction_type AS j_jurisdiction_type,
+        NULL::uuid AS lt_id, NULL::varchar AS lt_name, NULL::varchar AS lt_code,
+        NULL::uuid AS s_id, NULL::varchar AS s_url, NULL::varchar AS s_title, NULL::date AS s_last_verified
+        FROM jurisdictions
+        INNER JOIN activities ON activities.jurisdiction_id = jurisdictions.id)`
+    );
+  }
+
+  // Parentheses around every branch are REQUIRED so each SELECT's own
+  // ORDER BY / LIMIT is honoured inside the set operation.
+  const unionSql = branches.map(b => `(${b})`).join("\nUNION ALL\n");
+
+  const result = await db.execute(sql.raw(unionSql));
+  const arr = Array.isArray(result)
+    ? result
+    : (result as { rows?: unknown[] }).rows ?? (result as unknown[])[0] ?? [];
+
+  const flat = arr as Record<string, unknown>[];
+  const rows = flat.filter(r => r.a_id != null).map(mapCandidateRow);
+  const availability: AvailabilityRow[] = includeAvailability
+    ? flat
+        .filter(r => r.a_id == null && r.j_id != null)
+        .map(r => ({
+          id: String(r.j_id),
+          slug: String(r.j_slug),
+          name: String(r.j_name),
+          emirate: String(r.j_emirate),
+          jurisdictionType: String(r.j_jurisdiction_type),
+        }))
+    : [];
+
+  return { rows, evaluated: rows.length, availability };
 }
 
 // ============================================================
@@ -981,26 +1285,79 @@ const TYPE_PRIORITY: Record<MatchType, number> = {
 interface PipelineOutput {
   items: SearchResultItem[];
   intent: BusinessIntent;
+  parsed: ParsedQuery;
   candidatesEvaluated: number;
+  availability: AvailabilityRow[];
 }
 
-async function runPipeline(options: SearchOptions): Promise<PipelineOutput> {
+/**
+ * The activity clearly trades/supplies goods or equipment for a domain rather
+ * than operating the domain itself. E.g. query "restaurant" should never rank
+ * "Wholesale of Restaurants and Kitchens Equipment and Outfit Trading" as a
+ * strong match — but the user may still be interested, so we cap it to RELATED.
+ */
+const GOODS_CONTEXT_MARKERS =
+  /\b(equipment|machiner(?:y|ies)|machines?|tools?|devices?|apparatus|supplies?|requisites?|instruments?|fixtures?|furnishings?|fit[\s-]?outs?|outfits?|spare\s+parts?|wholesale|import|retail\s+of)\b/i;
+
+function capGoodsContextMatch(
+  officialName: string,
+  intent: BusinessIntent,
+  bestScore: ScoredResult,
+  queryAsksForGoods: boolean,
+): ScoredResult {
+  if (bestScore.matchType !== "strong" && bestScore.matchType !== "exact") return bestScore;
+  if (queryAsksForGoods) return bestScore;
+
+  const lower = officialName.toLowerCase();
+  if (!GOODS_CONTEXT_MARKERS.test(lower)) return bestScore;
+
+  const domainHits = [intent.primaryNoun, ...intent.requiredTerms]
+    .filter((t) => t.length > 2)
+    .some((t) => lower.includes(t.toLowerCase()));
+  if (!domainHits) return bestScore;
+
+  return {
+    activityId: bestScore.activityId,
+    matchType: "related",
+    score: Math.min(bestScore.score, 0.72),
+    reasons: [
+      `Matches "${intent.primaryNoun}" domain, but this activity is goods/equipment trading — related, not the business operation itself.`,
+    ],
+  };
+}
+
+async function runPipeline(
+  options: SearchOptions,
+  opts: { includeAvailability?: boolean } = {}
+): Promise<PipelineOutput> {
   const { q } = options;
+  const includeAvailability = opts.includeAvailability ?? false;
 
-  const intent = detectBusinessIntent(q);
-  const keywords = extractKeywords(q);
+  const parsed = parseQuery(q);
+  const intent = detectBusinessIntent(parsed.businessPhrase);
+  const keywords = extractKeywords(parsed.businessPhrase);
 
-  if (keywords.originalWords.length === 0 && !/\d/.test(q)) {
-    return { items: [], intent, candidatesEvaluated: 0 };
+  if (parsed.businessTerms.length === 0 && !/\d/.test(q)) {
+    const availability = includeAvailability
+      ? (await fetchCandidates(q, intent, keywords, true)).availability
+      : [];
+    return { items: [], intent, parsed, candidatesEvaluated: 0, availability };
   }
 
-  const { rows, evaluated } = await fetchCandidates(q, intent, keywords);
+  const { rows, evaluated, availability } = await fetchCandidates(
+    q,
+    intent,
+    keywords,
+    includeAvailability
+  );
+
+  const queryAsksForGoods = GOODS_CONTEXT_MARKERS.test(parsed.businessPhrase);
 
   const candidatesMap = new Map<string, { row: CandidateRow; bestScore: ScoredResult }>();
 
   for (const row of rows) {
     const id = row.activity.id;
-    const scored = scoreActivity(intent, keywords, {
+    let scored = scoreActivity(intent, keywords, {
       id: row.activity.id,
       officialName: row.activity.officialName,
       normalizedName: row.activity.normalizedName,
@@ -1010,6 +1367,8 @@ async function runPipeline(options: SearchOptions): Promise<PipelineOutput> {
       activityGroup: row.activity.activityGroup,
     });
     if (!scored) continue;
+
+    scored = capGoodsContextMatch(row.activity.officialName, intent, scored, queryAsksForGoods);
 
     const existing = candidatesMap.get(id);
     if (!existing || scored.score > existing.bestScore.score) {
@@ -1021,6 +1380,11 @@ async function runPipeline(options: SearchOptions): Promise<PipelineOutput> {
 
   for (const { row, bestScore } of candidatesMap.values()) {
     if (bestScore.score < MIN_RELEVANCE) continue;
+
+    // A jurisdiction mentioned in the query (e.g. "restaurant in RAKEZ")
+    // filters the result set to that jurisdiction. Otherwise all indexed
+    // jurisdictions are searched.
+    if (parsed.jurisdictionSlug && row.jurisdiction.slug !== parsed.jurisdictionSlug) continue;
 
     if (options.emirate && row.jurisdiction.emirate !== options.emirate) continue;
     if (options.jurisdictionType && row.jurisdiction.jurisdictionType !== options.jurisdictionType) continue;
@@ -1076,7 +1440,7 @@ async function runPipeline(options: SearchOptions): Promise<PipelineOutput> {
       a.jurisdiction.slug.localeCompare(b.jurisdiction.slug);
   });
 
-  return { items, intent, candidatesEvaluated: evaluated };
+  return { items, intent, parsed, candidatesEvaluated: evaluated, availability };
 }
 
 /** Flat, paginated search results (backwards-compatible entry point). */
@@ -1089,12 +1453,17 @@ export async function search(options: SearchOptions): Promise<SearchResultItem[]
 /**
  * Unified search: flat paginated results PLUS per-jurisdiction grouping and
  * explicit availability across every indexed jurisdiction.
+ *
+ * STEP 6.1: the whole response costs exactly ONE database round trip — the
+ * availability query is folded into the candidate UNION as an extra branch.
  */
 export async function searchUnified(options: SearchOptions): Promise<UnifiedSearchResponse> {
   const startedAt = Date.now();
   const { limit = 20, offset = 0, groupLimit = 8 } = options;
 
-  const { items, intent, candidatesEvaluated } = await runPipeline(options);
+  const pipeline = await runPipeline(options, { includeAvailability: true });
+
+  const { items, intent, parsed, candidatesEvaluated, availability: allJurisdictions } = pipeline;
 
   // Flat page
   const results = items.slice(offset, offset + limit);
@@ -1129,18 +1498,8 @@ export async function searchUnified(options: SearchOptions): Promise<UnifiedSear
 
   // Every jurisdiction whose official activity data is actually imported must
   // report availability explicitly. Registry placeholder rows without any
-  // imported activity are excluded.
-  const allJurisdictions = await db
-    .selectDistinct({
-      id: jurisdictions.id,
-      slug: jurisdictions.slug,
-      name: jurisdictions.name,
-      emirate: jurisdictions.emirate,
-      jurisdictionType: jurisdictions.jurisdictionType,
-    })
-    .from(jurisdictions)
-    .innerJoin(activities, eq(activities.jurisdictionId, jurisdictions.id));
-
+  // imported activity are excluded. (Rows fetched concurrently with the
+  // candidate UNION above; never re-query.)
   const jurisdictionGroups: JurisdictionGroup[] = [];
   const unmatched: SearchAvailability["unmatched"] = [];
 
@@ -1177,6 +1536,11 @@ export async function searchUnified(options: SearchOptions): Promise<UnifiedSear
       industryDomain: intent.industryDomain,
       specificityLevel: intent.specificityLevel,
       isGenericQuery: intent.isGenericQuery,
+      searchIntents: parsed.searchIntents,
+      jurisdictionSlug: parsed.jurisdictionSlug,
+      jurisdictionName: parsed.jurisdictionName,
+      businessTerms: parsed.businessTerms,
+      typoCorrected: parsed.correctedQuery !== parsed.originalQuery,
     },
     meta: {
       tookMs: Date.now() - startedAt,

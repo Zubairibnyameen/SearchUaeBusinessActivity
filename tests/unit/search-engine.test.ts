@@ -6,26 +6,10 @@ import type { BusinessIntent } from "@/lib/search/types";
 // accessible inside the factory.
 
 const { dbMock } = vi.hoisted(() => ({
-  dbMock: { select: vi.fn(), selectDistinct: vi.fn() },
+  dbMock: { select: vi.fn(), selectDistinct: vi.fn(), execute: vi.fn() },
 }));
 
 vi.mock("@/lib/db", () => ({ db: dbMock }));
-
-function makeChain(data: unknown[]) {
-  const resolveLimit = vi.fn().mockResolvedValue(data);
-  const resolveOrderByLimit = vi.fn().mockResolvedValue(data);
-  const orderBy = vi.fn().mockReturnValue({ limit: resolveOrderByLimit });
-  const where = vi.fn().mockReturnValue({ orderBy, limit: resolveLimit });
-  const leftJoin2 = vi.fn().mockReturnValue({ where });
-  const leftJoin1 = vi.fn().mockReturnValue({ leftJoin: leftJoin2, where });
-  const innerJoin = vi.fn().mockReturnValue({ leftJoin: leftJoin1, where });
-  const from = vi.fn().mockReturnValue({ innerJoin, leftJoin: leftJoin1, where });
-  return { from, innerJoin, leftJoin: leftJoin1, leftJoin2, where, orderBy, limit: resolveLimit, resolveOrderByLimit };
-}
-
-const emptyChain = makeChain([]);
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 interface CandidateOverrides {
   id?: string;
@@ -100,29 +84,68 @@ function makeJurisdictionRow(
 }
 
 /**
- * Wire up dbMock.select and dbMock.selectDistinct so that:
- * - select() is called 7 times (fetchCandidates tiers) and each returns
- *   a chain resolving with `candidateRows`.
- * - selectDistinct() returns a chain resolving with `jurisdictionRows`.
+ * Wire up dbMock so that:
+ * - execute() returns the candidate rows flattened to the exact alias shape
+ *   the engine's single UNION ALL query produces (STEP 6.1 retrieval collapse),
+ *   with the availability-branch rows (a_* NULL, j_* set) appended.
  *
  * Pass candidateRows = [] to test "no results" paths.
  */
+function toFlatCandidate(c: any) {
+  return {
+    a_id: c.activity.id,
+    a_official_name: c.activity.officialName,
+    a_normalized_name: c.activity.normalizedName,
+    a_activity_code: c.activity.activityCode,
+    a_description: c.activity.description,
+    a_official_category: c.activity.officialCategory,
+    a_activity_group: c.activity.activityGroup,
+    a_approval_signal: c.activity.approvalSignal,
+    a_approval_status: c.activity.approvalStatus,
+    a_verification_status: c.activity.verificationStatus,
+    a_last_verified: c.activity.lastVerified,
+    j_id: c.jurisdiction.id,
+    j_name: c.jurisdiction.name,
+    j_slug: c.jurisdiction.slug,
+    j_emirate: c.jurisdiction.emirate,
+    j_jurisdiction_type: c.jurisdiction.jurisdictionType,
+    lt_id: c.licenceType?.id,
+    lt_name: c.licenceType?.name,
+    lt_code: c.licenceType?.code,
+    s_id: c.source?.id,
+    s_url: c.source?.url,
+    s_title: c.source?.title,
+    s_last_verified: c.source?.lastVerified,
+  };
+}
+
+/** Flat availability-branch rows (a_* NULL, j_* populated), as the engine's UNION returns. */
+function toFlatAvailabilityRow(j: any) {
+  return {
+    a_id: null, a_official_name: null, a_normalized_name: null, a_activity_code: null, a_description: null,
+    a_official_category: null, a_activity_group: null, a_approval_signal: null, a_approval_status: null,
+    a_verification_status: null, a_last_verified: null,
+    j_id: j.id,
+    j_name: j.name,
+    j_slug: j.slug,
+    j_emirate: j.emirate,
+    j_jurisdiction_type: j.jurisdictionType,
+    lt_id: null, lt_name: null, lt_code: null,
+    s_id: null, s_url: null, s_title: null, s_last_verified: null,
+  };
+}
+
 function setupDbMock(
   candidateRows: unknown[],
   jurisdictionRows?: unknown[],
 ) {
-  const chains = Array.from({ length: 7 }, () => makeChain(candidateRows));
-  let callIdx = 0;
-  dbMock.select.mockImplementation(() => chains[Math.min(callIdx++, chains.length - 1)] ?? emptyChain);
-
+  dbMock.execute.mockReset();
   const jRows = jurisdictionRows ?? [makeJurisdictionRow()];
-  const distinctResolve = vi.fn().mockResolvedValue(jRows);
-  dbMock.selectDistinct.mockReset();
-  dbMock.selectDistinct.mockReturnValue({
-    from: vi.fn().mockReturnValue({
-      innerJoin: distinctResolve,
-    }),
-  });
+  dbMock.execute.mockImplementation(() =>
+    Promise.resolve([
+      ...(candidateRows as any[]).map(toFlatCandidate),
+      ...jRows.map(toFlatAvailabilityRow),
+    ]));
 }
 
 // ─── Import AFTER mock is set up ──────────────────────────────────────────────

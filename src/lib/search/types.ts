@@ -5,6 +5,14 @@
 
 export type MatchType = "exact" | "strong" | "related" | "low_confidence" | "ai_suggestion";
 
+export type SearchIntent =
+  | "ACTIVITY_SEARCH"
+  | "JURISDICTION_SEARCH"
+  | "LICENCE_SEARCH"
+  | "APPROVAL_SEARCH"
+  | "FEE_SEARCH"
+  | "COMPARISON_INTENT";
+
 export type ApprovalSignalValue =
   | "no_signal"
   | "third_party_approval_indicated"
@@ -95,6 +103,15 @@ export interface UnifiedSearchResponse {
     industryDomain: string;
     specificityLevel: string;
     isGenericQuery: boolean;
+    /** General search intent(s), strongest first, e.g. ["FEE_SEARCH","ACTIVITY_SEARCH"]. */
+    searchIntents: SearchIntent[];
+    /** Indexed jurisdiction mentioned in the query (results filtered to it). */
+    jurisdictionSlug: string | null;
+    jurisdictionName: string | null;
+    /** Line-level understanding: the business words that drove the match. */
+    businessTerms: string[];
+    /** True when the raw query was changed by typo correction. */
+    typoCorrected: boolean;
   };
   meta: {
     tookMs: number;
