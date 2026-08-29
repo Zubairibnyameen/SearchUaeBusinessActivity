@@ -1,5 +1,12 @@
 import Link from "next/link";
 
+const FOOTER_LINKS = [
+  { href: "/search", label: "Search Activities" },
+  { href: "/activities", label: "Browse Activities" },
+  { href: "/jurisdictions", label: "Jurisdictions" },
+  { href: "/compare", label: "Compare" },
+];
+
 export function Footer() {
   return (
     <footer className="border-t border-neutral-200 bg-white">
@@ -8,25 +15,16 @@ export function Footer() {
           <div className="text-sm text-neutral-500">
             UAE Activity Intelligence Platform
           </div>
-          <nav className="flex gap-4 text-sm">
-            <Link
-              href="/activities"
-              className="text-neutral-500 hover:text-neutral-700"
-            >
-              Activities
-            </Link>
-            <Link
-              href="/jurisdictions"
-              className="text-neutral-500 hover:text-neutral-700"
-            >
-              Jurisdictions
-            </Link>
-            <Link
-              href="/compare"
-              className="text-neutral-500 hover:text-neutral-700"
-            >
-              Compare
-            </Link>
+          <nav aria-label="Footer" className="flex flex-wrap justify-center gap-4 text-sm">
+            {FOOTER_LINKS.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-neutral-500 hover:text-neutral-700"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
         <div className="mt-6 text-center text-sm">

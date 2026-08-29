@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -16,15 +17,21 @@ import {
 } from "@/components/ui/verification-badges";
 
 const EXAMPLE_QUERIES = [
-  "Digital Marketing Agency",
+  "Real estate brokerage",
+  "Medical clinic",
   "Restaurant",
-  "Medical Clinic",
-  "Software Development Company",
-  "General Trading",
-  "Real Estate Brokerage",
+  "Software development",
+  "Jewellery trading",
 ];
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Search UAE Business Activities",
+  description:
+    "Find UAE jurisdictions, licences, approvals and verified regulatory costs. Search indexed official activity data across DMCC, IFZA, RAKEZ, SPC Free Zone and Ajman Free Zone.",
+  alternates: { canonical: "/" },
+};
 
 async function getHomeStats() {
   const [activityAgg, jurisdictionCount, verifiedApprovalCount, feeCount] =

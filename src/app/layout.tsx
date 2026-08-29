@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
     default: "UAE Activity Intelligence | Business Activity & Jurisdiction Platform",
     template: "%s | UAE Activity Intelligence",
@@ -35,6 +36,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_AE",
     siteName: "UAE Activity Intelligence",
+  },
+  alternates: {
+    canonical: "/",
   },
 };
 

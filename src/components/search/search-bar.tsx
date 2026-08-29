@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export function SearchBar({ compact = false }: { compact?: boolean }) {
   const [query, setQuery] = useState("");
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const q = query.trim();
     if (q) {
-      router.push(`/search?q=${encodeURIComponent(q)}`);
+      startTransition(() => {
+        router.push(`/search?q=${encodeURIComponent(q)}`);
+      });
     }
   };
 
@@ -48,9 +51,11 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
           id="activity-search"
           type="text"
           autoComplete="off"
+          spellCheck={false}
           placeholder="What business activity do you want to start?"
           value={query}
           onChange={e => setQuery(e.target.value)}
+          aria-busy={isPending}
           className={cn(
             "min-w-0 flex-1 bg-transparent font-normal text-neutral-900 placeholder:text-neutral-400 focus:outline-none",
             compact ? "px-1 py-2 text-sm" : "px-2 py-2.5 text-base sm:text-lg"
@@ -58,12 +63,36 @@ export function SearchBar({ compact = false }: { compact?: boolean }) {
         />
         <button
           type="submit"
+          disabled={isPending || !query.trim()}
+          aria-label={isPending ? "Searching…" : "Search"}
           className={cn(
-            "shrink-0 rounded-lg bg-neutral-900 font-semibold text-white transition-colors hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/30",
+            "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-neutral-900 font-semibold text-white transition-colors hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/30 disabled:cursor-not-allowed disabled:opacity-60",
             compact ? "px-4 py-2 text-sm" : "px-6 py-3 text-sm sm:text-base"
           )}
         >
-          Search
+          {isPending && (
+            <svg
+              className="h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-90"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+          )}
+          {isPending ? "Searching…" : "Search"}
         </button>
       </div>
     </form>

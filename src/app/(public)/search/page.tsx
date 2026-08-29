@@ -14,12 +14,14 @@ export async function generateMetadata({
     return {
       title: "Search UAE Business Activities",
       description:
-        "Search 9,000+ official UAE business activities across DMCC, IFZA, RAKEZ, SPC Free Zone and Ajman Free Zone. Find jurisdictions, licences, approvals and regulatory costs.",
+        "Search official UAE business activities across DMCC, IFZA, RAKEZ, SPC Free Zone and Ajman Free Zone. Find jurisdictions, licences, approvals and regulatory costs.",
+      alternates: { canonical: "/search" },
     };
   }
   return {
     title: `"${query}" — UAE activity search results`,
     description: `Jurisdictions, licences, approval status and verified government fees for "${query}" across indexed UAE free zones and mainland authorities.`,
+    alternates: { canonical: `/search?q=${encodeURIComponent(query)}` },
     robots: { index: false },
   };
 }

@@ -2,13 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { activities, jurisdictions } from "@/lib/db/schema";
-import { formatEmirate, formatJurisdictionType } from "@/lib/format";
+import {
+  activities,
+  jurisdictions,
+  licenceTypes,
+} from "@/lib/db/schema";
+import {
+  formatDate,
+  formatEmirate,
+  formatJurisdictionType,
+} from "@/lib/format";
+import { VerifiedBadge } from "@/components/ui/verification-badges";
 
 export const metadata: Metadata = {
   title: "Indexed UAE Jurisdictions",
   description:
     "Browse the UAE free zones and mainland authorities currently indexed in UAE Activity Intelligence: DMCC, IFZA, RAKEZ, SPC Free Zone and Ajman Free Zone.",
+  alternates: { canonical: "/jurisdictions" },
 };
 
 export const dynamic = "force-dynamic";
@@ -16,12 +26,14 @@ export const dynamic = "force-dynamic";
 export default async function JurisdictionsPage() {
   const rows = await db
     .select({
+      id: jurisdictions.id,
       slug: jurisdictions.slug,
       name: jurisdictions.name,
       emirate: jurisdictions.emirate,
       type: jurisdictions.jurisdictionType,
       website: jurisdictions.officialWebsite,
       activityCount: sql<number>`COUNT(${activities.id})::int`,
+      lastVerified: sql<string | null>`MAX(${activities.lastVerified})`,
     })
     .from(jurisdictions)
     .leftJoin(activities, eq(activities.jurisdictionId, jurisdictions.id))
@@ -35,6 +47,30 @@ export default async function JurisdictionsPage() {
       jurisdictions.officialWebsite
     )
     .orderBy(jurisdictions.name);
+
+  // Licence types per jurisdiction (top counts) — database-backed only.
+  const licenceRows = await db
+    .select({
+      jurisdictionId: licenceTypes.jurisdictionId,
+      name: licenceTypes.name,
+      count: sql<number>`COUNT(${activities.id})::int`,
+    })
+    .from(licenceTypes)
+    .innerJoin(activities, eq(activities.licenceTypeId, licenceTypes.id))
+    .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))
+    .where(eq(jurisdictions.status, "active"))
+    .groupBy(licenceTypes.jurisdictionId, licenceTypes.name)
+    .orderBy(
+      licenceTypes.jurisdictionId,
+      sql`COUNT(${activities.id}) DESC`
+    );
+
+  const licenceByJurisdiction = new Map<string, { name: string; count: number }[]>();
+  for (const l of licenceRows) {
+    const list = licenceByJurisdiction.get(l.jurisdictionId) ?? [];
+    if (list.length < 3) list.push({ name: l.name, count: l.count });
+    licenceByJurisdiction.set(l.jurisdictionId, list);
+  }
 
   const indexed = rows.filter(r => r.activityCount > 0);
   const freeZones = indexed.filter(r => r.type === "free_zone");
@@ -63,7 +99,7 @@ export default async function JurisdictionsPage() {
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {freeZones.map(j => (
-                <JurisdictionCard key={j.slug} j={j} />
+                <JurisdictionCard key={j.slug} j={j} licenceTypes={licenceByJurisdiction.get(j.id) ?? []} />
               ))}
             </div>
           </>
@@ -76,7 +112,7 @@ export default async function JurisdictionsPage() {
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {mainlands.map(j => (
-                <JurisdictionCard key={j.slug} j={j} />
+                <JurisdictionCard key={j.slug} j={j} licenceTypes={licenceByJurisdiction.get(j.id) ?? []} />
               ))}
             </div>
           </>
@@ -100,22 +136,28 @@ export default async function JurisdictionsPage() {
   );
 }
 
+interface JurisdictionCardRow {
+  id: string;
+  slug: string;
+  name: string;
+  emirate: string;
+  type: string;
+  website: string | null;
+  activityCount: number;
+  lastVerified: string | null;
+}
+
 function JurisdictionCard({
   j,
+  licenceTypes,
 }: {
-  j: {
-    slug: string;
-    name: string;
-    emirate: string;
-    type: string;
-    website: string | null;
-    activityCount: number;
-  };
+  j: JurisdictionCardRow;
+  licenceTypes: { name: string; count: number }[];
 }) {
   return (
     <Link
       href={`/jurisdictions/${j.slug}`}
-      className="group rounded-xl border border-neutral-200 bg-white p-5 transition-all hover:border-neutral-300 hover:shadow-md"
+      className="group flex flex-col rounded-xl border border-neutral-200 bg-white p-5 transition-all hover:border-neutral-300 hover:shadow-md"
     >
       <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
         {formatJurisdictionType(j.type)}
@@ -124,10 +166,44 @@ function JurisdictionCard({
         {j.name}
       </h3>
       <p className="mt-0.5 text-sm text-neutral-500">{formatEmirate(j.emirate)}</p>
+
       <p className="mt-3 text-xs font-medium tabular-nums text-neutral-500">
         {j.activityCount.toLocaleString()}{" "}
         {j.activityCount === 1 ? "activity" : "activities"} indexed
       </p>
+
+      {licenceTypes.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {licenceTypes.map(lt => (
+            <span
+              key={lt.name}
+              className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-600"
+            >
+              {lt.name}
+            </span>
+          ))}
+          {licenceTypes.length === 3 && (
+            <span className="rounded-md px-1 py-0.5 text-[11px] text-neutral-400">
+              etc.
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center gap-1.5 border-t border-neutral-100 pt-3">
+        {j.lastVerified ? (
+          <>
+            <VerifiedBadge label="Source data dated" />
+            <span className="text-xs text-neutral-400">
+              {formatDate(j.lastVerified)}
+            </span>
+          </>
+        ) : (
+          <span className="text-xs text-neutral-400">
+            Verification date not recorded
+          </span>
+        )}
+      </div>
     </Link>
   );
 }

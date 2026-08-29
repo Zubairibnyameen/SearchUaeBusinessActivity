@@ -178,3 +178,143 @@ export function JurisdictionPill({
     </Link>
   );
 }
+
+/**
+ * Explicit per-record verification-state labels (mapped from the shared
+ * verification_status enum used by activities and approvals):
+ *
+ *   verified        → "Verified"
+ *   pending_review  → "Pending research"
+ *   outdated        → "Outdated"
+ *   unverified      → "Not verified"
+ *   conflict        → "Conflicting records"
+ *
+ * Never present missing evidence as a confirmed negative.
+ */
+export function VerificationStatusBadge({ status }: { status: string }) {
+  switch (status) {
+    case "verified":
+      return <VerifiedBadge label="Verified" />;
+    case "pending_review":
+      return (
+        <span className={cn(BASE, "border-amber-200 bg-amber-50 text-amber-800")}>
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" aria-hidden>
+            <path
+              fillRule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Pending research
+        </span>
+      );
+    case "outdated":
+      return (
+        <span className={cn(BASE, "border-neutral-300 bg-neutral-50 text-neutral-600")}>
+          Outdated
+        </span>
+      );
+    case "conflict":
+      return (
+        <span className={cn(BASE, "border-red-200 bg-red-50 text-red-700")}>
+          Conflicting records
+        </span>
+      );
+    case "unverified":
+    default:
+      return <NotVerifiedBadge label="Not verified" />;
+  }
+}
+
+/** Explicit requirement-state labels for approval records. */
+export function RequirementStatusBadge({ status }: { status: string }) {
+  switch (status) {
+    case "required":
+      return (
+        <span className={cn(BASE, "border-emerald-200 bg-emerald-50 text-emerald-800")}>
+          Required
+        </span>
+      );
+    case "may_be_required":
+      return (
+        <span className={cn(BASE, "border-amber-200 bg-amber-50 text-amber-800")}>
+          May be required
+        </span>
+      );
+    case "conditional":
+      return (
+        <span className={cn(BASE, "border-sky-200 bg-sky-50 text-sky-700")}>
+          Conditional
+        </span>
+      );
+    case "not_required":
+      return (
+        <span className={cn(BASE, "border-neutral-200 bg-white text-neutral-600")}>
+          Not required
+        </span>
+      );
+    case "unknown":
+    default:
+      return <ResearchRequiredBadge label="Unknown" />;
+  }
+}
+
+/**
+ * Explicit approval-requirement labels for an activity record (mapped from the
+ * approval_status enum on activities):
+ *
+ *   no_additional_approval          → "No additional approval"
+ *   approval_required               → "Approval required"
+ *   approval_may_be_required        → "May be required"
+ *   conditional_approval            → "Conditional"
+ *   multiple_approvals_required     → "Multiple approvals required"
+ *   restricted_activity             → "Restricted activity"
+ *   not_permitted                   → "Not permitted"
+ *   unknown                         → "Unknown"
+ */
+export function ApprovalRequirementBadge({ status }: { status: string }) {
+  switch (status) {
+    case "approval_required":
+    case "multiple_approvals_required":
+      return (
+        <span className={cn(BASE, "border-emerald-200 bg-emerald-50 text-emerald-800")}>
+          {status === "multiple_approvals_required"
+            ? "Multiple approvals required"
+            : "Approval required"}
+        </span>
+      );
+    case "approval_may_be_required":
+      return (
+        <span className={cn(BASE, "border-amber-200 bg-amber-50 text-amber-800")}>
+          May be required
+        </span>
+      );
+    case "conditional_approval":
+      return (
+        <span className={cn(BASE, "border-sky-200 bg-sky-50 text-sky-700")}>
+          Conditional
+        </span>
+      );
+    case "no_additional_approval":
+      return (
+        <span className={cn(BASE, "border-neutral-200 bg-white text-neutral-600")}>
+          No additional approval
+        </span>
+      );
+    case "restricted_activity":
+      return (
+        <span className={cn(BASE, "border-amber-200 bg-amber-50 text-amber-800")}>
+          Restricted activity
+        </span>
+      );
+    case "not_permitted":
+      return (
+        <span className={cn(BASE, "border-red-200 bg-red-50 text-red-700")}>
+          Not permitted
+        </span>
+      );
+    case "unknown":
+    default:
+      return <ResearchRequiredBadge label="Unknown" />;
+  }
+}

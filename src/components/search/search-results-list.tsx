@@ -5,6 +5,7 @@ import { enrichResponse } from "@/lib/search/enrichment";
 import { db } from "@/lib/db";
 import { jurisdictions } from "@/lib/db/schema";
 import { SearchResultCard } from "./search-results";
+import { MatchTypeBadge } from "@/components/ui/verification-badges";
 import type { UnifiedSearchResponse } from "@/lib/search/types";
 
 interface SearchResultsProps {
@@ -24,37 +25,95 @@ function pageHref(
   return `/search?${params.toString()}`;
 }
 
+function CheckIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className} aria-hidden>
+      <path
+        fillRule="evenodd"
+        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function CrossIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className} aria-hidden>
+      <path
+        fillRule="evenodd"
+        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Availability summary — a clear, evidence-only statement of which indexed
+ * jurisdictions match the query and which do not. Presence/absence claims are
+ * always scoped to "currently indexed official data".
+ */
 function AvailabilityStrip({ data }: { data: UnifiedSearchResponse }) {
   const matched = data.jurisdictionGroups.filter(g => g.status === "match");
   const unmatched = data.jurisdictionGroups.filter(g => g.status === "no_match");
+  const total = matched.length + unmatched.length;
+
+  if (total === 0) return null;
 
   return (
-    <div className="mb-8 rounded-xl border border-neutral-200 bg-white p-4">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-neutral-400">
-        Jurisdiction availability
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {matched.map(g => (
-          <a
-            key={g.jurisdiction.id}
-            href={`#jur-${g.jurisdiction.slug}`}
-            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 transition-colors hover:bg-emerald-100"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Match found · {g.jurisdiction.name} ({g.totalMatches})
-          </a>
-        ))}
-        {unmatched.map(g => (
-          <span
-            key={g.jurisdiction.id}
-            title="Not found in this jurisdiction's currently indexed official activity list. This does not mean the activity is prohibited."
-            className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-500"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-neutral-300" />
-            No strong match found · {g.jurisdiction.name}
-          </span>
-        ))}
-      </div>
+    <div className="mb-8 grid overflow-hidden rounded-xl border border-neutral-200 bg-white md:grid-cols-2">
+      <section className="p-5">
+        <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-emerald-700">
+          <CheckIcon className="h-4 w-4" />
+          Found in {matched.length} of {total} indexed{" "}
+          {total === 1 ? "jurisdiction" : "jurisdictions"}
+        </h2>
+        {matched.length > 0 ? (
+          <ul className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            {matched.map(g => (
+              <li key={g.jurisdiction.id} className="flex min-w-0 items-baseline justify-between gap-2">
+                <a
+                  href={`#jur-${g.jurisdiction.slug}`}
+                  className="truncate text-sm font-medium text-neutral-800 transition-colors hover:text-blue-700 hover:underline"
+                >
+                  {g.jurisdiction.name}
+                </a>
+                <span className="shrink-0 text-xs tabular-nums text-neutral-400">
+                  {g.totalMatches} {g.totalMatches === 1 ? "match" : "matches"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm text-neutral-500">No matches in indexed data.</p>
+        )}
+      </section>
+
+      {unmatched.length > 0 && (
+        <section className="border-t border-neutral-200 p-5 md:border-l md:border-t-0">
+          <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+            <CrossIcon className="h-4 w-4" />
+            Not found in
+          </h2>
+          <ul className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            {unmatched.map(g => (
+              <li
+                key={g.jurisdiction.id}
+                className="flex items-center gap-2 text-sm text-neutral-500"
+                title="Not found in this jurisdiction's currently indexed official activity list. This does not mean the activity is prohibited."
+              >
+                <CrossIcon className="h-3.5 w-3.5 shrink-0 text-neutral-300" />
+                <span className="truncate">{g.jurisdiction.name}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs leading-relaxed text-neutral-400">
+            &quot;Not found&quot; applies to the official activity lists indexed
+            so far — it does not mean the activity is prohibited or unavailable.
+          </p>
+        </section>
+      )}
     </div>
   );
 }
@@ -162,9 +221,11 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
           )}{" "}
           for <span className="font-semibold">&quot;{query}&quot;</span>
         </h2>
-        <span className="text-xs tabular-nums text-neutral-400">
-          {data.meta.tookMs}ms
-        </span>
+        {scopedName ? null : (
+          <span className="text-xs tabular-nums text-neutral-400">
+            {data.meta.tookMs}ms
+          </span>
+        )}
       </div>
 
       <AvailabilityStrip data={data} />
@@ -172,7 +233,7 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
       <div className="space-y-10">
         {matchGroups.map(group => (
           <section key={group.jurisdiction.id} id={`jur-${group.jurisdiction.slug}`}>
-            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-neutral-200 pb-2">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-2 border-b border-neutral-200 pb-3">
               <div>
                 <h3 className="text-base font-bold text-neutral-900">
                   <Link
@@ -182,25 +243,28 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
                     {group.jurisdiction.name}
                   </Link>
                 </h3>
-                <p className="text-xs text-neutral-500">
-                  Free Zone / Mainland shown per result ·{" "}
+                <p className="text-xs capitalize text-neutral-500">
                   {group.jurisdiction.emirate.replace(/_/g, " ")}
                 </p>
               </div>
-              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-                Match found
-                {group.totalMatches > 0 &&
-                  ` · ${group.totalMatches} ${group.totalMatches === 1 ? "activity" : "activities"}`}
-                {group.topResults.length < group.totalMatches &&
-                  ` (showing top ${group.topResults.length})`}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {group.bestMatchType && (
+                  <MatchTypeBadge matchType={group.bestMatchType} />
+                )}
+                <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+                  {group.totalMatches} {group.totalMatches === 1 ? "match" : "matches"}
+                  {group.topResults.length < group.totalMatches &&
+                    ` · showing top ${group.topResults.length}`}
+                </span>
+              </div>
             </div>
             <div className="space-y-4">
-              {group.topResults.map(result => (
+              {group.topResults.map((r, i) => (
                 <SearchResultCard
-                  key={`${result.matchType}-${result.activity.id}`}
-                  result={result}
-                  summary={summaries.get(result.activity.id)}
+                  key={`${r.matchType}-${r.activity.id}`}
+                  result={r}
+                  summary={summaries.get(r.activity.id)}
+                  index={i}
                 />
               ))}
             </div>
@@ -263,8 +327,8 @@ function EmptyState() {
         Enter a business idea to search
       </h2>
       <p className="mt-2 text-sm text-neutral-500">
-        Try &quot;Digital Marketing Agency&quot;, &quot;Medical Clinic&quot; or
-        &quot;General Trading&quot;.
+        Try &quot;Real estate brokerage&quot;, &quot;Medical clinic&quot;,
+        &quot;Restaurant&quot; or &quot;Software development&quot;.
       </p>
     </div>
   );

@@ -236,31 +236,41 @@ export default async function JurisdictionDetailPage({
               )}
             </div>
             {/* Scoped activity search */}
-            <form
-              action="/search"
-              method="GET"
-              role="search"
-              className="flex w-full max-w-xs items-center gap-2"
-            >
-              <input type="hidden" name="jurisdiction" value={j.slug} />
-              <label htmlFor={`search-${j.slug}`} className="sr-only">
-                Search activities in {j.name}
-              </label>
-              <input
-                id={`search-${j.slug}`}
-                type="text"
-                name="q"
-                required
-                placeholder={`Search ${j.name} activities…`}
-                className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
-              />
-              <button
-                type="submit"
-                className="shrink-0 rounded-lg bg-neutral-900 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-700"
+            <div className="flex w-full max-w-sm flex-col items-stretch gap-3 sm:items-end">
+              <form
+                action="/search"
+                method="GET"
+                role="search"
+                className="flex w-full items-center gap-2"
               >
-                Search
-              </button>
-            </form>
+                <input type="hidden" name="jurisdiction" value={j.slug} />
+                <label htmlFor={`search-${j.slug}`} className="sr-only">
+                  Search activities in {j.name}
+                </label>
+                <input
+                  id={`search-${j.slug}`}
+                  type="text"
+                  name="q"
+                  required
+                  placeholder={`Search ${j.name} activities…`}
+                  className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+                />
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-lg bg-neutral-900 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-700"
+                >
+                  Search
+                </button>
+              </form>
+              <Link
+                href={`/activities?jurisdiction=${j.slug}`}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-neutral-200 px-3.5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+              >
+                Browse all {activityCount.toLocaleString()}{" "}
+                {activityCount === 1 ? "activity" : "activities"}
+                <span aria-hidden>&rarr;</span>
+              </Link>
+            </div>
           </div>
         </header>
 

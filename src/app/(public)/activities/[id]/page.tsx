@@ -23,6 +23,9 @@ import {
 import {
   VerifiedBadge,
   OfficialSourceBadge,
+  VerificationStatusBadge,
+  RequirementStatusBadge,
+  ApprovalRequirementBadge,
 } from "@/components/ui/verification-badges";
 import {
   formatDate,
@@ -65,6 +68,7 @@ export async function generateMetadata({
   return {
     title: `${row.name}${row.code ? ` (${row.code})` : ""} — ${row.jurisdiction}`,
     description: `${row.name} business activity in ${row.jurisdiction} (${formatEmirate(row.emirate)}): licence type, approval status, government fees and official source verification.`,
+    alternates: { canonical: `/activities/${id}` },
   };
 }
 
@@ -276,11 +280,7 @@ export default async function ActivityDetailPage({
                 {a.officialCategory ?? <Muted>Not specified</Muted>}
               </Field>
               <Field label="Verification status">
-                {a.verificationStatus === "verified" ? (
-                  <VerifiedBadge />
-                ) : (
-                  <Muted>{titleCaseEnum(a.verificationStatus)}</Muted>
-                )}
+                <VerificationStatusBadge status={a.verificationStatus} />
               </Field>
               <Field label="Last verified">
                 {a.lastVerified ? formatDate(a.lastVerified) : <Muted>Never independently verified</Muted>}
@@ -413,7 +413,8 @@ export default async function ActivityDetailPage({
                     </div>
                     <p className="mt-1.5 text-emerald-800">
                       Type: {titleCaseEnum(ap.approvalType)} · Requirement
-                      status: {titleCaseEnum(ap.status)} · Authority:{" "}
+                      status: <RequirementStatusBadge status={ap.status} /> ·
+                      Authority:{" "}
                       {authority?.name ?? "—"} · Last verified:{" "}
                       {ap.lastVerified ? formatDate(ap.lastVerified) : "—"}
                     </p>
@@ -484,9 +485,14 @@ export default async function ActivityDetailPage({
               {hasVerifiedAnything ? (
                 <VerifiedBadge label="Verified approval" />
               ) : signals.length > 0 ? (
-                <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-800">
-                  Approval signal
-                </span>
+                signals.map(s => (
+                  <span
+                    key={s.id}
+                    className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-800"
+                  >
+                    Approval signal{s.authorityName ? ` · ${s.authorityName}` : ""}
+                  </span>
+                ))
               ) : a.approvalSignal === "no_signal" ? (
                 <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
                   No signal recorded
@@ -496,15 +502,21 @@ export default async function ActivityDetailPage({
                   Research required
                 </span>
               )}
-              <span className="text-xs text-neutral-500">
-                Activity verification: {titleCaseEnum(a.verificationStatus)}
-              </span>
             </div>
+            <dl className="mt-4 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+              <Field label="Record verification">
+                <VerificationStatusBadge status={a.verificationStatus} />
+              </Field>
+              <Field label="Approval requirement">
+                <ApprovalRequirementBadge status={a.approvalStatus} />
+              </Field>
+            </dl>
             <p className="mt-3 text-xs leading-relaxed text-neutral-500">
               Status model: VERIFIED APPROVAL (authoritative source confirms) ·
               APPROVAL SIGNAL (official listing indicates third-party
               involvement; not yet independently verified) · RESEARCH REQUIRED
-              (no reliable conclusion yet).
+              (no reliable conclusion yet). &quot;Not required&quot; is only
+              shown where an authoritative record actually confirms it.
             </p>
           </Section>
 

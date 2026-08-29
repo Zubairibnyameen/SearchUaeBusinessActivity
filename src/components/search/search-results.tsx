@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import type { SearchResultItem } from "@/lib/search/types";
 import type { RegulatorySummary } from "@/lib/search/enrichment";
 import {
@@ -34,12 +35,48 @@ function ApprovalStatusCell({
   return <ResearchRequiredBadge />;
 }
 
+/**
+ * Match classification is the primary signal a reviewer needs to judge a
+ * result quickly. Coloured left accent + badge make EXACT / STRONG / RELATED
+ * distinguishable at a glance without exposing internal scoring details.
+ */
+const MATCH_ACCENT: Record<string, string> = {
+  exact: "border-l-2 border-l-blue-600",
+  strong: "border-l-2 border-l-indigo-500",
+  related: "border-l-2 border-l-amber-400",
+  low_confidence: "border-l-2 border-dashed border-l-neutral-300",
+  ai_suggestion: "border-l-2 border-dashed border-l-violet-400",
+};
+
+function RelevanceMeter({ score }: { score: number }) {
+  const pct = Math.round(score * 100);
+  return (
+    <span
+      className="inline-flex items-center gap-1.5"
+      aria-label={`Relevance ${pct}%`}
+    >
+      <span
+        aria-hidden
+        className="h-1.5 w-14 overflow-hidden rounded-full bg-neutral-200/80"
+      >
+        <span
+          className="block h-full rounded-full bg-neutral-400"
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+      <span className="text-xs tabular-nums text-neutral-400">{pct}%</span>
+    </span>
+  );
+}
+
 export function SearchResultCard({
   result,
   summary,
+  index = 0,
 }: {
   result: SearchResultItem;
   summary?: RegulatorySummary;
+  index?: number;
 }) {
   const a = result.activity;
   const j = result.jurisdiction;
@@ -47,15 +84,20 @@ export function SearchResultCard({
   const tpc = summary?.thirdPartyCosts[0];
 
   return (
-    <article className="group rounded-xl border border-neutral-200 bg-white p-5 transition-shadow hover:border-neutral-300 hover:shadow-md">
+    <article
+      className={cn(
+        "group rounded-xl border border-neutral-200 bg-white p-5 transition-shadow hover:border-neutral-300 hover:shadow-md",
+        index === 0
+          ? `ring-1 ring-inset ring-neutral-100 ${MATCH_ACCENT[result.matchType] ?? ""}`
+          : MATCH_ACCENT[result.matchType] ?? ""
+      )}
+    >
       {/* Header row: match badge + name + code */}
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <MatchTypeBadge matchType={result.matchType} />
-            <span className="text-xs tabular-nums text-neutral-400">
-              {Math.round(result.matchScore * 100)}% relevance
-            </span>
+            <RelevanceMeter score={result.matchScore} />
           </div>
           <h3 className="mt-2 text-base font-semibold leading-snug text-neutral-900">
             <Link
@@ -73,7 +115,8 @@ export function SearchResultCard({
         </div>
         <Link
           href={`/activities/${a.id}`}
-          className="shrink-0 self-center rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 opacity-100 transition-colors hover:border-neutral-300 hover:bg-neutral-50 sm:opacity-0 sm:group-hover:opacity-100"
+          className="shrink-0 self-center rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+          aria-hidden={false}
         >
           View details
         </Link>

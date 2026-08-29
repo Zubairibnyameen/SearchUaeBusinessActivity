@@ -1,28 +1,35 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { activities } from "@/lib/db/schema";
+import { activities, jurisdictions } from "@/lib/db/schema";
 import { searchUnified } from "@/lib/search/engine";
 import { getRegulatorySummaries, type RegulatorySummary } from "@/lib/search/enrichment";
 import {
   VerifiedBadge,
   ApprovalSignalBadgeSmall,
   ResearchRequiredBadge,
+  MatchTypeBadge,
 } from "@/components/ui/verification-badges";
-import { formatAed, titleCaseEnum } from "@/lib/format";
+import { formatAed, formatEmirate, formatJurisdictionType, titleCaseEnum } from "@/lib/format";
+import { JurisdictionSelector } from "@/components/compare/jurisdiction-selector";
 
 export const metadata: Metadata = {
   title: "Compare Jurisdictions",
   description:
-    "Compare an activity across DMCC, IFZA, RAKEZ, SPC Free Zone and Ajman Free Zone: availability, licence type, approval status, government fees and sources.",
+    "Compare selected UAE free zones and mainland authorities side by side: activity availability, licence type, approval status, verified government fees and sources.",
+  alternates: { canonical: "/compare" },
 };
+
+// Comparison is designed around 2–4 selected jurisdictions.
+const MIN_JURISDICTIONS = 2;
+const MAX_JURISDICTIONS = 4;
 
 export default function ComparePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; jurisdictions?: string }>;
 }) {
   return (
     <div className="bg-neutral-50">
@@ -101,9 +108,9 @@ interface ComparisonColumn {
 async function ComparisonResults({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; jurisdictions?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, jurisdictions: jurisdictionsParam } = await searchParams;
   const query = q?.trim();
 
   if (!query) {
@@ -115,6 +122,35 @@ async function ComparisonResults({
       </div>
     );
   }
+
+  // Available jurisdictions = those with imported official activity data.
+  const availableJurisdictions = await db
+    .select({
+      id: jurisdictions.id,
+      slug: jurisdictions.slug,
+      name: jurisdictions.name,
+      emirate: jurisdictions.emirate,
+      jurisdictionType: jurisdictions.jurisdictionType,
+    })
+    .from(jurisdictions)
+    .innerJoin(activities, eq(activities.jurisdictionId, jurisdictions.id))
+    .where(eq(jurisdictions.status, "active"));
+
+  const availableSlugs = new Set(availableJurisdictions.map(j => j.slug));
+
+  // Resolve the requested selection (URL slugs) against indexed jurisdictions.
+  // Selection is re-clamped to the 2–4 range; invalid or too-small selections
+  // fall back to comparing every indexed jurisdiction.
+  const requested = (jurisdictionsParam ?? "")
+    .split(",")
+    .map(s => s.trim())
+    .filter(s => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s) && availableSlugs.has(s))
+    .slice(0, MAX_JURISDICTIONS);
+
+  const selected =
+    requested.length >= MIN_JURISDICTIONS
+      ? requested
+      : availableJurisdictions.map(j => j.slug);
 
   let data;
   try {
@@ -141,35 +177,37 @@ async function ComparisonResults({
     );
   }
 
-  // One column per jurisdiction that has matches, plus any indexed
-  // jurisdiction without a match (shown honestly as NO STRONG MATCH).
-  const columns: ComparisonColumn[] = data.jurisdictionGroups.map(g => {
-    if (g.status === "no_match") {
+  // One column per selected jurisdiction — matched or explicitly unmatched
+  // (shown honestly as NO STRONG MATCH in the indexed official data).
+  const columns: ComparisonColumn[] = data.jurisdictionGroups
+    .filter(g => selected.includes(g.jurisdiction.slug))
+    .map(g => {
+      if (g.status === "no_match") {
+        return {
+          slug: g.jurisdiction.slug,
+          name: g.jurisdiction.name,
+          emirate: g.jurisdiction.emirate,
+          type: g.jurisdiction.jurisdictionType,
+          available: false,
+        };
+      }
+      const top = g.topResults[0];
       return {
         slug: g.jurisdiction.slug,
         name: g.jurisdiction.name,
         emirate: g.jurisdiction.emirate,
         type: g.jurisdiction.jurisdictionType,
-        available: false,
+        available: true,
+        activityId: top.activity.id,
+        officialName: top.activity.officialName,
+        activityCode: top.activity.activityCode,
+        licenceTypeName: top.licenceType?.name ?? null,
+        matchType: top.matchType,
+        signal: top.activity.approvalSignal,
+        sourceUrl: top.source?.url ?? null,
+        sourceTitle: top.source?.title ?? null,
       };
-    }
-    const top = g.topResults[0];
-    return {
-      slug: g.jurisdiction.slug,
-      name: g.jurisdiction.name,
-      emirate: g.jurisdiction.emirate,
-      type: g.jurisdiction.jurisdictionType,
-      available: true,
-      activityId: top.activity.id,
-      officialName: top.activity.officialName,
-      activityCode: top.activity.activityCode,
-      licenceTypeName: top.licenceType?.name ?? null,
-      matchType: top.matchType,
-      signal: top.activity.approvalSignal,
-      sourceUrl: top.source?.url ?? null,
-      sourceTitle: top.source?.title ?? null,
-    };
-  });
+    });
 
   // Enrich: regulatory summaries + restrictions for matched activities
   const matchedIds = columns
@@ -207,6 +245,20 @@ async function ComparisonResults({
         </h2>
       </div>
 
+      <div className="mb-6 rounded-xl border border-neutral-200 bg-white p-4">
+        <JurisdictionSelector
+          key={selected.join(",")}
+          jurisdictions={availableJurisdictions.map(j => ({ slug: j.slug, name: j.name }))}
+          selected={selected}
+          query={query}
+        />
+        <p className="mt-3 text-xs leading-relaxed text-neutral-400">
+          Only jurisdictions whose official activity data has been imported are
+          selectable. Differences between columns reflect indexed official
+          data — never assumed values.
+        </p>
+      </div>
+
       {/* ── Desktop table ── */}
       <div className="hidden overflow-x-auto rounded-xl border border-neutral-200 bg-white md:block">
         <table className="w-full min-w-[900px] border-collapse text-sm">
@@ -223,18 +275,16 @@ async function ComparisonResults({
                   >
                     {c.name}
                   </Link>
-                  <p className="mt-0.5 text-[11px] font-normal capitalize text-neutral-400">
-                    {c.emirate.replace(/_/g, " ")} ·{" "}
-                    {c.type === "free_zone" ? "Free Zone" : "Mainland"}
+                  <p className="mt-0.5 text-[11px] font-normal text-neutral-400">
+                    {formatEmirate(c.emirate)} ·{" "}
+                    {formatJurisdictionType(c.type)}
                   </p>
                   <div className="mt-1.5">
                     {c.available ? (
-                      <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                        Match found
-                      </span>
+                      <MatchTypeBadge matchType={c.matchType ?? "related"} />
                     ) : (
                       <span className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                        No strong match found
+                        No match in indexed data
                       </span>
                     )}
                   </div>
@@ -431,18 +481,17 @@ async function ComparisonResults({
                 >
                   {c.name}
                 </Link>
-                <p className="text-[11px] capitalize text-neutral-400">
-                  {c.emirate.replace(/_/g, " ")} ·{" "}
-                  {c.type === "free_zone" ? "Free Zone" : "Mainland"}
+                <p className="text-[11px] text-neutral-400">
+                  {formatEmirate(c.emirate)} · {formatJurisdictionType(c.type)}
                 </p>
               </div>
               {c.available ? (
-                <span className="shrink-0 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                  Match found
+                <span className="shrink-0">
+                  <MatchTypeBadge matchType={c.matchType ?? "related"} />
                 </span>
               ) : (
                 <span className="shrink-0 rounded-md border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                  No strong match
+                  No match in indexed data
                 </span>
               )}
             </div>
@@ -505,7 +554,7 @@ async function ComparisonResults({
               </dl>
             ) : (
               <p className="px-4 py-4 text-xs leading-relaxed text-neutral-500">
-                No strong match was found for this activity in{" "}
+                No match was found for this activity in{" "}
                 {c.name}&apos;s currently indexed official dataset. This does
                 not mean the activity is prohibited or unavailable.
               </p>
@@ -541,8 +590,8 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 function UnavailableCell() {
   return (
-    <td className="px-4 py-3 text-xs text-neutral-400" aria-label="No strong match found">
-      No strong match found
+    <td className="px-4 py-3 text-xs text-neutral-400" aria-label="No match found in indexed data">
+      No match in indexed data
     </td>
   );
 }
