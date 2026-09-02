@@ -91,7 +91,32 @@ function makeJurisdictionRow(
  *
  * Pass candidateRows = [] to test "no results" paths.
  */
-function toFlatCandidate(c: any) {
+interface FlagActivity {
+  activity: {
+    id: string;
+    officialName: string;
+    normalizedName: string;
+    activityCode: string | null;
+    description: string | null;
+    officialCategory: string | null;
+    activityGroup: string | null;
+    approvalSignal: string;
+    approvalStatus: string;
+    verificationStatus: string;
+    lastVerified: string | null;
+  };
+  jurisdiction: {
+    id: string;
+    name: string;
+    slug: string;
+    emirate: string;
+    jurisdictionType: string;
+  };
+  licenceType: { id: string; name: string; code: string } | null;
+  source: { id: string; url: string; title: string; lastVerified: string | null } | null;
+}
+
+function toFlatCandidate(c: FlagActivity) {
   return {
     a_id: c.activity.id,
     a_official_name: c.activity.officialName,
@@ -119,8 +144,16 @@ function toFlatCandidate(c: any) {
   };
 }
 
+interface FlagJurisdiction {
+  id: string;
+  name: string;
+  slug: string;
+  emirate: string;
+  jurisdictionType: string;
+}
+
 /** Flat availability-branch rows (a_* NULL, j_* populated), as the engine's UNION returns. */
-function toFlatAvailabilityRow(j: any) {
+function toFlatAvailabilityRow(j: FlagJurisdiction) {
   return {
     a_id: null, a_official_name: null, a_normalized_name: null, a_activity_code: null, a_description: null,
     a_official_category: null, a_activity_group: null, a_approval_signal: null, a_approval_status: null,
@@ -136,14 +169,14 @@ function toFlatAvailabilityRow(j: any) {
 }
 
 function setupDbMock(
-  candidateRows: unknown[],
-  jurisdictionRows?: unknown[],
+  candidateRows: FlagActivity[],
+  jurisdictionRows?: FlagJurisdiction[],
 ) {
   dbMock.execute.mockReset();
   const jRows = jurisdictionRows ?? [makeJurisdictionRow()];
   dbMock.execute.mockImplementation(() =>
     Promise.resolve([
-      ...(candidateRows as any[]).map(toFlatCandidate),
+      ...candidateRows.map(toFlatCandidate),
       ...jRows.map(toFlatAvailabilityRow),
     ]));
 }

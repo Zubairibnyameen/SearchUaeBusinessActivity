@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-09-02T17:07:07.289Z",
+  "runsPerQuery": 5,
+  "queries": [
+    {
+      "query": "digital marketing agency",
+      "baseP50": 792,
+      "intelP50": 1453,
+      "overheadMs": 662,
+      "pctOverhead": 84,
+      "matchedJurisdictions": 5
+    },
+    {
+      "query": "software development company",
+      "baseP50": 571,
+      "intelP50": 1295,
+      "overheadMs": 725,
+      "pctOverhead": 127,
+      "matchedJurisdictions": 5
+    },
+    {
+      "query": "restaurant",
+      "baseP50": 431,
+      "intelP50": 1065,
+      "overheadMs": 634,
+      "pctOverhead": 147,
+      "matchedJurisdictions": 5
+    },
+    {
+      "query": "jewellery trading",
+      "baseP50": 453,
+      "intelP50": 1140,
+      "overheadMs": 686,
+      "pctOverhead": 151,
+      "matchedJurisdictions": 5
+    },
+    {
+      "query": "general trading",
+      "baseP50": 432,
+      "intelP50": 1126,
+      "overheadMs": 694,
+      "pctOverhead": 161,
+      "matchedJurisdictions": 5
+    },
+    {
+      "query": "logistics services",
+      "baseP50": 403,
+      "intelP50": 1231,
+      "overheadMs": 828,
+      "pctOverhead": 205,
+      "matchedJurisdictions": 5
+    },
+    {
+      "query": "dental clinic",
+      "baseP50": 417,
+      "intelP50": 1140,
+      "overheadMs": 724,
+      "pctOverhead": 174,
+      "matchedJurisdictions": 4
+    },
+    {
+      "query": "ecommerce business",
+      "baseP50": 411,
+      "intelP50": 1068,
+      "overheadMs": 657,
+      "pctOverhead": 160,
+      "matchedJurisdictions": 5
+    }
+  ],
+  "summary": {
+    "avgBaseP50Ms": 489,
+    "avgIntelP50Ms": 1190,
+    "avgOverheadMs": 701,
+    "avgPctOverhead": 143
+  }
+}

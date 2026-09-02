@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { jurisdictions } from "@/lib/db/schema";
 import { SearchResultCard } from "./search-results";
 import { MatchTypeBadge } from "@/components/ui/verification-badges";
+import { SearchCompareBar } from "@/components/compare/search-compare-bar";
 import type { UnifiedSearchResponse } from "@/lib/search/types";
 
 interface SearchResultsProps {
@@ -229,6 +230,18 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
       </div>
 
       <AvailabilityStrip data={data} />
+
+      {!scopedName && matchGroups.length > 0 && (
+        <div className="mb-6">
+          <SearchCompareBar
+            query={query}
+            matchedJurisdictions={matchGroups.map(g => ({
+              slug: g.jurisdiction.slug,
+              name: g.jurisdiction.name,
+            }))}
+          />
+        </div>
+      )}
 
       <div className="space-y-10">
         {matchGroups.map(group => (
