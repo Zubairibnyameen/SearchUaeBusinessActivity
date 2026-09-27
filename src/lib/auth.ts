@@ -10,39 +10,40 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { adminAuditLogs } from "@/lib/db/schema";
+import { getRateLimiter } from "@/lib/rate-limit";
 
 export const ADMIN_COOKIE = "uaai_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 hours
 
 // ---------- rate limiting ----------
 /**
- * LIMITATION (documented, accepted for now): this rate limiter is an
- * in-process Map. It is SINGLE-INSTANCE / DEVELOPMENT-GRADE only:
+ * Rate limiting is delegated to the rate-limiter abstraction (see
+ * src/lib/rate-limit/*). The default implementation is in-process and
+ * SINGLE-INSTANCE / DEVELOPMENT-GRADE only:
  *   - state resets on server restart
  *   - it does NOT protect multi-instance / serverless deployments
  *     (each instance keeps its own counter)
  *   - it is keyed by client IP and can be bypassed behind proxies that do
  *     not forward X-Forwarded-For faithfully
- * Production hardening would move counters to shared storage (e.g. Redis).
- * Kept unchanged deliberately for Phase 3.
+ * Production hardening would swap in a shared-storage adapter (e.g. Redis /
+ * Upstash) via getRateLimiter() — no caller changes.
+ *
+ * NOTE: login/route.ts checks the rate limit BEFORE parsing the request body.
  */
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const RATE_MAX_ATTEMPTS = 5;
-const attempts = new Map<string, { count: number; resetAt: number }>();
+const RATE_KEY_RE = /^[a-zA-Z0-9_.:-]{1,128}$/;
+
+function rateKey(key: string): string {
+  // Guard against unbounded map growth from attacker-controlled keys.
+  if (!RATE_KEY_RE.test(key)) return "unknown";
+  return key;
+}
 
 export function checkRateLimit(key: string): boolean {
-  const now = Date.now();
-  const entry = attempts.get(key);
-  if (!entry || entry.resetAt < now) {
-    attempts.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return true;
-  }
-  entry.count += 1;
-  return entry.count <= RATE_MAX_ATTEMPTS;
+  return getRateLimiter().check(rateKey(key)).allowed;
 }
 
 export function clearRateLimit(key: string): void {
-  attempts.delete(key);
+  getRateLimiter().clear(rateKey(key));
 }
 
 // ---------- password verification (timing-safe) ----------

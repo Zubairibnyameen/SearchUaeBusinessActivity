@@ -19,6 +19,9 @@ import {
   resolveNotRequired,
   markConflicting,
   flagManualReview,
+  claimResearch,
+  releaseResearch,
+  markNotConfirmed,
 } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +33,7 @@ const STATUS_LABELS: Record<string, string> = {
   not_required: "Not required",
   conflicting_sources: "Conflicting sources",
   needs_manual_review: "Needs manual review",
+  not_confirmed: "Not confirmed",
 };
 
 interface ResearchDetailPageProps {
@@ -247,6 +251,30 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
       </Section>
 
       <Section title="Workflow">
+        {q.reviewerAdmin && (
+          <p className="text-xs text-neutral-500 mb-3">
+            Claimed by: <span className="font-medium text-neutral-700">{q.reviewerAdmin}</span>
+          </p>
+        )}
+
+        <div className="flex flex-wrap gap-3 mb-6">
+          {!q.reviewerAdmin ? (
+            <form action={claimResearch}>
+              <input type="hidden" name="id" value={q.id} />
+              <button className="px-4 py-2 rounded-md border border-neutral-300 text-sm font-medium hover:bg-neutral-50">
+                Claim this item
+              </button>
+            </form>
+          ) : (
+            <form action={releaseResearch}>
+              <input type="hidden" name="id" value={q.id} />
+              <button className="px-4 py-2 rounded-md border border-neutral-300 text-sm font-medium text-red-700 hover:bg-red-50">
+                Release claim
+              </button>
+            </form>
+          )}
+        </div>
+
         {q.researchStatus === "pending_review" && (
           <form action={startResearch}>
             <input type="hidden" name="id" value={q.id} />
@@ -353,6 +381,21 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
                 </button>
               </form>
             </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-neutral-700 mb-1">Mark NOT CONFIRMED</h3>
+            <p className="text-xs text-neutral-500 mb-2">
+              Use this when you could NOT confirm the requirement despite research. This is
+              <strong> not</strong> the same as &lsquo;not required&rsquo; — no negative conclusion is recorded.
+            </p>
+            <form action={markNotConfirmed} className="grid grid-cols-1 gap-2">
+              <input type="hidden" name="id" value={q.id} />
+              <textarea name="reviewNotes" rows={2} placeholder="What remains unconfirmed?" className={inputCls} />
+              <button className="justify-self-start px-4 py-2 rounded-md bg-neutral-700 text-white text-sm font-medium hover:bg-neutral-600">
+                Mark not confirmed
+              </button>
+            </form>
           </div>
         </div>
       </Section>

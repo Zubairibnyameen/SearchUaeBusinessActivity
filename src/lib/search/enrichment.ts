@@ -23,19 +23,22 @@ export interface RegulatorySummary {
     amount: string | number;
     currency: string;
     feeType: string;
+    feeBasis: string | null;
+    sourceId: string | null;
   }[];
   thirdPartyCosts: {
     estimatedAmount: string | number | null;
     currency: string;
     costType: string;
+    sourceId: string | null;
   }[];
 }
 
-const EMPTY: RegulatorySummary = {
+const regulatorySummaryEmpty = (): RegulatorySummary => ({
   verifiedApprovals: [],
   govFees: [],
   thirdPartyCosts: [],
-};
+});
 
 export async function getRegulatorySummaries(
   activityIds: string[]
@@ -59,7 +62,8 @@ export async function getRegulatorySummaries(
     )
     .where(inArray(approvals.activityId, activityIds));
 
-  for (const id of activityIds) map.set(id, { ...EMPTY });
+  for (const id of activityIds)
+    map.set(id, regulatorySummaryEmpty());
 
   const verified = approvalRows.filter(r => r.verificationStatus === "verified");
   for (const r of verified) {
@@ -87,6 +91,8 @@ export async function getRegulatorySummaries(
         amount: f.amount,
         currency: f.currency,
         feeType: f.feeType,
+        feeBasis: f.feeBasis ?? null,
+        sourceId: f.sourceId ?? null,
       });
     }
     for (const t of costs) {
@@ -94,6 +100,7 @@ export async function getRegulatorySummaries(
         estimatedAmount: t.estimatedAmount,
         currency: t.currency,
         costType: t.costType,
+        sourceId: t.sourceId ?? null,
       });
     }
   }

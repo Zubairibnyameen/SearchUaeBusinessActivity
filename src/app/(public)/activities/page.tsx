@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { activities, jurisdictions, licenceTypes } from "@/lib/db/schema";
 import { VerifiedBadge, ApprovalSignalBadgeSmall } from "@/components/ui/verification-badges";
@@ -19,7 +19,7 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export default async function ActivitiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; jurisdiction?: string }>;
+  searchParams: Promise<{ page?: string; jurisdiction?: string; category?: string }>;
 }) {
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
@@ -36,9 +36,36 @@ export default async function ActivitiesPage({
     if (rows[0]) scopedJurisdiction = rows[0];
   }
 
-  const whereClause = scopedJurisdiction
-    ? eq(activities.jurisdictionId, scopedJurisdiction.id)
-    : undefined;
+  // Optional category scope (URL-encoded, validated against DB)
+  const categoryParam = params.category?.trim();
+  let scopedCategory: string | null = null;
+  if (categoryParam) {
+    let decodedCategory: string;
+    try {
+      decodedCategory = decodeURIComponent(categoryParam);
+    } catch {
+      decodedCategory = "";
+    }
+    if (decodedCategory) {
+      const [exists] = await db
+        .select({ officialCategory: activities.officialCategory })
+        .from(activities)
+        .where(sql`${activities.officialCategory} = ${decodedCategory}`)
+        .limit(1);
+      if (exists) scopedCategory = decodedCategory;
+    }
+  }
+
+  // Build combined where clause
+  const conditions: SQL[] = [];
+  if (scopedJurisdiction) conditions.push(eq(activities.jurisdictionId, scopedJurisdiction.id));
+  if (scopedCategory) conditions.push(sql`${activities.officialCategory} = ${scopedCategory}`);
+  let whereClause: SQL | undefined;
+  if (conditions.length === 1) {
+    whereClause = conditions[0];
+  } else if (conditions.length > 1) {
+    whereClause = conditions.reduce((a, b) => sql`${a} AND ${b}`);
+  }
 
   const [countAgg] = await db
     .select({ count: sql<number>`COUNT(*)::int` })
@@ -83,6 +110,22 @@ export default async function ActivitiesPage({
       .orderBy(jurisdictions.name)
   ).filter(jo => jo.activityCount > 0);
 
+  // Category options — scoped to current jurisdiction when one is selected.
+  const categoryConditions: SQL[] = [sql`${activities.officialCategory} IS NOT NULL`];
+  if (scopedJurisdiction) categoryConditions.push(eq(activities.jurisdictionId, scopedJurisdiction.id));
+  const categoryWhere = categoryConditions.reduce((a, b) => sql`${a} AND ${b}`);
+  const categoryOptions = (
+    await db
+      .select({
+        category: activities.officialCategory,
+        count: sql<number>`COUNT(${activities.id})::int`,
+      })
+      .from(activities)
+      .where(categoryWhere)
+      .groupBy(activities.officialCategory)
+      .orderBy(sql`COUNT(${activities.id}) DESC`)
+  ).filter(co => co.category !== null && co.count > 0) as { category: string; count: number }[];
+
   return (
     <div className="bg-neutral-50">
       <div className="mx-auto max-w-6xl px-6 py-10">
@@ -92,30 +135,17 @@ export default async function ActivitiesPage({
               Business Activities
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
-              {total.toLocaleString()} official{" "}
-              {total === 1 ? "activity" : "activities"} indexed from verified
-              authority publications
-              {scopedJurisdiction ? (
-                <>
-                  {" "}
-                  in{" "}
-                  <Link
-                    href={`/jurisdictions/${scopedJurisdiction.slug}`}
-                    className="font-medium text-blue-700 hover:underline"
-                  >
-                    {scopedJurisdiction.name}
-                  </Link>
-                </>
-              ) : null}
-              . Looking for something specific?{" "}
+              Browse {total.toLocaleString()} official{" "}
+              {total === 1 ? "activity" : "activities"} across currently indexed
+              jurisdictions — filter by authority and category below, or{" "}
               <Link href="/search" className="font-medium text-blue-700 hover:underline">
-                Use activity search
-              </Link>{" "}
-              to match your business idea.
+                search for a specific activity
+              </Link>
+              .
             </p>
           </div>
 
-          {/* Filters */}
+          {/* Filters — Jurisdiction */}
           <nav aria-label="Filter by jurisdiction" className="flex flex-wrap gap-2">
             <Link
               href="/activities"
@@ -130,7 +160,7 @@ export default async function ActivitiesPage({
             {jurisdictionOptions.map(jo => (
               <Link
                 key={jo.slug}
-                href={`/activities?jurisdiction=${jo.slug}`}
+                href={pageHref(jo.slug, null, null)}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   scopedJurisdiction?.slug === jo.slug
                     ? "border-neutral-900 bg-neutral-900 text-white"
@@ -141,6 +171,36 @@ export default async function ActivitiesPage({
               </Link>
             ))}
           </nav>
+
+          {/* Filters — Category */}
+          {categoryOptions.length > 0 && (
+            <nav aria-label="Filter by category" className="flex flex-wrap gap-2">
+              <Link
+                href={pageHref(scopedJurisdiction?.slug, null, null)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  !scopedCategory
+                    ? "border-neutral-900 bg-neutral-900 text-white"
+                    : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
+                }`}
+              >
+                All categories
+              </Link>
+              {categoryOptions.map(co => (
+                <Link
+                  key={co.category}
+                  href={pageHref(scopedJurisdiction?.slug, null, co.category)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    scopedCategory === co.category
+                      ? "border-neutral-900 bg-neutral-900 text-white"
+                      : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300"
+                  }`}
+                >
+                  {co.category}
+                  <span className="ml-1 text-[10px] opacity-60">({co.count})</span>
+                </Link>
+              ))}
+            </nav>
+          )}
         </header>
 
         {rows.length > 0 ? (
@@ -235,7 +295,7 @@ export default async function ActivitiesPage({
               >
                 {page > 1 ? (
                   <Link
-                    href={pageHref(scopedJurisdiction?.slug, page - 1)}
+                    href={pageHref(scopedJurisdiction?.slug, page - 1, scopedCategory)}
                     className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
                   >
                     &larr; Previous
@@ -250,7 +310,7 @@ export default async function ActivitiesPage({
                 </span>
                 {page < totalPages ? (
                   <Link
-                    href={pageHref(scopedJurisdiction?.slug, page + 1)}
+                    href={pageHref(scopedJurisdiction?.slug, page + 1, scopedCategory)}
                     className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
                   >
                     Next &rarr;
@@ -266,7 +326,11 @@ export default async function ActivitiesPage({
         ) : (
           <div className="mt-6 rounded-xl border border-dashed border-neutral-300 bg-white p-10 text-center">
             <p className="text-sm text-neutral-500">
-              No activities are indexed for this selection yet.
+              No activities found for this filter combination.{" "}
+              <Link href="/activities" className="font-medium text-blue-700 hover:underline">
+                Clear filters
+              </Link>
+              .
             </p>
           </div>
         )}
@@ -284,11 +348,13 @@ export default async function ActivitiesPage({
 
 function pageHref(
   jurisdiction: string | undefined | null,
-  page: number
+  page: number | null,
+  category: string | undefined | null
 ): string {
   const params = new URLSearchParams();
   if (jurisdiction) params.set("jurisdiction", jurisdiction);
-  if (page > 1) params.set("page", String(page));
+  if (category) params.set("category", category);
+  if (page && page > 1) params.set("page", String(page));
   const qs = params.toString();
   return qs ? `/activities?${qs}` : "/activities";
 }

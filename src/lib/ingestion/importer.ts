@@ -30,6 +30,7 @@ import { saveRaw } from "./raw-store";
 import { detectBatchDuplicates, defaultValidate } from "./validate";
 import { auditJurisdiction, printAudit } from "./audit";
 import { formatAmount } from "./normalize";
+import { hasSameSignal, planBackfill } from "./backfill";
 import type {
   ImportReport,
   NormalizedActivity,
@@ -47,7 +48,7 @@ function loadEnv() {
 
 export async function runImport(
   adapter: OfficialActivitySourceAdapter,
-  opts: { dryRun?: boolean } = {}
+  opts: { dryRun?: boolean; backfillSignals?: boolean } = {}
 ): Promise<ImportReport> {
   loadEnv();
   const client = postgres(process.env.DATABASE_URL!, { max: 1 });
@@ -64,6 +65,7 @@ export async function runImport(
       duplicatesInBatch: 0,
       duplicatesExisting: 0,
       reviewFlagged: 0,
+      backfilled: 0,
     },
     errors: [],
     warnings: [],
@@ -169,19 +171,41 @@ export async function runImport(
     // 5. Import (single transaction per run)
     // ---------------------------------------------------------------
     if (!opts.dryRun) {
+      const backfillSignals = opts.backfillSignals ?? false;
       await db.transaction(async (tx) => {
         const today = new Date().toISOString().split("T")[0];
 
-        // One source record per fetched artifact.
+        // One source record per fetched artifact. In backfill mode the source
+        // is reused (idempotent) rather than duplicated on every run.
         const sourceIds: string[] = [];
         for (const art of report.artifacts) {
+          const sourceUrl =
+            report.sourcesProcessed.find((d) =>
+              art.relativePath.includes(d.id)
+            )?.url ?? adapter.meta.authorityWebsite ?? "";
+          if (backfillSignals) {
+            const [existing] = await tx
+              .select({ id: sources.id, contentHash: sources.contentHash })
+              .from(sources)
+              .where(eq(sources.url, sourceUrl))
+              .limit(1);
+            if (existing) {
+              // Reuse the source record; backfill missing content hash so
+              // provenance is recorded for the verified artifact.
+              if (!existing.contentHash) {
+                await tx
+                  .update(sources)
+                  .set({ contentHash: art.sha256, lastVerified: today })
+                  .where(eq(sources.id, existing.id));
+              }
+              sourceIds.push(existing.id);
+              continue;
+            }
+          }
           const [rec] = await tx
             .insert(sources)
             .values({
-              url:
-                report.sourcesProcessed.find((d) =>
-                  art.relativePath.includes(d.id)
-                )?.url ?? adapter.meta.authorityWebsite ?? "",
+              url: sourceUrl,
               title: `${adapter.meta.jurisdictionName} official activities (${art.relativePath.split(/[\\/]/).pop()})`,
               sourceType: adapter.meta.sourceType,
               authority: adapter.meta.authorityName,
@@ -270,7 +294,103 @@ export async function runImport(
                 .limit(1);
 
           if (existing.length > 0) {
-            report.counters.duplicatesExisting += 1;
+            if (backfillSignals) {
+              const [current] = await tx
+                .select({
+                  approvalSignal: activities.approvalSignal,
+                  approvalStatus: activities.approvalStatus,
+                  verificationStatus: activities.verificationStatus,
+                })
+                .from(activities)
+                .where(eq(activities.id, existing[0].id))
+                .limit(1);
+
+              if (!current) {
+                // Row disappeared between lookup and update — skip safely.
+                report.counters.duplicatesExisting += 1;
+                continue;
+              }
+
+              const plan = planBackfill(current, n.signalDetail);
+
+              if (plan.kind === "insert_signal" && plan.signalDetail) {
+                const existingSignals = await tx
+                  .select({
+                    signalType: activityApprovalSignals.signalType,
+                    authorityName: activityApprovalSignals.authorityName,
+                  })
+                  .from(activityApprovalSignals)
+                  .where(eq(activityApprovalSignals.activityId, existing[0].id));
+
+                let changed = false;
+                if (
+                  !hasSameSignal(existingSignals, plan.signalDetail)
+                ) {
+                  await tx.insert(activityApprovalSignals).values({
+                    activityId: existing[0].id,
+                    signalType: plan.signalDetail.signalType ?? "other_signal",
+                    authorityName: plan.signalDetail.authorityName,
+                    notes: plan.signalDetail.notes,
+                    sourceId: primarySourceId,
+                    lastVerified: today,
+                  });
+                  changed = true;
+                }
+
+                if (plan.needsSignalUpdate) {
+                  await tx
+                    .update(activities)
+                    .set({
+                      approvalSignal: "third_party_approval_indicated",
+                      ...(plan.patch?.approvalStatus !== undefined
+                        ? { approvalStatus: plan.patch.approvalStatus }
+                        : {}),
+                      ...(plan.patch?.verificationStatus !== undefined
+                        ? { verificationStatus: plan.patch.verificationStatus }
+                        : {}),
+                      lastVerified: today,
+                    })
+                    .where(eq(activities.id, existing[0].id));
+                  changed = true;
+                } else if (plan.patch && Object.keys(plan.patch).length > 0) {
+                  await tx
+                    .update(activities)
+                    .set({
+                      ...(plan.patch.approvalStatus !== undefined
+                        ? { approvalStatus: plan.patch.approvalStatus }
+                        : {}),
+                      ...(plan.patch.verificationStatus !== undefined
+                        ? { verificationStatus: plan.patch.verificationStatus }
+                        : {}),
+                      lastVerified: today,
+                    })
+                    .where(eq(activities.id, existing[0].id));
+                  changed = true;
+                }
+
+                if (changed) {
+                  report.counters.backfilled =
+                    (report.counters.backfilled ?? 0) + 1;
+                }
+              } else if (plan.kind === "update_status" && plan.patch) {
+                await tx
+                  .update(activities)
+                  .set({
+                    ...(plan.patch.approvalStatus !== undefined
+                      ? { approvalStatus: plan.patch.approvalStatus }
+                      : {}),
+                    ...(plan.patch.verificationStatus !== undefined
+                      ? { verificationStatus: plan.patch.verificationStatus }
+                      : {}),
+                    lastVerified: today,
+                  })
+                  .where(eq(activities.id, existing[0].id));
+                report.counters.backfilled =
+                  (report.counters.backfilled ?? 0) + 1;
+              }
+            } else {
+              report.counters.duplicatesExisting += 1;
+            }
             continue;
           }
 

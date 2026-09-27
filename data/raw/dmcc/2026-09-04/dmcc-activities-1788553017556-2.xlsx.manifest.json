@@ -1,0 +1,22 @@
+{
+  "file": "dmcc-activities-1788553017556-2.xlsx",
+  "discoveryId": "dmcc-activities",
+  "label": "DMCC Approved List of Activities (October 2025)",
+  "sourceUrl": "https://dmcc.ae/hubfs/website%20support%20documents/License%20Activity%2015%20OCT%202025.xlsx",
+  "finalUrl": "https://dmcc.ae/hubfs/website%20support%20documents/License%20Activity%2015%20OCT%202025.xlsx",
+  "httpStatus": 200,
+  "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "fetchedAt": "2026-09-04T20:16:57.555Z",
+  "bytes": 255034,
+  "sha256": "ba9ed3fec4fb91b021136c679889b0156957660deae93476ccd1f7a1da7934e4",
+  "jurisdiction": {
+    "slug": "dmcc",
+    "name": "DMCC",
+    "emirate": "dubai",
+    "type": "free_zone",
+    "authority": "Dubai Multi Commodities Centre",
+    "authorityWebsite": "https://www.dmcc.ae",
+    "sourceType": "free_zone_authority"
+  },
+  "notes": "Official DMCC XLSX; first sheet, headers in row 1, data from row 2 (__EMPTY_N columns)."
+}

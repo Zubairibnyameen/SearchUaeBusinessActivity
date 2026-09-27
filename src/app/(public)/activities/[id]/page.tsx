@@ -218,10 +218,12 @@ export default async function ActivityDetailPage({
     <div className="bg-neutral-50">
       <div className="mx-auto max-w-5xl px-6 py-10">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-1.5 text-sm text-neutral-500">
+        <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-neutral-500">
           <Link href="/" className="hover:text-neutral-800">Home</Link>
           <span aria-hidden>/</span>
-          <Link href="/jurisdictions" className="hover:text-neutral-800">Jurisdictions</Link>
+          <Link href="/search" className="hover:text-neutral-800">Search</Link>
+          <span aria-hidden>/</span>
+          <Link href="/activities" className="hover:text-neutral-800">Browse</Link>
           <span aria-hidden>/</span>
           <Link href={`/jurisdictions/${j.slug}`} className="hover:text-neutral-800">{j.name}</Link>
         </nav>
@@ -401,25 +403,41 @@ export default async function ActivityDetailPage({
             )}
 
             {verifiedApprovals.length > 0 ? (
-              <ul className="mt-4 space-y-4">
+              <ul className="mt-4 space-y-5">
                 {verifiedApprovals.map(({ approval: ap, authority, source }) => (
                   <li
                     key={ap.id}
-                    className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm"
+                    className="rounded-lg border border-emerald-200 bg-emerald-50 p-5 text-sm"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-emerald-900">{ap.name}</p>
                       <VerifiedBadge label="Verified approval" />
+                      <VerificationStatusBadge status={ap.verificationStatus} />
                     </div>
-                    <p className="mt-1.5 text-emerald-800">
-                      Type: {titleCaseEnum(ap.approvalType)} · Requirement
-                      status: <RequirementStatusBadge status={ap.status} /> ·
-                      Authority:{" "}
-                      {authority?.name ?? "—"} · Last verified:{" "}
-                      {ap.lastVerified ? formatDate(ap.lastVerified) : "—"}
-                    </p>
+
+                    <dl className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                      <div>
+                        <dt className="text-[11px] font-medium uppercase tracking-wide text-emerald-600">
+                          Approval type
+                        </dt>
+                        <dd className="mt-0.5 text-emerald-800">{titleCaseEnum(ap.approvalType)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[11px] font-medium uppercase tracking-wide text-emerald-600">
+                          Requirement status
+                        </dt>
+                        <dd className="mt-0.5"><RequirementStatusBadge status={ap.status} /></dd>
+                      </div>
+                      <div>
+                        <dt className="text-[11px] font-medium uppercase tracking-wide text-emerald-600">
+                          Authority
+                        </dt>
+                        <dd className="mt-0.5 text-emerald-800">{authority?.name ?? "—"}</dd>
+                      </div>
+                    </dl>
+
                     {ap.description && (
-                      <p className="mt-2 leading-relaxed text-emerald-800">{ap.description}</p>
+                      <p className="mt-3 leading-relaxed text-emerald-800">{ap.description}</p>
                     )}
                     {ap.applicationProcess && (
                       <p className="mt-2 leading-relaxed text-emerald-800">
@@ -429,7 +447,7 @@ export default async function ActivityDetailPage({
                     )}
                     {Array.isArray(ap.requiredDocuments) &&
                       ap.requiredDocuments.length > 0 && (
-                        <details className="mt-2">
+                        <details className="mt-3">
                           <summary className="cursor-pointer font-medium text-emerald-800">
                             Required documents ({ap.requiredDocuments.length})
                           </summary>
@@ -452,26 +470,59 @@ export default async function ActivityDetailPage({
                         </ul>
                       </details>
                     )}
-                    {source && (
-                      <p className="mt-2 text-xs text-emerald-700">
-                        Official source:{" "}
-                        <a
-                          href={source.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="break-all underline"
-                        >
-                          {source.title || source.url}
-                        </a>{" "}
-                        (retrieved {source.retrievedDate ? formatDate(source.retrievedDate) : "?"})
+
+                    {/* Evidence provenance — only shown when source data exists */}
+                    <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-100/50 p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">
+                        Verification evidence
                       </p>
-                    )}
+                      <dl className="mt-1.5 grid gap-x-8 gap-y-1 text-xs sm:grid-cols-2">
+                        {source && (
+                          <div className="flex gap-1">
+                            <dt className="text-emerald-600">Source:</dt>
+                            <dd className="min-w-0">
+                              <a
+                                href={source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="break-all text-emerald-800 underline"
+                              >
+                                {source.title || source.url}
+                              </a>
+                            </dd>
+                          </div>
+                        )}
+                        {authority?.name && (
+                          <div className="flex gap-1">
+                            <dt className="text-emerald-600">Authority:</dt>
+                            <dd className="text-emerald-800">{authority.name}</dd>
+                          </div>
+                        )}
+                        {source?.retrievedDate && (
+                          <div className="flex gap-1">
+                            <dt className="text-emerald-600">Source retrieved:</dt>
+                            <dd className="text-emerald-800">{formatDate(source.retrievedDate)}</dd>
+                          </div>
+                        )}
+                        {ap.lastVerified && (
+                          <div className="flex gap-1">
+                            <dt className="text-emerald-600">Last verified:</dt>
+                            <dd className="text-emerald-800">{formatDate(ap.lastVerified)}</dd>
+                          </div>
+                        )}
+                      </dl>
+                      {!source && (
+                        <p className="mt-1 text-xs text-emerald-700">
+                          Source not available — requires further research.
+                        </p>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="mt-4 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-600">
-                No VERIFIED regulatory approval records exist for this activity
+                No verified regulatory approval records exist for this activity
                 yet. Any signal above comes from the jurisdiction&apos;s own
                 activity listing and must be confirmed directly with the
                 indicated authority before you rely on it.
@@ -480,7 +531,7 @@ export default async function ActivityDetailPage({
           </Section>
 
           {/* ── 5. APPROVAL STATUS ────────────────────────────────────── */}
-          <Section number={5} title="Approval status">
+          <Section number={5} title="Approval status summary">
             <div className="flex flex-wrap items-center gap-2">
               {hasVerifiedAnything ? (
                 <VerifiedBadge label="Verified approval" />
@@ -511,13 +562,27 @@ export default async function ActivityDetailPage({
                 <ApprovalRequirementBadge status={a.approvalStatus} />
               </Field>
             </dl>
-            <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-              Status model: VERIFIED APPROVAL (authoritative source confirms) ·
-              APPROVAL SIGNAL (official listing indicates third-party
-              involvement; not yet independently verified) · RESEARCH REQUIRED
-              (no reliable conclusion yet). &quot;Not required&quot; is only
-              shown where an authoritative record actually confirms it.
-            </p>
+            <div className="mt-4 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-600">
+              <p className="font-medium text-neutral-700">How to read this page:</p>
+              <ul className="mt-1.5 list-inside list-disc space-y-0.5">
+                <li>
+                  <strong className="text-emerald-700">Verified approval</strong> — an authoritative source
+                  confirms this approval is required.
+                </li>
+                <li>
+                  <strong className="text-amber-700">Approval signal</strong> — the official activity
+                  listing indicates third-party involvement; not yet independently verified.
+                </li>
+                <li>
+                  <strong className="text-neutral-500">Research required</strong> — no reliable conclusion
+                  available yet.
+                </li>
+                <li>
+                  <strong>Not confirmed</strong> means the requirement has not been confirmed from available
+                  evidence — it does <strong>not</strong> mean the requirement does not exist.
+                </li>
+              </ul>
+            </div>
           </Section>
 
           {/* ── 6. GOVERNMENT FEES ────────────────────────────────────── */}

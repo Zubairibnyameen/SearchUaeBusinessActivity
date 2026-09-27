@@ -8,7 +8,7 @@
 
 import ExcelJS from "exceljs";
 import { fetchOfficial } from "../http";
-import { cleanText, isTruthyFlag, normalizeName, parseAmount } from "../normalize";
+import { cleanText, normalizeName } from "../normalize";
 import type {
   DiscoveredSource,
   FetchedPayload,
@@ -105,38 +105,42 @@ export const dmccAdapter: OfficialActivitySourceAdapter = {
     if (!sheet) throw new Error("DMCC XLSX has no worksheets");
 
     const rows: Record<string, unknown>[] = [];
-    const headers: string[] = [];
-    sheet.eachRow((row, rowNumber) => {
-      if (rowNumber === 1) {
-        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          headers[colNumber - 1] = String(cell.value ?? "");
+    let seenHeaderRow = false;
+    sheet.eachRow((row) => {
+      if (!seenHeaderRow) {
+        let hasValue = false;
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          if (cell.value != null && cell.value !== "") hasValue = true;
         });
-        return;
+        if (!hasValue) return; // skip fully blank leading rows
+        seenHeaderRow = true;
+        return; // skip the header row itself
       }
       const obj: Record<string, unknown> = {};
       row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        const key = headers[colNumber - 1] ?? `__EMPTY_${colNumber - 1}`;
-        obj[key] = cell.value;
+        obj[`__EMPTY_${colNumber - 1}`] = cell.value;
       });
       rows.push(obj);
     });
 
     const out: ParsedActivity[] = [];
-    for (const r of rows.slice(1)) {
+    for (const r of rows) {
       const m = mapRow(r);
       if (!m.activityCode || !m.activityName) continue;
 
-      const approval = isTruthyFlag(m.thirdPartyApprovalRequired)
+      // Column "Third Party Approval Required - Regulated Activity" names the
+      // approving authority/body verbatim (e.g. "Dubai Health Authority").
+      // Non-empty = authoritative positive indication; empty = no signal in the
+      // source, so the activity must remain UNKNOWN (never inferred "no approval").
+      const authority = cleanText(m.thirdPartyApprovalRequired);
+      const approval = authority
         ? {
             signal: "third_party_approval_indicated" as const,
             signalType: "third_party_approval_required" as const,
-            notes: "Third Party Approval flag = Y in official DMCC list",
+            authorityName: authority,
+            notes: `Approving regulator named in official DMCC list: ${authority}`,
           }
-        : {
-            signal: "no_signal" as const,
-            signalType: undefined,
-            notes: "Third Party Approval flag not set in official DMCC list",
-          };
+        : undefined;
 
       out.push({
         raw: r as Record<string, unknown>,

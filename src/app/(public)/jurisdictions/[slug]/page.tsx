@@ -19,9 +19,11 @@ import {
   OfficialSourceBadge,
 } from "@/components/ui/verification-badges";
 import {
+  formatAed,
   formatDate,
   formatEmirate,
   formatJurisdictionType,
+  titleCaseEnum,
 } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -139,6 +141,28 @@ export default async function JurisdictionDetailPage({
         and(inArray(approvals.activityId, ids), eq(approvals.verificationStatus, "verified"))
       );
     verifiedFeeCount = feeAgg?.count ?? 0;
+  }
+
+  // Verified fee details (government / regulatory) — from verified approvals
+  // only. Kept separate from licence prices and third-party costs. When fees
+  // are absent the section states exactly that — never AED 0.
+  let verifiedFeeRecords: {
+    approvalName: string;
+    amount: string | null;
+    feeType: string;
+  }[] = [];
+  if (ids.length > 0) {
+    verifiedFeeRecords = await db
+      .selectDistinct({
+        approvalName: approvals.name,
+        amount: approvalFees.amount,
+        feeType: approvalFees.feeType,
+      })
+      .from(approvalFees)
+      .innerJoin(approvals, eq(approvalFees.approvalId, approvals.id))
+      .where(
+        and(inArray(approvals.activityId, ids), eq(approvals.verificationStatus, "verified"))
+      );
   }
 
   // Sources & last verification info — includes BOTH activity-listing
@@ -270,6 +294,13 @@ export default async function JurisdictionDetailPage({
                 {activityCount === 1 ? "activity" : "activities"}
                 <span aria-hidden>&rarr;</span>
               </Link>
+              <Link
+                href={`/compare?jurisdictions=${j.slug}`}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-neutral-200 px-3.5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+              >
+                Compare this jurisdiction
+                <span aria-hidden>&rarr;</span>
+              </Link>
             </div>
           </div>
         </header>
@@ -344,6 +375,53 @@ export default async function JurisdictionDetailPage({
             <p className="text-sm text-neutral-500">
               No licence-type records are linked to indexed activities for this
               jurisdiction yet.
+            </p>
+          )}
+        </section>
+
+        {/* Verified government fees */}
+        <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-6">
+          <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-neutral-500">
+            Verified government fees
+          </h2>
+          {verifiedFeeRecords.length > 0 ? (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[480px] text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-400">
+                      <th className="py-2 pr-4 font-medium">Approval</th>
+                      <th className="py-2 pr-4 font-medium">Fee type</th>
+                      <th className="py-2 text-right font-medium">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {verifiedFeeRecords.map((f, i) => (
+                      <tr key={i}>
+                        <td className="py-2.5 pr-4 font-medium text-neutral-800">
+                          {f.approvalName}
+                        </td>
+                        <td className="py-2.5 pr-4 text-neutral-600">
+                          {titleCaseEnum(f.feeType)}
+                        </td>
+                        <td className="py-2.5 text-right tabular-nums text-neutral-700">
+                          {formatAed(f.amount) ?? "Amount not published"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-4 border-t border-neutral-100 pt-3 text-xs leading-relaxed text-neutral-500">
+                These are verified government / regulatory approval fees from
+                indexed sources. They are separate from licence prices and any
+                third-party costs.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-neutral-500">
+              No verified government approval fee is currently available in the
+              indexed data.
             </p>
           )}
         </section>

@@ -124,14 +124,21 @@ async function ComparisonResults({
   }
 
   // Available jurisdictions = those with imported official activity data.
+  // selectDistinctOn is required because the inner join to activities yields
+  // one row per activity; without it the same jurisdiction slug repeats (e.g.
+  // afz, dmcc), producing duplicate React keys in the selector and duplicate
+  // fallback selection slugs.
   const availableJurisdictions = await db
-    .select({
-      id: jurisdictions.id,
-      slug: jurisdictions.slug,
-      name: jurisdictions.name,
-      emirate: jurisdictions.emirate,
-      jurisdictionType: jurisdictions.jurisdictionType,
-    })
+    .selectDistinctOn(
+      [jurisdictions.id],
+      {
+        id: jurisdictions.id,
+        slug: jurisdictions.slug,
+        name: jurisdictions.name,
+        emirate: jurisdictions.emirate,
+        jurisdictionType: jurisdictions.jurisdictionType,
+      }
+    )
     .from(jurisdictions)
     .innerJoin(activities, eq(activities.jurisdictionId, jurisdictions.id))
     .where(eq(jurisdictions.status, "active"));

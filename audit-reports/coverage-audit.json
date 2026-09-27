@@ -1,0 +1,392 @@
+{
+  "generatedAt": "2026-09-04T18:24:33.006Z",
+  "dataset": {
+    "activities": 9109,
+    "sources": 10,
+    "activitySourceRows": 9109,
+    "activitySynonymRows": 17290,
+    "approvalSignalRows": 8107,
+    "approvalRows": 5,
+    "approvalFeeRows": 12,
+    "thirdPartyCostRows": 0,
+    "researchQueueRows": 120,
+    "verificationHistoryRows": 5
+  },
+  "jurisdictionCoverage": [
+    {
+      "slug": "rakez",
+      "name": "RAKEZ",
+      "activities": 3614,
+      "activitiesWithSource": 3614,
+      "activitiesWithApprovalSignal": 3614,
+      "approvalRecords": 1,
+      "verifiedApprovalRecords": 1,
+      "activitiesWithVerifiedApproval": 1,
+      "verifiedFeeRecords": 0,
+      "activitiesWithVerifiedFee": 0,
+      "thirdPartyCostRecords": 0
+    },
+    {
+      "slug": "spc",
+      "name": "SPC Free Zone",
+      "activities": 1979,
+      "activitiesWithSource": 1979,
+      "activitiesWithApprovalSignal": 1979,
+      "approvalRecords": 1,
+      "verifiedApprovalRecords": 1,
+      "activitiesWithVerifiedApproval": 1,
+      "verifiedFeeRecords": 0,
+      "activitiesWithVerifiedFee": 0,
+      "thirdPartyCostRecords": 0
+    },
+    {
+      "slug": "afz",
+      "name": "Ajman Free Zone",
+      "activities": 1689,
+      "activitiesWithSource": 1689,
+      "activitiesWithApprovalSignal": 1689,
+      "approvalRecords": 0,
+      "verifiedApprovalRecords": 0,
+      "activitiesWithVerifiedApproval": 0,
+      "verifiedFeeRecords": 0,
+      "activitiesWithVerifiedFee": 0,
+      "thirdPartyCostRecords": 0
+    },
+    {
+      "slug": "dmcc",
+      "name": "DMCC",
+      "activities": 1002,
+      "activitiesWithSource": 1002,
+      "activitiesWithApprovalSignal": 0,
+      "approvalRecords": 0,
+      "verifiedApprovalRecords": 0,
+      "activitiesWithVerifiedApproval": 0,
+      "verifiedFeeRecords": 0,
+      "activitiesWithVerifiedFee": 0,
+      "thirdPartyCostRecords": 0
+    },
+    {
+      "slug": "ifza",
+      "name": "IFZA",
+      "activities": 825,
+      "activitiesWithSource": 825,
+      "activitiesWithApprovalSignal": 825,
+      "approvalRecords": 3,
+      "verifiedApprovalRecords": 3,
+      "activitiesWithVerifiedApproval": 3,
+      "verifiedFeeRecords": 12,
+      "activitiesWithVerifiedFee": 3,
+      "thirdPartyCostRecords": 0
+    }
+  ],
+  "emptyJurisdictionCount": 17,
+  "approvalSignalByJurisdiction": [
+    {
+      "slug": "rakez",
+      "approvalSignal": "third_party_approval_indicated",
+      "count": 1851
+    },
+    {
+      "slug": "rakez",
+      "approvalSignal": "no_signal",
+      "count": 1763
+    },
+    {
+      "slug": "spc",
+      "approvalSignal": "no_signal",
+      "count": 1542
+    },
+    {
+      "slug": "spc",
+      "approvalSignal": "third_party_approval_indicated",
+      "count": 437
+    },
+    {
+      "slug": "ifza",
+      "approvalSignal": "third_party_approval_indicated",
+      "count": 246
+    },
+    {
+      "slug": "dmcc",
+      "approvalSignal": "unknown",
+      "count": 1002
+    },
+    {
+      "slug": "ifza",
+      "approvalSignal": "no_signal",
+      "count": 579
+    },
+    {
+      "slug": "afz",
+      "approvalSignal": "no_signal",
+      "count": 1689
+    }
+  ],
+  "approvalSignalBySignalType": [
+    {
+      "signalType": "third_party_authority_indicated",
+      "count": 437
+    },
+    {
+      "signalType": "third_party_approval_required",
+      "count": 2097
+    },
+    {
+      "signalType": "other_signal",
+      "count": 5573
+    }
+  ],
+  "verifiedApprovalGlobal": {
+    "verifiedApprovalRecords": 5,
+    "activitiesWithVerifiedApproval": 5
+  },
+  "verifiedFeeProfile": {
+    "verifiedFeeRecords": 12,
+    "activitiesWithVerifiedFee": 3
+  },
+  "thirdPartyCoverage": {
+    "totalRecords": 0,
+    "verifiedRecords": 0,
+    "byJurisdiction": []
+  },
+  "provenance": [
+    {
+      "label": "verifiedApprovalMissingSource",
+      "count": 0
+    },
+    {
+      "label": "verifiedApprovalMissingLastVerified",
+      "count": 0
+    },
+    {
+      "label": "verifiedApprovalSourceMissingContentHash",
+      "count": 2
+    },
+    {
+      "label": "sourcesMissingContentHash",
+      "count": 3
+    },
+    {
+      "label": "sourcesMissingLastVerified",
+      "count": 0
+    }
+  ],
+  "orphans": [
+    {
+      "status": "activitySourcesOrphanSourceId",
+      "count": 0
+    },
+    {
+      "status": "approvalFeesOrphanSourceId",
+      "count": 0
+    },
+    {
+      "status": "thirdPartyCostsOrphanSourceId",
+      "count": 0
+    },
+    {
+      "status": "approvalSignalsOrphanSourceId",
+      "count": 0
+    },
+    {
+      "status": "sourcePricesOrphanSourceId",
+      "count": 0
+    },
+    {
+      "status": "licenceTypesOrphanSourceId",
+      "count": 0
+    },
+    {
+      "status": "approvalsOrphanActivity",
+      "count": 0
+    },
+    {
+      "status": "approvalFeesOrphanApproval",
+      "count": 0
+    },
+    {
+      "status": "thirdPartyCostsOrphanApproval",
+      "count": 0
+    },
+    {
+      "status": "researchQueueOrphanActivity",
+      "count": 0
+    },
+    {
+      "status": "approvalSignalsOrphanActivity",
+      "count": 0
+    },
+    {
+      "status": "activitySourcesOrphanActivity",
+      "count": 0
+    }
+  ],
+  "researchQueue": {
+    "byStatus": [
+      {
+        "status": "needs_manual_review",
+        "count": 3
+      },
+      {
+        "status": "verified",
+        "count": 5
+      },
+      {
+        "status": "pending_review",
+        "count": 112
+      }
+    ],
+    "byJurisdiction": [
+      {
+        "status": "rakez",
+        "count": 50
+      },
+      {
+        "status": "ifza",
+        "count": 38
+      },
+      {
+        "status": "spc",
+        "count": 32
+      }
+    ]
+  },
+  "categoryDistribution": [
+    {
+      "slug": "rakez",
+      "officialCategory": null,
+      "count": 3614
+    },
+    {
+      "slug": "spc",
+      "officialCategory": null,
+      "count": 1979
+    },
+    {
+      "slug": "afz",
+      "officialCategory": null,
+      "count": 1689
+    },
+    {
+      "slug": "ifza",
+      "officialCategory": null,
+      "count": 825
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Personal & Community Services",
+      "count": 107
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "General Trading",
+      "count": 92
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Personal & Household Goods",
+      "count": 89
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Healthcare",
+      "count": 89
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Professional Services",
+      "count": 86
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Construction, Engineering & Machinery",
+      "count": 85
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Technology & Telecom",
+      "count": 71
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Food & Agro",
+      "count": 68
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Financials",
+      "count": 44
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Education",
+      "count": 36
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Automotive Transportation",
+      "count": 31
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Hospitality",
+      "count": 29
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Shipping & Logistics",
+      "count": 29
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Media & Marketing",
+      "count": 24
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Energy",
+      "count": 23
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Aviation",
+      "count": 20
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Crypto & Web3",
+      "count": 19
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Real Estate & Facility Services",
+      "count": 19
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Support Services",
+      "count": 16
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Precious Metals & Stones",
+      "count": 16
+    },
+    {
+      "slug": "dmcc",
+      "officialCategory": "Metals & Minerals",
+      "count": 9
+    }
+  ],
+  "licencesMissing": 1980,
+  "dataQualityFlags": [
+    "verifiedApprovalSourceMissingContentHash: 2",
+    "verifiedFeeRecords: 12",
+    "jurisdictionsWithVerifiedFee: 1",
+    "activitiesWithoutApprovalSignalRecord: 1002",
+    "activitiesWithLicenceTypeMissing: 1980",
+    "sourcesMissingContentHash: 3",
+    "totalActivities: 9109",
+    "globalSourceCoveragePct: 100.0%"
+  ]
+}

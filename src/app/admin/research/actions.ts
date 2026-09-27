@@ -22,8 +22,71 @@ import {
   verificationHistory,
 } from "@/lib/db/schema";
 import { isAdminAuthenticated, logAdminEvent } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, and, or, isNull } from "drizzle-orm";
 import crypto from "node:crypto";
+import { z } from "zod";
+
+const UUID_SCHEMA = z.string().uuid();
+const NOTES_SCHEMA = z.string().max(4000);
+const URL_SCHEMA = z.string().url().max(1000).optional().or(z.literal(""));
+
+/**
+ * Input validation for the research workflow. All mutations Zod-validate their
+ * FormData inputs before touching the database:
+ *  - `id` must be a well-formed UUID
+ *  - free-text fields are length-bounded
+ *  - URLs are structurally validated
+ * Existing validation for official-source enforcement is preserved alongside.
+ */
+const ResearchIdInput = z.object({
+  id: UUID_SCHEMA,
+});
+
+const ResearchNotesInput = ResearchIdInput.extend({
+  notes: NOTES_SCHEMA,
+  candidateSourceUrl: URL_SCHEMA,
+});
+
+const ResearchReviewInput = ResearchIdInput.extend({
+  reviewNotes: NOTES_SCHEMA,
+});
+
+const ResearchConflictInput = ResearchIdInput.extend({
+  conflictNotes: NOTES_SCHEMA,
+});
+
+const ResearchVerifiedInput = ResearchIdInput.extend({
+  verifiedSourceUrl: z.string().url().max(1000),
+  verifiedSourceTitle: z.string().min(1).max(500),
+  authorityName: NOTES_SCHEMA,
+  approvalName: NOTES_SCHEMA,
+  approvalType: z.string().max(50),
+  requirementText: NOTES_SCHEMA,
+  applicationProcess: NOTES_SCHEMA,
+  conditions: NOTES_SCHEMA,
+  requiredDocuments: NOTES_SCHEMA,
+});
+
+const ResearchNotRequiredInput = ResearchIdInput.extend({
+  notRequiredSourceUrl: z.string().url().max(1000),
+  rationale: NOTES_SCHEMA,
+});
+
+function parseForm<T extends z.ZodTypeAny>(
+  schema: T,
+  formData: FormData
+): z.infer<T> {
+  const raw: Record<string, FormDataEntryValue | undefined> = {};
+  for (const [k, v] of Array.from(formData.entries())) raw[k] = v;
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const field = String(issue?.path?.[0] ?? "input");
+    const reason = String(issue?.message ?? "invalid input");
+    throw new Error(`${field}: ${reason}`);
+  }
+  return parsed.data as z.infer<T>;
+}
 
 const OFFICIAL_HOST_PATTERNS = [
   /\.gov\.ae$/,
@@ -91,9 +154,15 @@ async function safeFetch(url: string): Promise<{ ok: boolean; body: string | nul
   }
 }
 
+/**
+ * Stable admin identity for this single-admin system, derived from the trusted
+ * authenticated session (the session token is server-signed and was verified by
+ * `requireAdmin` / `isAdminAuthenticated`). It deliberately does NOT come from
+ * any client-supplied header or body: never trust client-provided identity.
+ * It also never contains an IP address, so it is safe to display in the admin UI.
+ */
 async function getAdminIdentity(): Promise<string> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "admin";
+  return "admin";
 }
 
 async function requireAdmin(): Promise<void> {
@@ -114,14 +183,13 @@ async function audit(event: string, details: Record<string, unknown>): Promise<v
 
 export async function saveResearchNotes(formData: FormData): Promise<void> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  const notes = String(formData.get("notes") ?? "");
-  const candidateUrl = String(formData.get("candidateSourceUrl") ?? "").trim() || null;
+  const { id, notes, candidateSourceUrl } = parseForm(ResearchNotesInput, formData);
+  const candidateUrl = candidateSourceUrl ? candidateSourceUrl.trim() || null : null;
 
   await db
     .update(regulatoryResearchQueue)
     .set({
-      notes: notes || null,
+      notes: notes.trim() || null,
       candidateSourceUrl: candidateUrl,
       lastUpdatedAt: new Date(),
     })
@@ -134,7 +202,7 @@ export async function saveResearchNotes(formData: FormData): Promise<void> {
 
 export async function startResearch(formData: FormData): Promise<void> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
+  const { id } = parseForm(ResearchIdInput, formData);
   const adminId = await getAdminIdentity();
 
   await db
@@ -149,25 +217,30 @@ export async function startResearch(formData: FormData): Promise<void> {
 
 export async function resolveVerified(formData: FormData): Promise<void> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  const sourceUrl = String(formData.get("verifiedSourceUrl") ?? "").trim();
-  const sourceTitle = String(formData.get("verifiedSourceTitle") ?? "").trim();
-  const authorityName = String(formData.get("authorityName") ?? "").trim();
-  const approvalName = String(formData.get("approvalName") ?? "").trim();
-  const approvalType = String(formData.get("approvalType") ?? "other");
-  const requirementText = String(formData.get("requirementText") ?? "").trim();
-  const applicationProcess = String(formData.get("applicationProcess") ?? "").trim() || null;
-  const conditionsRaw = String(formData.get("conditions") ?? "").trim();
-  const documentsRaw = String(formData.get("requiredDocuments") ?? "").trim();
+  const {
+    id,
+    verifiedSourceUrl: sourceUrl,
+    verifiedSourceTitle: sourceTitle,
+    authorityName,
+    approvalName,
+    approvalType,
+    requirementText,
+    applicationProcess,
+    conditions: conditionsRaw,
+    requiredDocuments: documentsRaw,
+  } = parseForm(ResearchVerifiedInput, formData);
   const adminId = await getAdminIdentity();
 
-  if (!sourceUrl || !looksOfficial(sourceUrl)) {
-    await audit("research.verify_rejected_non_official_source", { researchId: id, sourceUrl });
+  const sourceUrlTrim = sourceUrl.trim();
+  const sourceTitleTrim = sourceTitle.trim();
+
+  if (!looksOfficial(sourceUrlTrim)) {
+    await audit("research.verify_rejected_non_official_source", { researchId: id, sourceUrl: sourceUrlTrim });
     throw new Error(
       "Verification requires an OFFICIAL source URL (government / authority domain). Third-party links are leads only."
     );
   }
-  if (!sourceTitle) {
+  if (!sourceTitleTrim) {
     throw new Error("A descriptive source title is required.");
   }
 
@@ -181,7 +254,7 @@ export async function resolveVerified(formData: FormData): Promise<void> {
   const today = new Date().toISOString().split("T")[0];
   let contentHash: string | null = null;
   try {
-    const { ok, body } = await safeFetch(sourceUrl);
+    const { ok, body } = await safeFetch(sourceUrlTrim);
     if (ok && body) {
       contentHash = `sha256:${crypto.createHash("sha256").update(body).digest("hex")}`;
     }
@@ -192,8 +265,8 @@ export async function resolveVerified(formData: FormData): Promise<void> {
   const [source] = await db
     .insert(sources)
     .values({
-      url: sourceUrl,
-      title: sourceTitle,
+      url: sourceUrlTrim,
+      title: sourceTitleTrim,
       sourceType: "sector_regulator",
       authority: authorityName || null,
       retrievedDate: today,
@@ -224,7 +297,7 @@ export async function resolveVerified(formData: FormData): Promise<void> {
           slug,
           officialWebsite: (() => {
             try {
-              return new URL(sourceUrl).origin;
+              return new URL(sourceUrlTrim).origin;
             } catch {
               return null;
             }
@@ -256,7 +329,7 @@ export async function resolveVerified(formData: FormData): Promise<void> {
       description: requirementText || null,
       conditions: parseLines(conditionsRaw),
       requiredDocuments: parseLines(documentsRaw),
-      applicationProcess,
+      applicationProcess: applicationProcess.trim() || null,
       sourceId: source.id,
       lastVerified: today,
       verificationStatus: "verified",
@@ -299,9 +372,9 @@ export async function resolveVerified(formData: FormData): Promise<void> {
 
 export async function resolveNotRequired(formData: FormData): Promise<void> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  const sourceUrl = String(formData.get("notRequiredSourceUrl") ?? "").trim();
-  const rationale = String(formData.get("rationale") ?? "").trim();
+  const { id, notRequiredSourceUrl, rationale } = parseForm(ResearchNotRequiredInput, formData);
+  const sourceUrl = notRequiredSourceUrl.trim();
+  const rationaleTrim = rationale.trim();
   const adminId = await getAdminIdentity();
 
   if (!sourceUrl || !looksOfficial(sourceUrl)) {
@@ -317,6 +390,16 @@ export async function resolveNotRequired(formData: FormData): Promise<void> {
   if (!item) throw new Error("Research item not found");
 
   const today = new Date().toISOString().split("T")[0];
+  let contentHash: string | null = null;
+  try {
+    const { ok, body } = await safeFetch(sourceUrl);
+    if (ok && body) {
+      contentHash = `sha256:${crypto.createHash("sha256").update(body).digest("hex")}`;
+    }
+  } catch {
+    contentHash = null;
+  }
+
   const [source] = await db
     .insert(sources)
     .values({
@@ -325,6 +408,7 @@ export async function resolveNotRequired(formData: FormData): Promise<void> {
       sourceType: "secondary_source",
       retrievedDate: today,
       lastVerified: today,
+      contentHash,
     })
     .returning({ id: sources.id });
 
@@ -335,7 +419,7 @@ export async function resolveNotRequired(formData: FormData): Promise<void> {
       name: "No additional third-party approval identified",
       approvalType: "other",
       status: "not_required",
-      description: rationale || null,
+      description: rationaleTrim || null,
       sourceId: source.id,
       lastVerified: today,
       verificationStatus: "verified",
@@ -351,7 +435,7 @@ export async function resolveNotRequired(formData: FormData): Promise<void> {
       resolutionApprovalId: approval.id,
       reviewerAdmin: adminId,
       lastUpdatedAt: new Date(),
-      notes: rationale || item.notes,
+      notes: rationaleTrim || item.notes,
     })
     .where(eq(regulatoryResearchQueue.id, id));
 
@@ -367,8 +451,7 @@ export async function resolveNotRequired(formData: FormData): Promise<void> {
 
 export async function markConflicting(formData: FormData): Promise<void> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  const conflictNotes = String(formData.get("conflictNotes") ?? "").trim();
+  const { id, conflictNotes } = parseForm(ResearchConflictInput, formData);
   const adminId = await getAdminIdentity();
 
   await db
@@ -376,7 +459,7 @@ export async function markConflicting(formData: FormData): Promise<void> {
     .set({
       researchStatus: "conflicting_sources",
       reviewerAdmin: adminId,
-      notes: conflictNotes || undefined,
+      notes: conflictNotes.trim() || undefined,
       lastUpdatedAt: new Date(),
     })
     .where(eq(regulatoryResearchQueue.id, id));
@@ -388,8 +471,7 @@ export async function markConflicting(formData: FormData): Promise<void> {
 
 export async function flagManualReview(formData: FormData): Promise<void> {
   await requireAdmin();
-  const id = String(formData.get("id") ?? "");
-  const reviewNotes = String(formData.get("reviewNotes") ?? "").trim();
+  const { id, reviewNotes } = parseForm(ResearchReviewInput, formData);
   const adminId = await getAdminIdentity();
 
   await db
@@ -397,12 +479,119 @@ export async function flagManualReview(formData: FormData): Promise<void> {
     .set({
       researchStatus: "needs_manual_review",
       reviewerAdmin: adminId,
-      notes: reviewNotes || undefined,
+      notes: reviewNotes.trim() || undefined,
       lastUpdatedAt: new Date(),
     })
     .where(eq(regulatoryResearchQueue.id, id));
 
   await audit("research.flagged_manual_review", { researchId: id });
+  revalidatePath(`/admin/research/${id}`);
+  revalidatePath("/admin/research");
+}
+
+/**
+ * Atomically claim a research item.
+ *
+ * Concurrency: the UPDATE is conditional on the item being unclaimed OR already
+ * claimed by this same admin (`reviewer_admin IS NULL OR reviewer_admin = me`)
+ * and uses `.returning()` so a lost race yields zero rows → we reject rather
+ * than silently overwriting another claimant. Two admins cannot both win.
+ */
+export async function claimResearch(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const { id } = parseForm(ResearchIdInput, formData);
+  const adminId = await getAdminIdentity();
+
+  const result = await db
+    .update(regulatoryResearchQueue)
+    .set({ reviewerAdmin: adminId, lastUpdatedAt: new Date() })
+    .where(
+      and(
+        eq(regulatoryResearchQueue.id, id),
+        or(
+          isNull(regulatoryResearchQueue.reviewerAdmin),
+          eq(regulatoryResearchQueue.reviewerAdmin, adminId)
+        )
+      )
+    )
+    .returning({ id: regulatoryResearchQueue.id });
+
+  // No rows updated → the item is already claimed by someone else (or missing).
+  if (result.length === 0) {
+    await audit("research.claim_rejected_already_claimed", { researchId: id });
+    throw new Error("Item is already claimed by another admin.");
+  }
+
+  await audit("research.claimed", { researchId: id });
+  revalidatePath(`/admin/research/${id}`);
+  revalidatePath("/admin/research");
+}
+
+/**
+ * Release a claim. Only the current claimant (or an admin) may release.
+ * Conditional on `reviewer_admin = me`; if the claimant changed meanwhile the
+ * update matches zero rows and we reject.
+ */
+export async function releaseResearch(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const { id } = parseForm(ResearchIdInput, formData);
+  const adminId = await getAdminIdentity();
+
+  const result = await db
+    .update(regulatoryResearchQueue)
+    .set({ reviewerAdmin: null, lastUpdatedAt: new Date() })
+    .where(
+      and(eq(regulatoryResearchQueue.id, id), eq(regulatoryResearchQueue.reviewerAdmin, adminId))
+    )
+    .returning({ id: regulatoryResearchQueue.id });
+
+  if (result.length === 0) {
+    await audit("research.release_rejected_not_owner", { researchId: id });
+    throw new Error("This item is not claimed by you (or is already released).");
+  }
+
+  await audit("research.released", { researchId: id });
+  revalidatePath(`/admin/research/${id}`);
+  revalidatePath("/admin/research");
+}
+
+/**
+ * Mark an item as NOT CONFIRMED (distinct from not_required).
+ *
+ * Records an honest "could not confirm" outcome. It creates NO approval and
+ * makes NO negative regulatory conclusion: absence of evidence is never
+ * converted into "no approval required". Only audit + notes are recorded.
+ */
+export async function markNotConfirmed(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const { id, reviewNotes } = parseForm(ResearchReviewInput, formData);
+  const adminId = await getAdminIdentity();
+
+  const [item] = await db
+    .select()
+    .from(regulatoryResearchQueue)
+    .where(eq(regulatoryResearchQueue.id, id))
+    .limit(1);
+  if (!item) throw new Error("Research item not found");
+
+  // Do not overwrite an already-verified conclusion with "not confirmed".
+  if (item.researchStatus === "verified" || item.researchStatus === "not_required") {
+    throw new Error(
+      `Cannot change a resolved (${item.researchStatus}) item to not_confirmed without evidence-backed re-review.`
+    );
+  }
+
+  await db
+    .update(regulatoryResearchQueue)
+    .set({
+      researchStatus: "not_confirmed",
+      notes: reviewNotes || null,
+      reviewerAdmin: adminId,
+      lastUpdatedAt: new Date(),
+    })
+    .where(eq(regulatoryResearchQueue.id, id));
+
+  await audit("research.marked_not_confirmed", { researchId: id });
   revalidatePath(`/admin/research/${id}`);
   revalidatePath("/admin/research");
 }

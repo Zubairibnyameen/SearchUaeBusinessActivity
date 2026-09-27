@@ -431,9 +431,9 @@ function deriveFeeIntelligence(
     amount: f.amount,
     currency: f.currency,
     feeType: f.feeType,
-    feeBasis: "fixed" as const,
+    feeBasis: f.feeBasis ?? "fixed",
     conditions: null,
-    sourceId: null,
+    sourceId: f.sourceId,
     lastVerified: null,
     verificationStatus: "verified" as const,
   }));
@@ -443,7 +443,7 @@ function deriveFeeIntelligence(
     description: null,
     estimatedAmount: tpc.estimatedAmount,
     currency: tpc.currency,
-    sourceId: null,
+    sourceId: tpc.sourceId,
     verificationStatus: "verified" as const,
   }));
 

@@ -7,15 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:report": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary",
     "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install",
+    "ci": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "verify": "tsx src/scripts/verify.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
+    "db:migrate:local": "tsx src/scripts/db-guard.ts db:migrate && drizzle-kit migrate",
+    "db:push": "tsx src/scripts/db-guard.ts db:push && drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/lib/db/seed.ts"
+    "db:seed": "tsx src/scripts/db-guard.ts db:seed && tsx src/lib/db/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -37,6 +45,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
@@ -44,6 +53,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.11",
     "@vitest/ui": "^4.1.11",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",

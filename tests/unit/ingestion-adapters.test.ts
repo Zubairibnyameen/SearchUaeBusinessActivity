@@ -1,60 +1,72 @@
 import { describe, it, expect, vi } from "vitest";
 
-const { MockWorkbook } = vi.hoisted(() => {
-  const mockSheet = {
-    eachRow: (cb: (row: { eachCell: (opts: unknown, cb2: (cell: { value: unknown }, col: number) => void) => void }, rowNumber: number) => void) => {
-      cb({ eachCell: () => {} }, 1);
-      cb(
-        {
-          eachCell: (_opts: unknown,             cb2: (cell: { value: unknown }, col: number) => void) => {
-            cb2({ value: "" }, 1);
-            cb2({ value: "" }, 2);
-            cb2({ value: "" }, 3);
-            cb2({ value: "" }, 4);
-            cb2({ value: "" }, 5);
-            cb2({ value: "Sub-header" }, 6);
-            cb2({ value: "" }, 7);
-            cb2({ value: "" }, 8);
-            cb2({ value: "" }, 9);
-            cb2({ value: "" }, 10);
-            cb2({ value: "" }, 11);
-            cb2({ value: "" }, 12);
-            cb2({ value: "" }, 13);
-            cb2({ value: "" }, 14);
-            cb2({ value: "" }, 15);
+const { MockWorkbook, setMockWorkbookSheet } = vi.hoisted(() => {
+  interface CellFn {
+    (opts: unknown, cb2: (cell: { value: unknown }, col: number) => void): void;
+  }
+
+  const makeSheet = (rows: { cells: { value: unknown; col: number }[] }[]) => ({
+    eachRow: (
+      cb: (
+        row: { eachCell: CellFn },
+        rowNumber: number
+      ) => void
+    ) => {
+      rows.forEach((row, i) => {
+        cb(
+          {
+            eachCell: (_opts: unknown, cb2: (cell: { value: unknown }, col: number) => void) => {
+              for (const c of row.cells) cb2(c, c.col);
+            },
           },
-        },
-        2,
-      );
-      cb(
-        {
-          eachCell: (_opts: unknown, cb2: (cell: { value: unknown }, col: number) => void) => {
-            cb2({ value: "" }, 1);
-            cb2({ value: "" }, 2);
-            cb2({ value: "" }, 3);
-            cb2({ value: "" }, 4);
-            cb2({ value: "" }, 5);
-            cb2({ value: "ACT-001" }, 6);
-            cb2({ value: "General Trading" }, 7);
-            cb2({ value: "" }, 8);
-            cb2({ value: "Commercial" }, 9);
-            cb2({ value: "General trading activities" }, 10);
-            cb2({ value: "" }, 11);
-            cb2({ value: "" }, 12);
-            cb2({ value: "" }, 13);
-            cb2({ value: "" }, 14);
-            cb2({ value: "Y" }, 15);
-          },
-        },
-        3,
-      );
+          i + 1
+        );
+      });
     },
-  };
+  });
+
+  const defaultRows = [
+    { cells: [] },
+    {
+      cells: [
+        { value: "Business Sector", col: 3 },
+        { value: "Sub Sector", col: 4 },
+        { value: "Activity ISIC4 Code", col: 5 },
+        { value: "Activity Code", col: 6 },
+        { value: "Activity Name", col: 7 },
+        { value: "License Type", col: 9 },
+        { value: "Activity Description", col: 10 },
+        { value: "Third party approval required - Regulated Activity", col: 15 },
+      ],
+    },
+    {
+      cells: [
+        { value: "Energy", col: 3 },
+        { value: "Services in Energy Sector", col: 4 },
+        { value: "0910001", col: 5 },
+        { value: "ACT-001", col: 6 },
+        { value: "General Trading", col: 7 },
+        { value: "Commercial", col: 9 },
+        { value: "General trading activities", col: 10 },
+        { value: "Dubai Health Authority", col: 15 },
+      ],
+    },
+  ];
+
+  let currentSheet = makeSheet(defaultRows);
+
   class MockWorkbook {
     xlsx = { load: vi.fn().mockResolvedValue(undefined) };
-    worksheets = [mockSheet];
+    get worksheets() {
+      return [currentSheet];
+    }
   }
-  return { MockWorkbook };
+
+  const setMockWorkbookSheet = (rows: { cells: { value: unknown; col: number }[] }[]) => {
+    currentSheet = makeSheet(rows);
+  };
+
+  return { MockWorkbook, setMockWorkbookSheet };
 });
 
 vi.mock("exceljs", () => ({
@@ -213,6 +225,43 @@ describe("dmccAdapter", () => {
       expect(result[0].activityCode).toBe("ACT-001");
       expect(result[0].approval).toBeDefined();
       expect(result[0].approval?.signal).toBe("third_party_approval_indicated");
+      expect(result[0].approval?.signalType).toBe("third_party_approval_required");
+      expect(result[0].approval?.authorityName).toBe("Dubai Health Authority");
+    });
+
+    it("keeps approval undefined for an empty authority column (stays UNKNOWN)", async () => {
+setMockWorkbookSheet([
+        { cells: [] },
+        {
+          cells: [
+            { value: "Activity Code", col: 6 },
+            { value: "Third party approval required - Regulated Activity", col: 15 },
+          ],
+        },
+        {
+          cells: [
+            { value: "ACT-002", col: 6 },
+            { value: "General Trading", col: 7 },
+          ],
+        },
+      ]);
+      const payload = {
+        discovery: {
+          id: "test",
+          label: "Test",
+          url: "http://example.com/test.xlsx",
+          format: "xlsx" as const,
+        },
+        body: Buffer.from("fake-xlsx"),
+        fetchedAt: new Date(),
+      };
+      const rows = await dmccAdapter.parse(payload);
+      const row = rows.find((r) => r.activityCode === "ACT-002");
+      expect(row).toBeDefined();
+      expect(row?.approval).toBeUndefined();
+      const normalized = dmccAdapter.normalize(row!);
+      expect(normalized.approvalSignal).toBe("unknown");
+      expect(normalized.signalDetail).toBeUndefined();
     });
   });
 });

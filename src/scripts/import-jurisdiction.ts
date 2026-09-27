@@ -1,7 +1,11 @@
 /**
  * Unified ingestion runner.
  *
- * Usage: npx tsx src/scripts/import-jurisdiction.ts <slug> [--dry-run]
+ * Usage: npx tsx src/scripts/import-jurisdiction.ts <slug> [--dry-run] [--backfill-signals]
+ *
+ * --backfill-signals: idempotently backfill approval signals onto ALREADY
+ * imported activities (source records + activity_approval_signals upserted,
+ * activities updated). Nothing is duplicated on re-runs.
  *
  * Adapters are registered explicitly; missing ones fail fast with a clear
  * message instead of silently importing nothing.
@@ -49,9 +53,12 @@ function notApprovedStub(slug: string, name: string) {
 async function main() {
   const slug = process.argv[2];
   const dryRun = process.argv.includes("--dry-run");
+  const backfillSignals = process.argv.includes("--backfill-signals");
 
   if (!slug) {
-    console.error("Usage: npx tsx src/scripts/import-jurisdiction.ts <slug> [--dry-run]");
+    console.error(
+      "Usage: npx tsx src/scripts/import-jurisdiction.ts <slug> [--dry-run] [--backfill-signals]"
+    );
     console.error(`Available: ${Object.keys(ADAPTERS).join(", ")}`);
     process.exit(1);
   }
@@ -69,9 +76,11 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Running import for '${slug}'${dryRun ? " (DRY RUN)" : ""}\n`);
+  console.log(
+    `Running import for '${slug}'${dryRun ? " (DRY RUN)" : ""}${backfillSignals ? " (BACKFILL SIGNALS)" : ""}\n`
+  );
   const adapter = mod[adapterKey] as OfficialActivitySourceAdapter;
-  const report = await runImport(adapter, { dryRun });
+  const report = await runImport(adapter, { dryRun, backfillSignals });
 
   // Persist machine-readable report
   const outDir = path.join(process.cwd(), "data", "reports", slug);

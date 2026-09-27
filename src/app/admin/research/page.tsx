@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<string, string> = {
   not_required: "Not required",
   conflicting_sources: "Conflicting sources",
   needs_manual_review: "Needs manual review",
+  not_confirmed: "Not confirmed",
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -21,6 +22,7 @@ const STATUS_STYLES: Record<string, string> = {
   not_required: "bg-emerald-50 text-emerald-700",
   conflicting_sources: "bg-red-50 text-red-700",
   needs_manual_review: "bg-amber-50 text-amber-800",
+  not_confirmed: "bg-neutral-200 text-neutral-700",
 };
 
 interface ResearchListPageProps {

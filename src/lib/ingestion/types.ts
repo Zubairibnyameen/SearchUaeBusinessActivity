@@ -168,6 +168,8 @@ export interface ImportCounters {
   duplicatesInBatch: number;
   duplicatesExisting: number;
   reviewFlagged: number;
+  /** Rows whose approval signal / status were backfilled onto existing activities. */
+  backfilled?: number;
 }
 
 export interface ImportReport {

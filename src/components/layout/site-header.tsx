@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const NAV_ITEMS = [
   { href: "/search", label: "Search Activities" },
+  { href: "/activities", label: "Browse Activities" },
   { href: "/jurisdictions", label: "Jurisdictions" },
   { href: "/compare", label: "Compare" },
 ];

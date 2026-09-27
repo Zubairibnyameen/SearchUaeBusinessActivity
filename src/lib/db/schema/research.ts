@@ -29,6 +29,10 @@ export const regulatoryResearchStatusEnum = pgEnum("regulatory_research_status",
   "not_required",
   "conflicting_sources",
   "needs_manual_review",
+  // Honest "we could not confirm despite research" state. Distinct from
+  // not_required: absence of evidence is NEVER converted into a negative
+  // regulatory conclusion.
+  "not_confirmed",
 ]);
 
 export const regulatoryResearchQueue = pgTable(
