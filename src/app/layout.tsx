@@ -12,8 +12,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const LOCAL_FALLBACK_ORIGIN = "http://localhost:3000";
+const appOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(appOrigin || LOCAL_FALLBACK_ORIGIN),
   title: {
     default: "UAE Activity Intelligence | Business Activity & Jurisdiction Platform",
     template: "%s | UAE Activity Intelligence",
