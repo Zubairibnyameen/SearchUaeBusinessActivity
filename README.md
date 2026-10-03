@@ -79,13 +79,25 @@ variables — it will refuse to start meaningful DB-backed flows without them:
 | Variable                | Purpose                                                        |
 | ----------------------- | -------------------------------------------------------------- |
 | `DATABASE_URL`          | PostgreSQL connection string (postgres://… or postgresql://…)  |
-| `ADMIN_PASSWORD`        | Password for the admin login                                   |
-| `ADMIN_SESSION_SECRET`  | HMAC secret that signs admin session tokens (random 64 chars)  |
 
 Optional: `NEXT_PUBLIC_APP_URL` for canonical links.
 
 Placeholder values (e.g. `change-this-to-a-secure-password`) are detected by the
 environment validator and treated as unconfigured.
+
+### Admin access
+
+There is **no admin password**. `/admin` is authorized by Supabase (Google) login:
+
+1. The visitor signs in with Google via `/signin`.
+2. On sign-in their e-mail is looked up in the `ADMIN_EMAILS` allowlist and
+   promoted to `role = 'admin'` in `app_users`.
+3. Every admin page, route handler and server action calls `requireAdmin()`,
+   which requires a verified session with `role = 'admin'` and an `active`
+   status.
+
+An empty `ADMIN_EMAILS` grants no admin access at all, so the admin area is
+unreachable until you fill it in. Set `ADMIN_EMAILS` to your own address.
 
 ### 3. Run the database migrations
 

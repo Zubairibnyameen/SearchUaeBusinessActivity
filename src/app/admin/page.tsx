@@ -11,6 +11,7 @@ import {
   regulatoryResearchQueue,
 } from "@/lib/db/schema";
 import { eq, sql, and, inArray, isNull } from "drizzle-orm";
+import { getUserStats } from "@/lib/auth/viewer";
 
 async function getCounts() {
   const [
@@ -105,7 +106,17 @@ function StatCard({
 }
 
 export default async function AdminDashboardPage() {
-  const c = await getCounts();
+  // Dataset counts are cheap and always available; the SaaS user stats depend on
+  // `app_users`, which may not exist on a deployment that has not run the auth
+  // migration yet. Degrade to a notice rather than 500-ing the whole dashboard.
+  const [c, userStatsResult] = await Promise.all([
+    getCounts(),
+    getUserStats().then(
+      stats => ({ stats, error: null as string | null }),
+      () => ({ stats: null, error: "User statistics are unavailable." })
+    ),
+  ]);
+  const userStats = userStatsResult.stats;
   const tpa = c.signals.third_party_approval_indicated ?? 0;
   const unknown = c.signals.unknown ?? 0;
   const noSignal = c.signals.no_signal ?? 0;
@@ -114,7 +125,48 @@ export default async function AdminDashboardPage() {
     <div>
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-3">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-3">
+        Users
+      </h2>
+      {userStats ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            value={userStats.total}
+            label="Total users"
+            href="/admin/users"
+          />
+          <StatCard
+            value={userStats.active}
+            label="Active users"
+            accent="emerald"
+            href="/admin/users?status=active"
+          />
+          <StatCard
+            value={userStats.suspended}
+            label="Suspended users"
+            accent={userStats.suspended > 0 ? "amber" : "neutral"}
+            href="/admin/users?status=suspended"
+          />
+          <StatCard
+            value={userStats.admins}
+            label="Administrators"
+            href="/admin/users?role=admin"
+          />
+          <StatCard
+            value={userStats.newLast7Days}
+            label="New users ┬╖ 7 days"
+            href="/admin/users"
+          />
+          <StatCard value={userStats.newLast30Days} label="New users ┬╖ 30 days" />
+          <StatCard value={userStats.signInsLast7Days} label="Sign-ins ┬╖ 7 days" />
+        </div>
+      ) : (
+        <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          {userStatsResult.error}
+        </p>
+      )}
+
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mt-8 mb-3">
         Dataset
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -127,7 +179,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mt-8 mb-3">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mt-8 mb-3">
         Regulatory verification
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -145,7 +197,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mt-8 mb-3">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mt-8 mb-3">
         Work queues
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -165,8 +217,14 @@ export default async function AdminDashboardPage() {
           accent="emerald"
           href="/admin/research?status=verified"
         />
-        <StatCard value={c.pendingReviewQueue} label="Import review queue" />
+        <StatCard
+          value={c.pendingReviewQueue}
+          label="Import review queue"
+          href="/admin/review?status=pending_review"
+          accent={c.pendingReviewQueue > 0 ? "amber" : "neutral"}
+        />
       </div>
+
 
       <div className="mt-8 p-6 rounded-lg bg-neutral-50 border border-neutral-200 text-sm text-neutral-600 space-y-1">
         <p className="font-medium text-neutral-700">Data rules enforced</p>

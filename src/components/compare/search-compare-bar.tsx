@@ -51,7 +51,7 @@ export function SearchCompareBar({
           <p className="text-xs font-medium text-neutral-700">
             Compare jurisdictions
           </p>
-          <p className="text-[11px] text-neutral-400">
+          <p className="text-[11px] text-neutral-500">
             Select 2–4 matched jurisdictions to compare side by side
           </p>
         </div>
@@ -63,7 +63,7 @@ export function SearchCompareBar({
             "rounded-lg px-4 py-2 text-xs font-semibold transition-colors",
             canCompare
               ? "bg-neutral-900 text-white hover:bg-neutral-700"
-              : "cursor-not-allowed bg-neutral-100 text-neutral-400"
+              : "cursor-not-allowed bg-neutral-100 text-neutral-500"
           )}
         >
           Compare{selected.size > 0 ? ` (${selected.size})` : ""}
@@ -100,7 +100,7 @@ export function SearchCompareBar({
         })}
       </div>
       {selected.size > 0 && selected.size < MIN_SELECT && (
-        <p className="mt-2 text-[11px] text-neutral-400">
+        <p className="mt-2 text-[11px] text-neutral-500">
           Select at least {MIN_SELECT} jurisdictions to compare
         </p>
       )}

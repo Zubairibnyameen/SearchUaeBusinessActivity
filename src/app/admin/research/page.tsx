@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { regulatoryResearchQueue, jurisdictions, activities } from "@/lib/db/schema";
 import { eq, desc, sql, and, type SQL } from "drizzle-orm";
+import { uuidFilter } from "@/lib/db/uuid";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +32,21 @@ interface ResearchListPageProps {
 
 const PAGE_SIZE = 25;
 
+/**
+ * `?jurisdiction=` is compared against a `uuid` column, so an unvalidated value
+ * is not a cosmetic problem: `?jurisdiction=abc` reaches Postgres as
+ * `invalid input syntax for type uuid` and the page 500s with a driver error
+ * instead of showing an empty list.
+ *
+ * Anything that is not a UUID is dropped, so the query falls back to the
+ * unfiltered list — the same whitelist the sibling `?status=` filter above
+ * already applies, and the same rule `/admin/users` documents for its own query
+ * string.
+ */
 export default async function ResearchListPage({ searchParams }: ResearchListPageProps) {
   const sp = await searchParams;
   const statusFilter = sp.status && STATUS_LABELS[sp.status] ? sp.status : undefined;
-  const jurisdictionFilter = sp.jurisdiction || undefined;
+  const jurisdictionFilter = uuidFilter(sp.jurisdiction);
   const page = Math.max(1, Number(sp.page) || 1);
 
   const conditions: SQL[] = [];
@@ -92,10 +104,13 @@ export default async function ResearchListPage({ searchParams }: ResearchListPag
         approvals without an authoritative source. Unresolved records are kept.
       </p>
 
-      {/* Status summary */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      {/* Status summary. `aria-current="true"` marks the active filter — the selected
+          state was conveyed only by a colour or a ring, which carries nothing to a
+          screen reader navigating the pill row. */}
+      <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Filter by status">
         <Link
           href={buildHref({ status: undefined, page: undefined })}
+          aria-current={!statusFilter ? "true" : undefined}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border ${!statusFilter ? "bg-neutral-900 text-white border-neutral-900" : "bg-white text-neutral-600 border-neutral-200"}`}
         >
           All ({Object.values(statusCounts).reduce((a, b) => a + b.n, 0)})
@@ -104,6 +119,7 @@ export default async function ResearchListPage({ searchParams }: ResearchListPag
           <Link
             key={s.status}
             href={buildHref({ status: s.status as string, page: undefined })}
+            aria-current={statusFilter === s.status ? "true" : undefined}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border ${statusFilter === s.status ? "ring-2 ring-neutral-300" : ""} ${STATUS_STYLES[s.status as string] ?? ""}`}
           >
             {STATUS_LABELS[s.status as string] ?? s.status} ({s.n})
@@ -112,9 +128,10 @@ export default async function ResearchListPage({ searchParams }: ResearchListPag
       </div>
 
       {/* Jurisdiction filter */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Filter by jurisdiction">
         <Link
           href={buildHref({ jurisdiction: undefined, page: undefined })}
+          aria-current={!jurisdictionFilter ? "true" : undefined}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border ${!jurisdictionFilter ? "bg-neutral-900 text-white border-neutral-900" : "bg-white text-neutral-600 border-neutral-200"}`}
         >
           All jurisdictions
@@ -123,6 +140,7 @@ export default async function ResearchListPage({ searchParams }: ResearchListPag
           <Link
             key={j.id}
             href={buildHref({ jurisdiction: j.id, page: undefined })}
+            aria-current={jurisdictionFilter === j.id ? "true" : undefined}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border uppercase ${jurisdictionFilter === j.id ? "bg-neutral-900 text-white border-neutral-900" : "bg-white text-neutral-600 border-neutral-200"}`}
           >
             {j.slug}
@@ -135,16 +153,25 @@ export default async function ResearchListPage({ searchParams }: ResearchListPag
           No research items match the current filters.
         </div>
       ) : (
-        <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+          {/*
+           * `overflow-x-auto`, NOT `overflow-hidden`.
+           *
+           * Clipping hid the right-hand columns with no scrollbar to reach them:
+           * `officialName` is varchar(1000), so one long unbroken name made the
+           * table far wider than its container and the Status and Updated columns
+           * simply disappeared. `min-w-[880px]` keeps the columns from crushing
+           * instead, and the auto margins let the browser know a scrollbar exists.
+           */}
+          <table className="w-full min-w-[880px] text-sm">
             <thead className="bg-neutral-50 text-left text-neutral-500">
               <tr>
-                <th className="px-4 py-3 font-medium">Priority</th>
-                <th className="px-4 py-3 font-medium">Activity</th>
-                <th className="px-4 py-3 font-medium">Jur.</th>
-                <th className="px-4 py-3 font-medium">Possible authority</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Updated</th>
+                <th scope="col" className="px-4 py-3 font-medium">Priority</th>
+                <th scope="col" className="px-4 py-3 font-medium">Activity</th>
+                <th scope="col" className="px-4 py-3 font-medium">Jur.</th>
+                <th scope="col" className="px-4 py-3 font-medium">Possible authority</th>
+                <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                <th scope="col" className="px-4 py-3 font-medium">Updated</th>
               </tr>
             </thead>
             <tbody>
@@ -155,7 +182,7 @@ export default async function ResearchListPage({ searchParams }: ResearchListPag
                     <Link href={`/admin/research/${r.id}`} className="font-medium text-neutral-900 hover:underline">
                       {r.officialName}
                     </Link>
-                    {r.code && <span className="ml-2 text-xs text-neutral-400">[{r.code}]</span>}
+                    {r.code && <span className="ml-2 text-xs text-neutral-500">[{r.code}]</span>}
                   </td>
                   <td className="px-4 py-3 uppercase text-neutral-500">{r.jurisdictionSlug}</td>
                   <td className="px-4 py-3 text-neutral-600">{r.authority ?? "—"}</td>
@@ -164,7 +191,7 @@ export default async function ResearchListPage({ searchParams }: ResearchListPag
                       {STATUS_LABELS[r.status as string] ?? r.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-neutral-400">
+                  <td className="px-4 py-3 text-xs text-neutral-500">
                     {new Date(r.updatedAt).toISOString().slice(0, 10)}
                   </td>
                 </tr>

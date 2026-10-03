@@ -15,7 +15,11 @@
  */
 
 import { searchUnified, type SearchOptions } from "./engine";
-import { getRegulatorySummaries, type RegulatorySummary } from "./enrichment";
+import {
+  collectRenderedActivityIds,
+  getRegulatorySummaries,
+  type RegulatorySummary,
+} from "./enrichment";
 import type {
   SearchResultItem,
   MatchType,
@@ -41,7 +45,11 @@ export type CostVerificationStatus = "verified" | "not_verified" | "not_publishe
 
 export interface LicenceIntelligence {
   officialActivityName: string;
-  activityCode: string | null;
+  /**
+   * Published ISIC classification. This is the only activity code exposed to a
+   * client — the internal `activityCode` is deliberately absent.
+   */
+  isicCode: string | null;
   licenceType: string | null;
   licenceBinding: LicenceBindingStatus;
   jurisdiction: string;
@@ -244,17 +252,24 @@ export async function getJurisdictionIntelligence(
 ): Promise<JurisdictionIntelligenceResponse> {
   const startTime = Date.now();
 
+  // Grouped analysis, not a page: every jurisdiction must be summarised from
+  // its best match across all matches, so paging is opted out of explicitly.
   const searchData = await searchUnified({
     q: query,
     limit: 50,
     groupLimit: 10,
+    allMatches: true,
     ...options,
   });
 
-  const matchedIds = [
-    ...new Set(searchData.results.map(r => r.activity.id)),
-  ];
-  const regulatorySummaries = await getRegulatorySummaries(matchedIds);
+  // Enrich exactly what this function renders. It reads `group.topResults`
+  // below and never the flat page, so the scope is "grouped": keying on
+  // `results` instead would leave jurisdictions whose best match ranks outside
+  // the page without a summary — indistinguishable from "no verified approval
+  // exists", which is exactly the claim that must never be made by omission.
+  const regulatorySummaries = await getRegulatorySummaries(
+    collectRenderedActivityIds(searchData, "grouped")
+  );
 
   const jurisdictionMatches: JurisdictionMatch[] =
     searchData.jurisdictionGroups.map(group => {
@@ -363,7 +378,7 @@ function deriveLicenceIntelligence(
 
   return {
     officialActivityName: item.activity.officialName,
-    activityCode: item.activity.activityCode,
+    isicCode: item.activity.isicCode,
     licenceType: item.licenceType?.name ?? null,
     licenceBinding: deriveLicenceBinding(item),
     jurisdiction: jurisdiction.name,
@@ -506,11 +521,11 @@ export function buildComparisonDimensions(
   });
 
   dims.push({
-    label: "Activity code",
+    label: "ISIC code",
     values: Object.fromEntries(
       matches.map(m => [
         m.jurisdiction.slug,
-        m.bestMatch?.activity.activityCode ?? "Not published",
+        m.bestMatch?.activity.isicCode ?? "Not published",
       ])
     ),
   });

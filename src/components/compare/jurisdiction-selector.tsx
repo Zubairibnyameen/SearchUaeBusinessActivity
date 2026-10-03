@@ -52,7 +52,7 @@ export function JurisdictionSelector({
 
   return (
     <fieldset>
-      <legend className="text-xs font-medium uppercase tracking-widest text-neutral-400">
+      <legend className="text-xs font-medium uppercase tracking-widest text-neutral-500">
         Compare jurisdictions&nbsp;
         <span aria-hidden>
           ({selection.length} of {jurisdictions.length})
@@ -103,7 +103,7 @@ export function JurisdictionSelector({
             </button>
           );
         })}
-        <span className="text-xs text-neutral-400" aria-live="polite">
+        <span className="text-xs text-neutral-500" aria-live="polite">
           Select {MIN}–{MAX} jurisdictions.
         </span>
       </div>

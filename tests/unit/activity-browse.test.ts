@@ -74,6 +74,7 @@ const DEFAULT_ACTIVITY = {
   id: "act-1",
   officialName: "General Trading",
   activityCode: "TRD-001",
+  isicCode: "4651",
   approvalSignal: "unknown",
   verificationStatus: "unverified",
   jurisdictionName: "DMCC",
@@ -214,7 +215,10 @@ describe("activities browse page — STEP 11", () => {
     const html = await renderPage();
     expect(html).toContain("General Trading");
     expect(html).toContain("DMCC");
-    expect(html).toContain("TRD-001");
+    // The published ISIC classification is shown; the internal activity code
+    // is never rendered on a public surface.
+    expect(html).toContain("4651");
+    expect(html).not.toContain("TRD-001");
   });
 
   it("T2: page title shows activity count", async () => {
@@ -294,12 +298,14 @@ describe("activities browse page — STEP 11", () => {
     expect(html).toContain("Clear filters");
   });
 
-  it("T8: activity name and code are shown as links in listing", async () => {
+  it("T8: activity name and ISIC code are shown as links in listing", async () => {
     allData = noFilterSlots();
     const html = await renderPage();
-    // Activity names and codes appear in the listing as linked text
+    // Activity names and the published ISIC code appear in the listing as
+    // linked text. The internal activity code must not leak.
     expect(html).toContain("General Trading");
-    expect(html).toContain("TRD-001");
+    expect(html).toContain("4651");
+    expect(html).not.toContain("TRD-001");
   });
 
   it("T9: 'All' jurisdiction pill appears to clear jurisdiction filter", async () => {

@@ -94,7 +94,7 @@ export default async function JurisdictionsPage() {
 
         {freeZones.length > 0 && (
           <>
-            <h2 className="mb-4 mt-10 text-xs font-semibold uppercase tracking-widest text-neutral-400">
+            <h2 className="mb-4 mt-10 text-xs font-semibold uppercase tracking-widest text-neutral-500">
               Free Zones
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -107,7 +107,7 @@ export default async function JurisdictionsPage() {
 
         {mainlands.length > 0 && (
           <>
-            <h2 className="mb-4 mt-10 text-xs font-semibold uppercase tracking-widest text-neutral-400">
+            <h2 className="mb-4 mt-10 text-xs font-semibold uppercase tracking-widest text-neutral-500">
               Mainland
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -159,7 +159,7 @@ function JurisdictionCard({
       href={`/jurisdictions/${j.slug}`}
       className="group flex flex-col rounded-xl border border-neutral-200 bg-white p-5 transition-all hover:border-neutral-300 hover:shadow-md"
     >
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
         {formatJurisdictionType(j.type)}
       </span>
       <h3 className="mt-1 font-semibold text-neutral-900 transition-colors group-hover:text-blue-700">
@@ -183,7 +183,7 @@ function JurisdictionCard({
             </span>
           ))}
           {licenceTypes.length === 3 && (
-            <span className="rounded-md px-1 py-0.5 text-[11px] text-neutral-400">
+            <span className="rounded-md px-1 py-0.5 text-[11px] text-neutral-500">
               etc.
             </span>
           )}
@@ -194,12 +194,12 @@ function JurisdictionCard({
         {j.lastVerified ? (
           <>
             <VerifiedBadge label="Source data dated" />
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-neutral-500">
               {formatDate(j.lastVerified)}
             </span>
           </>
         ) : (
-          <span className="text-xs text-neutral-400">
+          <span className="text-xs text-neutral-500">
             Verification date not recorded
           </span>
         )}

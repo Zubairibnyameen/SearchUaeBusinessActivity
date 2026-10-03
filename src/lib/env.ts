@@ -4,14 +4,20 @@
  * SAFETY RULES (enforced across the codebase):
  *  - Never expose server-only env values to client bundles. Only
  *    `NEXT_PUBLIC_*` variables may be read in client code.
- *  - Never log or print secret values (DATABASE_URL, ADMIN_PASSWORD,
- *    ADMIN_SESSION_SECRET). Use `redact()` / the safe helpers here.
+ *  - Never log or print secret values (DATABASE_URL, ADMIN_EMAILS). Use
+ *    `redact()` / the safe helpers here.
  *  - Validation never throws at module import. This keeps `next build`
  *    (which may run without a DATABASE_URL) from failing before runtime.
  *  - `assertRequiredEnv()` is an explicit, opt-in runtime check used by the
  *    production verification script and startup boundaries so that a missing
  *    required variable makes production fail loudly and clearly, WITHOUT
  *    revealing the actual secret contents in the error.
+ *
+ * NOTE: `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET` are no longer required.
+ * They belonged to the removed ADMIN_PASSWORD admin session; admin access is
+ * now authorized solely by a verified Supabase session plus the `ADMIN_EMAILS`
+ * allowlist. Both names are still listed in SECRET_ENV_NAMES so a leftover value
+ * in an existing environment file can never be logged.
  */
 import "server-only";
 
@@ -24,20 +30,35 @@ export interface EnvCheckResult {
 }
 
 /** Required server-only configuration. */
-export const REQUIRED_ENV = [
-  "DATABASE_URL",
-  "ADMIN_PASSWORD",
-  "ADMIN_SESSION_SECRET",
+export const REQUIRED_ENV = ["DATABASE_URL"] as const;
+
+/**
+ * Optional configuration.
+ *
+ * Google login (Supabase Auth) is opt-in: when these are absent the public
+ * app still builds and every public page still works, but the
+ * authentication-gated features (activity search, admin area) fail closed.
+ */
+export const OPTIONAL_ENV = [
+  "NEXT_PUBLIC_APP_URL",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "ADMIN_EMAILS",
 ] as const;
 
-/** Optional/public configuration. Opted-in, never treated as required. */
-export const OPTIONAL_ENV = ["NEXT_PUBLIC_APP_URL"] as const;
+/** Public (browser-visible) members of the optional set — safe to reference in client code. */
+export const PUBLIC_ENV_NAMES = [
+  "NEXT_PUBLIC_APP_URL",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+] as const;
 
 /** Names whose values must never be printed, logged, or surfaced. */
 export const SECRET_ENV_NAMES = [
   "DATABASE_URL",
   "ADMIN_PASSWORD",
   "ADMIN_SESSION_SECRET",
+  "ADMIN_EMAILS",
 ] as const;
 
 /** Whether a value is considered "present and usable". */
@@ -90,6 +111,41 @@ export function validateEnv(): EnvCheckResult {
     }
   }
 
+  // ── Google login (Supabase Auth) ──────────────────────────────────────
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+  if (Boolean(supabaseUrl) !== Boolean(supabaseKey)) {
+    warnings.push(
+      "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set together; Google login is disabled otherwise"
+    );
+  }
+  if (supabaseUrl) {
+    try {
+      const u = new URL(supabaseUrl);
+      if (u.protocol !== "https:" && u.host !== "localhost") {
+        warnings.push("NEXT_PUBLIC_SUPABASE_URL should use https in production");
+      }
+    } catch {
+      warnings.push("NEXT_PUBLIC_SUPABASE_URL is not a valid absolute URL");
+    }
+  }
+
+  // ── Admin allowlist ───────────────────────────────────────────────────
+  // Fail-closed: an empty ADMIN_EMAILS means the admin area is unreachable via
+  // Google login. That is intentional and must be surfaced loudly.
+  if (supabaseUrl && supabaseKey) {
+    const admins = (process.env.ADMIN_EMAILS ?? "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    if (admins.length === 0) {
+      warnings.push(
+        "ADMIN_EMAILS is empty: no account can reach the admin area via Google login"
+      );
+    }
+  }
+
   return {
     valid: missing.length === 0,
     required,
@@ -139,6 +195,7 @@ const SECRET_MARKERS = [
   "postgresql://",
   "ADMIN_PASSWORD",
   "ADMIN_SESSION_SECRET",
+  "ADMIN_EMAILS",
 ];
 
 /**

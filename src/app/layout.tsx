@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { resolveAppOrigin } from "@/lib/app-origin";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,11 +13,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const LOCAL_FALLBACK_ORIGIN = "http://localhost:3000";
-const appOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
-
 export const metadata: Metadata = {
-  metadataBase: new URL(appOrigin || LOCAL_FALLBACK_ORIGIN),
+  // Never `new URL()` the raw env var: a malformed NEXT_PUBLIC_APP_URL would
+  // throw here and fail the whole production build.
+  metadataBase: new URL(resolveAppOrigin(process.env.NEXT_PUBLIC_APP_URL)),
   title: {
     default: "UAE Activity Intelligence | Business Activity & Jurisdiction Platform",
     template: "%s | UAE Activity Intelligence",

@@ -5,6 +5,15 @@ import { eq } from "drizzle-orm";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Public, unauthenticated activity detail — the JSON counterpart of the public
+ * `/activities/[id]` page, so a shared link works with no account.
+ *
+ * The projection is EXPLICIT rather than `select({ activity: activities })`
+ * (which is what this used to do). Selecting the whole row returned the
+ * internal `activity_code` to anyone who asked, on a field that must never be
+ * public. Only the published ISIC classification is exposed.
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,9 +27,38 @@ export async function GET(
   try {
     const results = await db
       .select({
-        activity: activities,
-        jurisdiction: jurisdictions,
-        licenceType: licenceTypes,
+        activity: {
+          id: activities.id,
+          officialName: activities.officialName,
+          officialNameAr: activities.officialNameAr,
+          normalizedName: activities.normalizedName,
+          isicCode: activities.isicCode,
+          description: activities.description,
+          officialCategory: activities.officialCategory,
+          normalizedCategory: activities.normalizedCategory,
+          activityGroup: activities.activityGroup,
+          activitySubcategory: activities.activitySubcategory,
+          zone: activities.zone,
+          restrictions: activities.restrictions,
+          approvalSignal: activities.approvalSignal,
+          approvalStatus: activities.approvalStatus,
+          verificationStatus: activities.verificationStatus,
+          lastVerified: activities.lastVerified,
+          createdAt: activities.createdAt,
+          updatedAt: activities.updatedAt,
+        },
+        jurisdiction: {
+          id: jurisdictions.id,
+          name: jurisdictions.name,
+          slug: jurisdictions.slug,
+          emirate: jurisdictions.emirate,
+          jurisdictionType: jurisdictions.jurisdictionType,
+        },
+        licenceType: {
+          id: licenceTypes.id,
+          name: licenceTypes.name,
+          code: licenceTypes.code,
+        },
       })
       .from(activities)
       .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))
@@ -32,7 +70,9 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json(results[0]);
+    return NextResponse.json(results[0], {
+      headers: { "cache-control": "public, max-age=300" },
+    });
   } catch (error) {
     console.error("Failed to fetch activity:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

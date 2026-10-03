@@ -9,9 +9,17 @@ const mockGetRegulatorySummaries = vi.fn();
 vi.mock("@/lib/search/engine", () => ({
   searchUnified: (...args: unknown[]) => mockSearchUnified(...args),
 }));
-vi.mock("@/lib/search/enrichment", () => ({
-  getRegulatorySummaries: (...args: unknown[]) => mockGetRegulatorySummaries(...args),
-}));
+vi.mock("@/lib/search/enrichment", async importOriginal => {
+  // `collectRenderedActivityIds` is pure and is what decides WHICH activities get
+  // enriched, so it runs for real here; only the database-backed lookup is mocked.
+  const actual = await importOriginal<
+    typeof import("@/lib/search/enrichment")
+  >();
+  return {
+    collectRenderedActivityIds: actual.collectRenderedActivityIds,
+    getRegulatorySummaries: (...args: unknown[]) => mockGetRegulatorySummaries(...args),
+  };
+});
 
 // Import AFTER mocks
 import { getJurisdictionIntelligence } from "@/lib/search/jurisdiction-intelligence";
@@ -49,6 +57,7 @@ function makeItem(overrides: Partial<SearchResultItem> = {}): SearchResultItem {
       officialName: "Restaurant",
       normalizedName: "restaurant",
       activityCode: "5520-01",
+      isicCode: null,
       description: null,
       officialCategory: "Food",
       activityGroup: "Food & Beverage",
@@ -141,6 +150,40 @@ describe("Jurisdiction intelligence - response structure", () => {
     mockSearchUnified.mockResolvedValue(makeSearchData());
     const res = await getJurisdictionIntelligence("restaurant");
     expect(res.meta.tookMs).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ===========================================================================
+describe("Jurisdiction intelligence - enrichment scope", () => {
+  it("enriches exactly the activities it renders, not the whole flat page", async () => {
+    // Grouped analysis is unpaged, so the flat `results` array holds every match
+    // while each group renders only its top N. Enriching the flat array would
+    // query thousands of activity ids to fill in a handful of cards.
+    const dmccTop = makeItem({ activity: { ...makeItem().activity, id: "a-dmcc" } });
+    const rakezTop = makeItem({ activity: { ...makeItem().activity, id: "a-rakez" } });
+    const offTop = makeItem({ activity: { ...makeItem().activity, id: "a-unranked" } });
+
+    mockSearchUnified.mockResolvedValue(
+      makeSearchData({
+        total: 3,
+        results: [dmccTop, rakezTop, offTop],
+        jurisdictionGroups: [
+          makeGroup({ jurisdiction: jurisdiction("dmcc"), topResults: [dmccTop] }),
+          makeGroup({ jurisdiction: jurisdiction("rakez"), topResults: [rakezTop] }),
+        ],
+      })
+    );
+
+    await getJurisdictionIntelligence("restaurant");
+
+    expect(mockGetRegulatorySummaries).toHaveBeenCalledTimes(1);
+    expect(mockGetRegulatorySummaries.mock.calls[0]![0]).toEqual(["a-dmcc", "a-rakez"]);
+  });
+
+  it("opts out of paging so every jurisdiction gets its best match", async () => {
+    mockSearchUnified.mockResolvedValue(makeSearchData());
+    await getJurisdictionIntelligence("restaurant");
+    expect(mockSearchUnified.mock.calls[0]![0]).toMatchObject({ allMatches: true });
   });
 });
 
@@ -287,7 +330,7 @@ describe("Jurisdiction intelligence - licence intelligence", () => {
     expect(li.licenceType).toBe("Restaurant Licence");
     expect(li.licenceBinding).toBe("verified");
     expect(li.officialActivityName).toBe("Restaurant");
-    expect(li.activityCode).toBe("5520-01");
+    expect(li.isicCode).toBeNull();
   });
 
   it("marks licence binding as unknown when licenceType is null", async () => {
@@ -483,7 +526,7 @@ describe("Jurisdiction intelligence - comparison dimensions", () => {
       bestMatchType: "exact",
       licenceIntelligence: {
         officialActivityName: "Restaurant",
-        activityCode: "5520-01",
+        isicCode: null,
         licenceType: "Restaurant Licence",
         licenceBinding: "verified",
         jurisdiction: "DMCC",

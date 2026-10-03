@@ -95,13 +95,36 @@ function SelectContent({
   )
 }
 
+/**
+ * A standalone field header — static text naming nothing in particular.
+ *
+ * NOT `SelectPrimitive.GroupLabel`: like Base UI's menu group label, it reads
+ * `SelectGroupContext` and throws outside a `SelectGroup`. Base UI has no
+ * standalone header part, so this shadcn-style wrapper renders a plain element
+ * and leaves group labelling to `SelectGroup` + `SelectGroupLabel`.
+ */
 function SelectLabel({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      role="presentation"
+      data-slot="select-label"
+      className={cn("px-1.5 py-1 text-xs text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+/** The accessible label of a `SelectGroup`; must be rendered inside one. */
+function SelectGroupLabel({
   className,
   ...props
 }: SelectPrimitive.GroupLabel.Props) {
   return (
     <SelectPrimitive.GroupLabel
-      data-slot="select-label"
+      data-slot="select-group-label"
       className={cn("px-1.5 py-1 text-xs text-muted-foreground", className)}
       {...props}
     />
@@ -191,6 +214,7 @@ export {
   Select,
   SelectContent,
   SelectGroup,
+  SelectGroupLabel,
   SelectItem,
   SelectLabel,
   SelectScrollDownButton,

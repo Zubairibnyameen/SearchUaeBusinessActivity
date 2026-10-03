@@ -35,7 +35,14 @@ export interface SearchResultItem {
     id: string;
     officialName: string;
     normalizedName: string;
+    /**
+     * INTERNAL jurisdiction-specific code. Retained because the matcher scores
+     * exact code hits, but it is NOT rendered on any public surface — use
+     * `isicCode` for anything a user can see.
+     */
     activityCode: string | null;
+    /** Published ISIC classification — the code safe to show publicly. */
+    isicCode: string | null;
     description: string | null;
     officialCategory: string | null;
     activityGroup: string | null;
@@ -76,8 +83,28 @@ export interface JurisdictionGroup {
     jurisdictionType: string;
   };
   status: "match" | "no_match";
+  /**
+   * Number of matches for this jurisdiction across the WHOLE result set, not
+   * just the current page. Stable across pages, so group ordering and the
+   * availability strip do not shift as a user pages through results.
+   */
   totalMatches: number;
+  /**
+   * Best match type across the whole result set for this jurisdiction, also
+   * page-independent.
+   */
   bestMatchType: MatchType | null;
+  /**
+   * The results this group actually renders: the subset of the requested page
+   * (`offset`/`limit`, or every match when `allMatches` is set) that belongs to
+   * this jurisdiction, capped at `groupLimit`.
+   *
+   * This is a partition of `UnifiedSearchResponse.results`, so the flat page and
+   * the grouped view always describe the same slice. A group can legitimately be
+   * empty on a given page while `status` is `"match"` — its matches simply rank
+   * on other pages — so consumers must skip empty groups when rendering and use
+   * `totalMatches` for availability.
+   */
   topResults: SearchResultItem[];
 }
 
@@ -132,4 +159,17 @@ export interface SearchOptions {
   offset?: number;
   /** Max results shown per jurisdiction group in grouped view. */
   groupLimit?: number;
+  /**
+   * Opt out of paging: `results` and every group's `topResults` cover the whole
+   * match set instead of one `offset`/`limit` window.
+   *
+   * For grouped-analysis callers — jurisdiction comparison, jurisdiction
+   * intelligence — which summarise the best match per jurisdiction across all
+   * matches rather than walking a page at a time. Free to use: the pipeline
+   * already materialises the full ranked list, so paging is only a `slice`.
+   *
+   * Must NOT be used by paged UIs, which rely on `offset`/`limit` selecting the
+   * rendered slice.
+   */
+  allMatches?: boolean;
 }

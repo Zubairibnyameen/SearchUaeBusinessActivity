@@ -54,3 +54,19 @@ export {
 } from "./research";
 
 export { adminAuditLogs } from "./audit";
+
+export {
+  appUsers,
+  appUserRoleEnumValues,
+  appUserStatusEnumValues,
+  type AppUser,
+  type AppUserRole,
+  type AppUserStatus,
+  type NewAppUser,
+} from "./auth";
+
+export {
+  searchUsage,
+  type SearchUsage,
+  type NewSearchUsage,
+} from "./usage";

@@ -9,6 +9,7 @@ import {
   approvalFees,
 } from "@/lib/db/schema";
 import { SearchBar } from "@/components/search/search-bar";
+import { getViewer } from "@/lib/auth/viewer";
 import {
   VerifiedBadge,
   ApprovalSignalBadgeSmall,
@@ -60,7 +61,13 @@ async function getHomeStats() {
 }
 
 export default async function HomePage() {
-  const stats = await getHomeStats();
+  const [stats, viewer] = await Promise.all([getHomeStats(), getViewer()]);
+  // Drives only the in-page sign-in prompt; the search API re-authorizes
+  // server-side, so this flag is never a security boundary.
+  const canSearch = Boolean(viewer?.isActive);
+  // Signed in but suspended: explain it instead of prompting for a sign-in
+  // that could never succeed.
+  const suspended = Boolean(viewer) && !canSearch;
 
   return (
     <div className="bg-white">
@@ -84,11 +91,11 @@ export default async function HomePage() {
           </p>
 
           <div className="mt-10">
-            <SearchBar />
+            <SearchBar canSearch={canSearch} suspended={suspended} />
           </div>
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-sm text-neutral-400">Try:</span>
+            <span className="text-sm text-neutral-500">Try:</span>
             {EXAMPLE_QUERIES.map(q => (
               <Link
                 key={q}

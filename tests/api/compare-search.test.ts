@@ -1,8 +1,15 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { NextRequest } from "next/server";
+import {
+  authViewerMock,
+  resetAuth,
+  signInAsUser,
+} from "../helpers/auth-mock";
 
 const mockSearchUnified = vi.fn();
 const mockGetRegulatorySummaries = vi.fn();
+
+vi.mock("@/lib/auth/viewer", () => authViewerMock());
 
 vi.mock("@/lib/db", () => ({
   db: { select: vi.fn() },
@@ -63,8 +70,13 @@ function group(slug: string, name: string, status: "match" | "no_match", matchTy
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetAuth();
+  signInAsUser();
+  // Default: no verified approvals/fees for any activity. Individual tests
+  // override this with `mockResolvedValueOnce` when they need real summaries.
   mockGetRegulatorySummaries.mockResolvedValue(new Map());
 });
+
 
 interface SearchCompareRow {
   jurisdiction: { slug: string; name: string };

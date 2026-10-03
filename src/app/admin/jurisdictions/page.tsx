@@ -37,16 +37,31 @@ export default async function AdminJurisdictionsPage() {
         <table className="w-full min-w-[820px] text-sm">
           <thead>
             <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-              <th className="px-4 py-2.5 font-medium">Name</th>
-              <th className="px-4 py-2.5 font-medium">Emirate</th>
-              <th className="px-4 py-2.5 font-medium">Type</th>
-              <th className="px-4 py-2.5 font-medium">Status</th>
-              <th className="px-4 py-2.5 font-medium text-right">Activities</th>
-              <th className="px-4 py-2.5 font-medium text-right">Verified approvals</th>
-              <th className="px-4 py-2.5 font-medium">Official site</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Name</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Emirate</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Type</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Status</th>
+              <th scope="col" className="px-4 py-2.5 font-medium text-right">Activities</th>
+              <th scope="col" className="px-4 py-2.5 font-medium text-right">Verified approvals</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Official site</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
+            {/* Empty-state row, so a genuinely unpopulated registry explains
+                itself instead of rendering a bare header row. Must live inside
+                <tbody> — a <tr> outside it is invalid and is dropped by the
+                parser, which would leave the "nothing here" message invisible. */}
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-4 py-10 text-center text-sm text-neutral-600"
+                >
+                  No jurisdictions have been created yet. They arrive with the
+                  first successful import run.
+                </td>
+              </tr>
+            ) : null}
             {rows.map(r => (
               <tr key={r.jurisdiction.id}>
                 <td className="px-4 py-3 font-medium text-neutral-900">
@@ -95,20 +110,24 @@ export default async function AdminJurisdictionsPage() {
         </table>
       </div>
 
-      <p className="mt-4 text-xs text-neutral-400">
-        Public pages:{" "}
-        {rows
-          .filter(r => r.activityCount > 0)
-          .map(r => (
-            <Link
-              key={r.jurisdiction.slug}
-              href={`/jurisdictions/${r.jurisdiction.slug}`}
-              className="mr-3 text-blue-700 hover:underline"
-            >
-              {r.jurisdiction.name}
-            </Link>
-          ))}
-      </p>
+      {/* When nothing is indexed, the public-jurisdiction shortcut list renders
+          as the bare words "Public pages:" followed by whitespace. */}
+      {rows.some(r => r.activityCount > 0) ? (
+        <p className="mt-4 text-xs text-neutral-500">
+          Public pages:{" "}
+          {rows
+            .filter(r => r.activityCount > 0)
+            .map(r => (
+              <Link
+                key={r.jurisdiction.slug}
+                href={`/jurisdictions/${r.jurisdiction.slug}`}
+                className="mr-3 text-blue-700 hover:underline"
+              >
+                {r.jurisdiction.name}
+              </Link>
+            ))}
+        </p>
+      ) : null}
     </div>
   );
 }

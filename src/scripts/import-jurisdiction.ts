@@ -14,41 +14,11 @@
 import fs from "fs";
 import path from "path";
 import { runImport } from "../lib/ingestion/importer";
-import { dmccAdapter } from "../lib/ingestion/adapters/dmcc";
-import type { OfficialActivitySourceAdapter } from "../lib/ingestion/types";
-
-interface AdapterModule {
-  [key: string]: unknown;
-}
-
-const ADAPTERS: Record<string, () => Promise<AdapterModule>> = {
-  dmcc: async () => ({ dmccAdapter }),
-  afz: () => import("../lib/ingestion/adapters/afz"),
-  spc: () => import("../lib/ingestion/adapters/spc"),
-  rakez: () => import("../lib/ingestion/adapters/rakez"),
-  ifza: () => import("../lib/ingestion/adapters/ifza"),
-  shams: async () => ({
-    shamsAdapter: notApprovedStub("shams", "SHAMS Free Zone"),
-  }),
-  jafza: async () => ({
-    jafzaAdapter: notApprovedStub("jafza", "JAFZA (Dubai Multi Commodities?) Jebel Ali Free Zone"),
-  }),
-  meydan: async () => ({
-    meydanAdapter: notApprovedStub("meydan", "Meydan Free Zone"),
-  }),
-};
-
-/** Fail-fast stub for jurisdictions whose ingestion is not yet approved. */
-function notApprovedStub(slug: string, name: string) {
-  return {
-    meta: { jurisdictionSlug: slug, jurisdictionName: name },
-    async discover() {
-      throw new Error(
-        `${name} ingestion has not been approved yet. Do not add new jurisdictions until explicitly instructed.`
-      );
-    },
-  };
-}
+import {
+  IMPORTABLE_SOURCES,
+  KNOWN_SOURCE_SLUGS,
+  loadAdapterFor,
+} from "../lib/ingestion/registry";
 
 async function main() {
   const slug = process.argv[2];
@@ -59,41 +29,40 @@ async function main() {
     console.error(
       "Usage: npx tsx src/scripts/import-jurisdiction.ts <slug> [--dry-run] [--backfill-signals]"
     );
-    console.error(`Available: ${Object.keys(ADAPTERS).join(", ")}`);
+    console.error(`Available: ${IMPORTABLE_SOURCES.map(s => s.slug).join(", ")}`);
     process.exit(1);
   }
 
-  const loader = ADAPTERS[slug];
-  if (!loader) {
-    console.error(`Unknown jurisdiction '${slug}'. Available: ${Object.keys(ADAPTERS).join(", ")}`);
-    process.exit(1);
-  }
-
-  const mod: AdapterModule = await loader();
-  const adapterKey = Object.keys(mod).find((k) => k.toLowerCase().includes("adapter"));
-  if (!adapterKey || !mod[adapterKey]) {
-    console.error(`Adapter not built yet for '${slug}'.`);
-    process.exit(1);
-  }
 
   console.log(
     `Running import for '${slug}'${dryRun ? " (DRY RUN)" : ""}${backfillSignals ? " (BACKFILL SIGNALS)" : ""}\n`
   );
-  const adapter = mod[adapterKey] as OfficialActivitySourceAdapter;
-  const report = await runImport(adapter, { dryRun, backfillSignals });
 
-  // Persist machine-readable report
-  const outDir = path.join(process.cwd(), "data", "reports", slug);
-  fs.mkdirSync(outDir, { recursive: true });
-  const outFile = path.join(
-    outDir,
-    `import-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
-  );
-  fs.writeFileSync(outFile, JSON.stringify(report, null, 2));
-  console.log(`\nReport saved: ${path.relative(process.cwd(), outFile)}`);
+  try {
+    const adapter = await loadAdapterFor(slug);
+    const report = await runImport(adapter, { dryRun, backfillSignals });
 
-  if (report.errors.length > 0 || report.counters.imported === 0) {
-    process.exitCode = 2;
+    // Persist machine-readable report
+    const outDir = path.join(process.cwd(), "data", "reports", slug);
+    fs.mkdirSync(outDir, { recursive: true });
+    const outFile = path.join(
+      outDir,
+      `import-${new Date().toISOString().replace(/[:.]/g, "-")}.json`
+    );
+    fs.writeFileSync(outFile, JSON.stringify(report, null, 2));
+    console.log(`\nReport saved: ${path.relative(process.cwd(), outFile)}`);
+
+    if (report.errors.length > 0 || report.counters.imported === 0) {
+      process.exitCode = 2;
+    }
+  } catch (e) {
+    // A slug we recognise gets its own message ("ingestion has not been
+    // approved yet"); anything else is a run-level failure.
+    const message = e instanceof Error ? e.message : String(e);
+    console.error(
+      KNOWN_SOURCE_SLUGS.includes(slug) ? message : `Import failed: ${message}`
+    );
+    process.exit(1);
   }
 }
 

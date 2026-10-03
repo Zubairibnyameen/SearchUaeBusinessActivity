@@ -53,7 +53,57 @@ function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
   return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
 }
 
+/**
+ * A standalone menu header — static text at the top of the menu that names
+ * nothing in particular (the signed-in user's name, a current value, ...).
+ *
+ * IT IS DELIBERATELY NOT `MenuPrimitive.GroupLabel`.
+ *   This wrapper is a port of the shadcn/Radix dropdown, where `Label` was a
+ *   standalone `<div>` with no parent requirement. Base UI has no equivalent
+ *   header part: its only label primitive is `Menu.GroupLabel`, and that one
+ *   calls `useMenuGroupRootContext()` unconditionally, so rendering it outside a
+ *   `Menu.Group` / `Menu.RadioGroup` throws
+ *   "Base UI: MenuGroupContext is missing." See `src/components/auth/user-menu.tsx`.
+ *
+ *   Mapping "label a group" onto a component that must appear *inside* a group is
+ *   what made the shadcn port fail at runtime. The two intents are therefore split:
+ *   this component for a bare header, `DropdownMenuGroupLabel` for a real group.
+ *
+ * `role="presentation"` matches what Base UI's own `GroupLabel` renders: the
+ * element sits inside `role="menu"`, which only permits menuitem/group/separator
+ * children, so the header is exposed as plain text rather than as an invalid
+ * child. Overridable via props, exactly as in Base UI.
+ */
 function DropdownMenuLabel({
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<"div"> & {
+  inset?: boolean
+}) {
+  return (
+    <div
+      role="presentation"
+      data-slot="dropdown-menu-label"
+      data-inset={inset}
+      className={cn(
+        "px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * The accessible label of a `DropdownMenuGroup`, wired to that group by Base UI
+ * via `aria-labelledby`.
+ *
+ * MUST be rendered inside a `DropdownMenuGroup` (or `DropdownMenuRadioGroup`):
+ * that is what supplies the context this part reads, and it is what turns the
+ * label text into the group's accessible name. Outside one it throws.
+ */
+function DropdownMenuGroupLabel({
   className,
   inset,
   ...props
@@ -62,7 +112,7 @@ function DropdownMenuLabel({
 }) {
   return (
     <MenuPrimitive.GroupLabel
-      data-slot="dropdown-menu-label"
+      data-slot="dropdown-menu-group-label"
       data-inset={inset}
       className={cn(
         "px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7",
@@ -255,6 +305,7 @@ export {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuGroupLabel,
   DropdownMenuLabel,
   DropdownMenuItem,
   DropdownMenuCheckboxItem,

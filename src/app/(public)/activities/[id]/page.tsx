@@ -33,14 +33,16 @@ import {
   formatJurisdictionType,
   titleCaseEnum,
 } from "@/lib/format";
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { IsicCode } from "@/components/activities/isic-code";
+import { ShareButton } from "@/components/activities/share-button";
+import { parseUuid } from "@/lib/db/uuid";
 
 const FEE_ABSENCE_NOTICE =
   "Fee not verified/published in indexed official sources.";
 const TPC_ABSENCE_NOTICE =
   "No third-party cost has been verified/published in indexed official sources. Where an approval signal indicates an external authority, costs must be confirmed directly with that authority.";
+
+const SITE_NAME = "UAE Activity Intelligence";
 
 export async function generateMetadata({
   params,
@@ -48,27 +50,53 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  if (!UUID_RE.test(id)) return { title: "Activity not found" };
+  const activityId = parseUuid(id);
+  if (!activityId) return { title: "Activity not found" };
 
+  // Only public-safe columns are selected here. The internal `activity_code` is
+  // deliberately NOT read, so it cannot reach a <title>, an Open Graph card, a
+  // Twitter card, or anything else a crawler could pick up.
   const rows = await db
     .select({
       name: activities.officialName,
-      code: activities.activityCode,
+      isicCode: activities.isicCode,
       jurisdiction: jurisdictions.name,
       emirate: jurisdictions.emirate,
     })
     .from(activities)
     .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))
-    .where(eq(activities.id, id))
+    .where(eq(activities.id, activityId))
     .limit(1);
 
   const row = rows[0];
   if (!row) return { title: "Activity not found" };
 
+  const title = `${row.name} — ${row.jurisdiction}`;
+  const description = `${row.name} business activity in ${row.jurisdiction} (${formatEmirate(
+    row.emirate
+  )}): licence type, approval status, government fees and official source verification.`;
+  const path = `/activities/${id}`;
+
   return {
-    title: `${row.name}${row.code ? ` (${row.code})` : ""} — ${row.jurisdiction}`,
-    description: `${row.name} business activity in ${row.jurisdiction} (${formatEmirate(row.emirate)}): licence type, approval status, government fees and official source verification.`,
-    alternates: { canonical: `/activities/${id}` },
+    title,
+    description,
+    alternates: { canonical: path },
+    // Shared URLs are public: a recipient must be able to open the activity
+    // without an account, so the page is indexable and shareable.
+    openGraph: {
+      type: "article",
+      siteName: SITE_NAME,
+      locale: "en_AE",
+      title,
+      description,
+      url: path,
+    },
+    twitter: {
+      card: "summary",
+      site: SITE_NAME,
+      title,
+      description,
+    },
   };
 }
 
@@ -78,7 +106,8 @@ export default async function ActivityDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!UUID_RE.test(id)) notFound();
+  const activityId = parseUuid(id);
+  if (!activityId) notFound();
 
   const rows = await db
     .select({
@@ -89,7 +118,7 @@ export default async function ActivityDetailPage({
     .from(activities)
     .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))
     .leftJoin(licenceTypes, eq(activities.licenceTypeId, licenceTypes.id))
-    .where(eq(activities.id, id))
+    .where(eq(activities.id, activityId))
     .limit(1);
 
   const row = rows[0];
@@ -162,7 +191,7 @@ export default async function ActivityDetailPage({
         .select({
           id: activities.id,
           officialName: activities.officialName,
-          activityCode: activities.activityCode,
+          isicCode: activities.isicCode,
         })
         .from(activities)
         .where(
@@ -247,19 +276,34 @@ export default async function ActivityDetailPage({
               <p className="mt-3 text-sm text-neutral-500">
                 {j.name} · {formatEmirate(j.emirate)} ·{" "}
                 {formatJurisdictionType(j.jurisdictionType)}
-                {a.activityCode && (
-                  <>
-                    {" "}· <span className="font-mono">Code {a.activityCode}</span>
-                  </>
-                )}
               </p>
+              {a.isicCode ? (
+                <p className="mt-1.5 text-sm text-neutral-500">
+                  ISIC Code{" "}
+                  <span className="font-mono text-neutral-800">
+                    {a.isicCode}
+                  </span>
+                </p>
+              ) : null}
             </div>
-            <Link
-              href={`/jurisdictions/${j.slug}`}
-              className="shrink-0 rounded-lg border border-neutral-200 px-3.5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-            >
-              About {j.name}
-            </Link>
+            <div className="flex shrink-0 flex-col items-start gap-2.5 sm:items-end">
+              <Link
+                href={`/jurisdictions/${j.slug}`}
+                className="rounded-lg border border-neutral-200 px-3.5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+              >
+                About {j.name}
+              </Link>
+              {/*
+                This page is public, so the shared link is public too. A
+                recipient opens the exact activity without signing in; if they
+                then run a new search they are asked to sign in.
+              */}
+              <ShareButton
+                activityId={id}
+                title={a.officialName}
+                description={`${j.name} · ${formatEmirate(j.emirate)}`}
+              />
+            </div>
           </div>
         </header>
 
@@ -268,12 +312,8 @@ export default async function ActivityDetailPage({
           <Section number={1} title="Activity overview">
             <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Official name">{a.officialName}</Field>
-              <Field label="Activity code">
-                {a.activityCode ? (
-                  <span className="font-mono">{a.activityCode}</span>
-                ) : (
-                  <Muted>Not assigned</Muted>
-                )}
+              <Field label="ISIC Code">
+                <IsicCode code={a.isicCode} />
               </Field>
               <Field label="Activity group">
                 {a.activityGroup ?? <Muted>Not specified</Muted>}
@@ -290,7 +330,7 @@ export default async function ActivityDetailPage({
             </dl>
             {typeof a.description === "string" && a.description.length > 0 && (
               <div className="mt-4 border-t border-neutral-100 pt-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                   Official description
                 </p>
                 <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-neutral-700">
@@ -318,7 +358,7 @@ export default async function ActivityDetailPage({
             {/* Licence/activity price is a LICENCE fact — kept clearly separate
                 from government fees below. */}
             <div className="mt-4 border-t border-neutral-100 pt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
                 Licence / activity price published by the authority
               </p>
               {prices.length > 0 ? (
@@ -588,14 +628,14 @@ export default async function ActivityDetailPage({
           {/* ── 6. GOVERNMENT FEES ────────────────────────────────────── */}
           <Section number={6} title="Government fees">
             {feeRecords.filter(f => f.amount !== null).length > 0 ? (
-              <div className="overflow-hidden rounded-lg border border-neutral-200">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto rounded-lg border border-neutral-200">
+                <table className="w-full min-w-[560px] text-sm">
                   <thead>
                     <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-                      <th className="px-4 py-2 font-medium">Fee</th>
-                      <th className="px-4 py-2 font-medium">Amount</th>
-                      <th className="px-4 py-2 font-medium">Type</th>
-                      <th className="hidden px-4 py-2 font-medium sm:table-cell">Basis</th>
+                      <th scope="col" className="px-4 py-2 font-medium">Fee</th>
+                      <th scope="col" className="px-4 py-2 font-medium">Amount</th>
+                      <th scope="col" className="px-4 py-2 font-medium">Type</th>
+                      <th scope="col" className="hidden px-4 py-2 font-medium sm:table-cell">Basis</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
@@ -624,7 +664,7 @@ export default async function ActivityDetailPage({
                 {FEE_ABSENCE_NOTICE}
               </p>
             )}
-            <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">
+            <p className="mt-3 text-[11px] leading-relaxed text-neutral-500">
               Government approval fees are recorded only with their own
               authoritative source. Licence prices shown above are never counted
               here. Unknown fees are displayed as not verified — never as AED 0.
@@ -701,23 +741,23 @@ export default async function ActivityDetailPage({
                     </div>
                     <dl className="mt-2 grid gap-x-8 gap-y-1 text-xs sm:grid-cols-2">
                       <div className="flex gap-1">
-                        <dt className="text-neutral-400">Authority:</dt>
+                        <dt className="text-neutral-500">Authority:</dt>
                         <dd className="text-neutral-700">{source.authority ?? j.name}</dd>
                       </div>
                       <div className="flex gap-1">
-                        <dt className="text-neutral-400">Retrieved:</dt>
+                        <dt className="text-neutral-500">Retrieved:</dt>
                         <dd className="text-neutral-700">
                           {source.retrievedDate ? formatDate(source.retrievedDate) : "—"}
                         </dd>
                       </div>
                       <div className="flex gap-1">
-                        <dt className="text-neutral-400">Last verified:</dt>
+                        <dt className="text-neutral-500">Last verified:</dt>
                         <dd className="text-neutral-700">
                           {source.lastVerified ? formatDate(source.lastVerified) : "not independently verified"}
                         </dd>
                       </div>
                       <div className="flex gap-1">
-                        <dt className="text-neutral-400">URL:</dt>
+                        <dt className="text-neutral-500">URL:</dt>
                         <dd className="min-w-0 break-all">
                           <a
                             href={source.url}
@@ -732,7 +772,7 @@ export default async function ActivityDetailPage({
                     </dl>
                     {typeof source.contentHash === "string" &&
                       source.contentHash.length > 0 && (
-                        <p className="mt-2 break-all text-[11px] text-neutral-400">
+                        <p className="mt-2 break-all text-[11px] text-neutral-500">
                           Content hash: {source.contentHash}
                         </p>
                       )}
@@ -744,7 +784,7 @@ export default async function ActivityDetailPage({
                 No source record is linked to this activity.
               </p>
             )}
-            <p className="mt-3 text-xs text-neutral-400">
+            <p className="mt-3 text-xs text-neutral-500">
               Activity last verified: {a.lastVerified ? formatDate(a.lastVerified) : "never"}.
               Verification information reflects the date the indexed data was
               checked against its official source — always confirm with the
@@ -765,9 +805,9 @@ export default async function ActivityDetailPage({
                       <span className="text-sm font-medium text-neutral-800">
                         {r.officialName}
                       </span>
-                      {r.activityCode && (
-                        <span className="ml-2 font-mono text-xs text-neutral-400">
-                          {r.activityCode}
+                      {r.isicCode && (
+                        <span className="ml-2 font-mono text-xs text-neutral-500">
+                          {r.isicCode}
                         </span>
                       )}
                     </Link>
@@ -819,7 +859,7 @@ export default async function ActivityDetailPage({
           </Section>
         </div>
 
-        <p className="mb-6 mt-8 text-center text-xs leading-relaxed text-neutral-400">
+        <p className="mb-6 mt-8 text-center text-xs leading-relaxed text-neutral-500">
           Data indexed from official publications. Approval signals are not
           verified approvals. Always verify regulatory requirements with the
           relevant authority before applying.
@@ -862,7 +902,7 @@ function Section({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
         {label}
       </dt>
       <dd className="mt-0.5 text-neutral-700">{children}</dd>
@@ -871,5 +911,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function Muted({ children }: { children: React.ReactNode }) {
-  return <span className="text-neutral-400">{children}</span>;
+  return <span className="text-neutral-500">{children}</span>;
 }

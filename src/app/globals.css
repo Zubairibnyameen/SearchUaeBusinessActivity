@@ -66,7 +66,21 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /*
+   * FOCUS RING — was oklch(0.708 0 0).
+   *
+   * WCAG 2.1 SC 1.4.11 (Non-text Contrast) requires a focus indicator to reach
+   * 3:1 against its adjacent background. The old value measured 2.59:1 on white,
+   * so every keyboard focus indicator drawn with `--ring` — the global
+   * `:focus-visible` outline below, plus `ring-(--ring)` in the Button, Input,
+   * Badge and Tabs primitives — was below the floor. Keyboard users could not
+   * reliably see where they were.
+   *
+   * oklch(0.556 0 0) is the same neutral-500 already used by
+   * `--muted-foreground`, and measures 4.73:1 on white. It is the darkest value
+   * in the neutral ramp that still reads as a UI tint rather than as body text.
+   */
+  --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

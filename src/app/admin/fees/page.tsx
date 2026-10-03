@@ -62,12 +62,12 @@ export default async function AdminFeesPage() {
             <table className="w-full min-w-[820px] text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-                  <th className="px-4 py-2.5 font-medium">Amount</th>
-                  <th className="px-4 py-2.5 font-medium">Type / basis</th>
-                  <th className="px-4 py-2.5 font-medium">Approval</th>
-                  <th className="px-4 py-2.5 font-medium">Activity</th>
-                  <th className="px-4 py-2.5 font-medium">Conditions</th>
-                  <th className="px-4 py-2.5 font-medium">Source</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Amount</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Type / basis</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Approval</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Activity</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Conditions</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Source</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -129,11 +129,11 @@ export default async function AdminFeesPage() {
             <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-                  <th className="px-4 py-2.5 font-medium">Estimate</th>
-                  <th className="px-4 py-2.5 font-medium">Cost type</th>
-                  <th className="px-4 py-2.5 font-medium">Approval</th>
-                  <th className="px-4 py-2.5 font-medium">Activity</th>
-                  <th className="px-4 py-2.5 font-medium">Source</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Estimate</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Cost type</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Approval</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Activity</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Source</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">

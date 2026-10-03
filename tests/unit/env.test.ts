@@ -22,17 +22,30 @@ describe("env validation", () => {
   });
 
   it("flags a missing required variable as missing without leaking values", () => {
-    vi.stubEnv("ADMIN_SESSION_SECRET", "");
+    vi.stubEnv("DATABASE_URL", "");
     const result = validateEnv();
     expect(result.valid).toBe(false);
-    expect(result.missing).toContain("ADMIN_SESSION_SECRET");
+    expect(result.missing).toContain("DATABASE_URL");
   });
 
   it("treats insecure placeholder values as missing", () => {
-    vi.stubEnv("ADMIN_PASSWORD", "change-this-to-a-secure-password");
+    vi.stubEnv("DATABASE_URL", "change-this-to-a-real-connection-string");
     const result = validateEnv();
     expect(result.valid).toBe(false);
-    expect(result.missing).toContain("ADMIN_PASSWORD");
+    expect(result.missing).toContain("DATABASE_URL");
+  });
+
+  it("no longer requires the legacy admin password or session secret", () => {
+    // Removed with the ADMIN_PASSWORD auth flow. The app must boot without them
+    // so no deployment is broken by an orphaned secret that is no longer read.
+    delete process.env.ADMIN_PASSWORD;
+    delete process.env.ADMIN_SESSION_SECRET;
+    const result = validateEnv();
+    expect(result.valid).toBe(true);
+    expect(result.missing).toEqual([]);
+    expect(REQUIRED_ENV).not.toContain("ADMIN_PASSWORD");
+    expect(REQUIRED_ENV).not.toContain("ADMIN_SESSION_SECRET");
+    expect(REQUIRED_ENV).toEqual(["DATABASE_URL"]);
   });
 
   it("hasRequiredEnv reflects presence", () => {
@@ -43,7 +56,6 @@ describe("env validation", () => {
 
   it("assertRequiredEnv throws a secret-free message naming missing variables", () => {
     vi.stubEnv("DATABASE_URL", "");
-    vi.stubEnv("ADMIN_PASSWORD", "");
     expect(() => assertRequiredEnv()).toThrowError(/DATABASE_URL/);
     expect(() => assertRequiredEnv()).not.toThrowError(/postgres/);
   });
@@ -56,7 +68,6 @@ describe("env validation", () => {
     const summary = getEnvSummary();
     expect(summary.requiredConfigured).toBe(true);
     expect(summary.configured).toHaveProperty("DATABASE_URL", true);
-    expect(summary.configured).toHaveProperty("ADMIN_PASSWORD", true);
     const json = JSON.stringify(summary);
     expect(json).not.toContain("postgres");
   });
@@ -76,7 +87,9 @@ describe("env validation", () => {
     expect(out).toContain("[REDACTED_CONNECTION_STRING]");
   });
 
-  it("redact hides ADMIN_PASSWORD/ADMIN_SESSION_SECRET key=value pairs", () => {
+  it("redact hides legacy admin key=value pairs even though they are no longer required", () => {
+    // The names stay in SECRET_ENV_NAMES purely so a stale .env pasted into a
+    // log can never leak. Their removal from the auth flow must not weaken that.
     const out = redact("ADMIN_PASSWORD=super-secret ADMIN_SESSION_SECRET=abc123");
     expect(out).not.toContain("super-secret");
     expect(out).not.toContain("abc123");

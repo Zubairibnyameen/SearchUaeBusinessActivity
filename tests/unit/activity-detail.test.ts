@@ -57,6 +57,14 @@ const dbMock = { select: vi.fn((): Record<string, unknown> => makeChain()) };
 
 vi.mock("@/lib/db", () => ({ db: dbMock }));
 
+// The share control is a client component (useState/useEffect). This suite uses
+// a hand-rolled renderer that invokes function components outside React, which
+// cannot run hooks, so it is stubbed here. Its own behaviour is covered by
+// tests/unit/share-button.test.ts.
+vi.mock("@/components/activities/share-button", () => ({
+  ShareButton: () => null,
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function renderToString(element: unknown): string {

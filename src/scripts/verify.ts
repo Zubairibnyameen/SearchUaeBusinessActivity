@@ -36,7 +36,7 @@ async function main() {
   let dbReachable = false;
 
   // 1. Required env configured (presence only)
-  const required = ["DATABASE_URL", "ADMIN_PASSWORD", "ADMIN_SESSION_SECRET"];
+  const required = ["DATABASE_URL"];
   const missingRequired = required.filter((n) => !present(n));
   results.push({
     name: "required env configured",

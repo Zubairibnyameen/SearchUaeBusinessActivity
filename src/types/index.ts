@@ -119,7 +119,11 @@ export interface ComparisonRow {
   activity: {
     id: string;
     officialName: string;
-    activityCode: string | null;
+    /**
+     * Published ISIC classification. The internal `activityCode` is an admin /
+     * ranking field and is deliberately not part of this outbound type.
+     */
+    isicCode: string | null;
     approvalStatus: string;
     verificationStatus: string;
   } | null;

@@ -235,7 +235,7 @@ export default async function JurisdictionDetailPage({
         <header className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
                 {formatJurisdictionType(j.jurisdictionType)} · {formatEmirate(j.emirate)}
               </span>
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
@@ -277,7 +277,7 @@ export default async function JurisdictionDetailPage({
                   name="q"
                   required
                   placeholder={`Search ${j.name} activities…`}
-                  className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+                  className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-500 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                 />
                 <button
                   type="submit"
@@ -314,7 +314,7 @@ export default async function JurisdictionDetailPage({
         </dl>
 
         <div className="mt-4 rounded-xl border border-neutral-200 bg-white p-5">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
             Approval coverage
           </h2>
           <ul className="space-y-1.5 text-sm text-neutral-700">
@@ -350,10 +350,10 @@ export default async function JurisdictionDetailPage({
             <div className="overflow-x-auto">
               <table className="w-full min-w-[480px] text-sm">
                 <thead>
-                  <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-400">
-                    <th className="py-2 pr-4 font-medium">Licence type</th>
-                    <th className="py-2 pr-4 font-medium">Code</th>
-                    <th className="py-2 text-right font-medium">Activities</th>
+                  <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500">
+                    <th scope="col" className="py-2 pr-4 font-medium">Licence type</th>
+                    <th scope="col" className="py-2 pr-4 font-medium">Code</th>
+                    <th scope="col" className="py-2 text-right font-medium">Activities</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
@@ -389,10 +389,10 @@ export default async function JurisdictionDetailPage({
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[480px] text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-400">
-                      <th className="py-2 pr-4 font-medium">Approval</th>
-                      <th className="py-2 pr-4 font-medium">Fee type</th>
-                      <th className="py-2 text-right font-medium">Amount</th>
+                    <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500">
+                      <th scope="col" className="py-2 pr-4 font-medium">Approval</th>
+                      <th scope="col" className="py-2 pr-4 font-medium">Fee type</th>
+                      <th scope="col" className="py-2 text-right font-medium">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">

@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/verification-badges";
 import { formatAed, formatEmirate, formatJurisdictionType, titleCaseEnum } from "@/lib/format";
 import { JurisdictionSelector } from "@/components/compare/jurisdiction-selector";
+import { SearchSignInWall } from "@/components/search/search-sign-in-wall";
+import { getViewer } from "@/lib/auth/viewer";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Compare Jurisdictions",
@@ -55,7 +59,7 @@ export default function ComparePage({
               name="q"
               placeholder="e.g. Medical Clinic"
               required
-              className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-4 py-2.5 text-sm placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+              className="min-w-0 flex-1 rounded-lg border border-neutral-300 px-4 py-2.5 text-sm placeholder:text-neutral-500 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
             />
             <button
               type="submit"
@@ -95,7 +99,7 @@ interface ComparisonColumn {
   available: boolean;
   activityId?: string;
   officialName?: string;
-  activityCode?: string | null;
+  isicCode?: string | null;
   licenceTypeName?: string | null;
   matchType?: string;
   signal?: string;
@@ -112,6 +116,27 @@ async function ComparisonResults({
 }) {
   const { q, jurisdictions: jurisdictionsParam } = await searchParams;
   const query = q?.trim();
+
+  // ── Authorization gate ──
+  // Comparison is powered by the same search engine as /search, so it carries
+  // the same requirement of a verified, active session. Checked here, before
+  // any database work.
+  const viewer = await getViewer();
+  if (!viewer || !viewer.isActive) {
+    const search = new URLSearchParams();
+    if (query) search.set("q", query);
+    if (jurisdictionsParam && /^[a-z0-9,-]{1,400}$/.test(jurisdictionsParam)) {
+      search.set("jurisdictions", jurisdictionsParam);
+    }
+    const qs = search.toString();
+    return (
+      <SearchSignInWall
+        nextPath={qs ? `/compare?${qs}` : "/compare"}
+        query={query}
+        title="Create a free account to compare jurisdictions"
+      />
+    );
+  }
 
   if (!query) {
     return (
@@ -207,7 +232,7 @@ async function ComparisonResults({
         available: true,
         activityId: top.activity.id,
         officialName: top.activity.officialName,
-        activityCode: top.activity.activityCode,
+        isicCode: top.activity.isicCode,
         licenceTypeName: top.licenceType?.name ?? null,
         matchType: top.matchType,
         signal: top.activity.approvalSignal,
@@ -259,7 +284,7 @@ async function ComparisonResults({
           selected={selected}
           query={query}
         />
-        <p className="mt-3 text-xs leading-relaxed text-neutral-400">
+        <p className="mt-3 text-xs leading-relaxed text-neutral-500">
           Only jurisdictions whose official activity data has been imported are
           selectable. Differences between columns reflect indexed official
           data — never assumed values.
@@ -271,7 +296,7 @@ async function ComparisonResults({
         <table className="w-full min-w-[900px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-neutral-200 bg-neutral-50/80">
-              <th scope="col" className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-neutral-400">
+              <th scope="col" className="w-44 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 Jurisdiction
               </th>
               {columns.map(c => (
@@ -282,7 +307,7 @@ async function ComparisonResults({
                   >
                     {c.name}
                   </Link>
-                  <p className="mt-0.5 text-[11px] font-normal text-neutral-400">
+                  <p className="mt-0.5 text-[11px] font-normal text-neutral-500">
                     {formatEmirate(c.emirate)} ·{" "}
                     {formatJurisdictionType(c.type)}
                   </p>
@@ -316,11 +341,11 @@ async function ComparisonResults({
                 )
               )}
             </Row>
-            <Row label="Activity code">
+            <Row label="ISIC Code">
               {columns.map(c =>
                 c.available ? (
                   <td key={c.slug} className="px-4 py-3 font-mono text-xs text-neutral-600">
-                    {c.activityCode ?? "—"}
+                    {c.isicCode ?? "—"}
                   </td>
                 ) : (
                   <UnavailableCell key={c.slug} />
@@ -366,7 +391,7 @@ async function ComparisonResults({
                           <li key={i}>
                             {va.name}
                             {va.authorityName && (
-                              <span className="text-xs text-neutral-400"> ({va.authorityName})</span>
+                              <span className="text-xs text-neutral-500"> ({va.authorityName})</span>
                             )}
                           </li>
                         ))}
@@ -389,7 +414,7 @@ async function ComparisonResults({
                         {c.summary.govFees.map((f, i) => (
                           <li key={i}>
                             <span className="font-semibold">{formatAed(f.amount)}</span>{" "}
-                            <span className="text-xs text-neutral-400">
+                            <span className="text-xs text-neutral-500">
                               ({titleCaseEnum(f.feeType)})
                             </span>
                           </li>
@@ -417,7 +442,7 @@ async function ComparisonResults({
                             {t.estimatedAmount !== null
                               ? formatAed(t.estimatedAmount)
                               : `${t.currency || ""} varies`}{" "}
-                            <span className="text-xs text-neutral-400">
+                            <span className="text-xs text-neutral-500">
                               ({titleCaseEnum(t.costType)})
                             </span>
                           </li>
@@ -488,7 +513,7 @@ async function ComparisonResults({
                 >
                   {c.name}
                 </Link>
-                <p className="text-[11px] text-neutral-400">
+                <p className="text-[11px] text-neutral-500">
                   {formatEmirate(c.emirate)} · {formatJurisdictionType(c.type)}
                 </p>
               </div>
@@ -509,8 +534,8 @@ async function ComparisonResults({
                     {c.officialName}
                   </Link>
                 </MobileRow>
-                <MobileRow label="Activity code">
-                  <span className="font-mono text-xs">{c.activityCode ?? "—"}</span>
+                <MobileRow label="ISIC Code">
+                  <span className="font-mono text-xs">{c.isicCode ?? "—"}</span>
                 </MobileRow>
                 <MobileRow label="Licence type">
                   {c.licenceTypeName ?? "Not specified in source"}
@@ -597,7 +622,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 function UnavailableCell() {
   return (
-    <td className="px-4 py-3 text-xs text-neutral-400" aria-label="No match found in indexed data">
+    <td className="px-4 py-3 text-xs text-neutral-500" aria-label="No match found in indexed data">
       No match in indexed data
     </td>
   );
@@ -606,7 +631,7 @@ function UnavailableCell() {
 function MobileRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 px-4 py-2.5">
-      <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+      <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
         {label}
       </dt>
       <dd className="min-w-0 text-right text-neutral-700">{children}</dd>

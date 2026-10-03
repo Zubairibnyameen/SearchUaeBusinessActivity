@@ -47,10 +47,10 @@ export default async function AdminAuditPage({
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-                <th className="px-4 py-2.5 font-medium">Time</th>
-                <th className="px-4 py-2.5 font-medium">Event</th>
-                <th className="px-4 py-2.5 font-medium">Outcome</th>
-                <th className="px-4 py-2.5 font-medium">Details</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Time</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Event</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Outcome</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -109,7 +109,7 @@ export default async function AdminAuditPage({
         </div>
       )}
 
-      <p className="mt-4 text-xs leading-relaxed text-neutral-400">
+      <p className="mt-4 text-xs leading-relaxed text-neutral-500">
         Data-quality audits are run via the integrity script
         (<code className="font-mono">npx tsx src/scripts/audit-regulatory.ts</code>)
         and reported separately; this view shows the persistent audit trail.

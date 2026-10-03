@@ -127,17 +127,16 @@ describe("fee isolation", () => {
   });
 });
 
-// ─── B. Auth (via exported functions) ─────────────────────────────────────
+// ─── B. Rate limiting ──────────────────────────────────────────────────────
+//
+// The ADMIN_PASSWORD session helpers these used to sit next to have been
+// removed: admin access is now authorized solely by a verified Supabase session
+// plus the ADMIN_EMAILS allowlist. The rate limiter is not admin-specific, so it
+// stays and is still covered.
 
-import {
-  checkRateLimit,
-  clearRateLimit,
-  verifyAdminPassword,
-  createSessionToken,
-  verifySessionToken,
-} from "@/lib/auth";
+import { checkRateLimit, clearRateLimit } from "@/lib/auth/rate-limit";
 
-describe("auth — checkRateLimit", () => {
+describe("rate limit — checkRateLimit", () => {
   beforeEach(() => {
     clearRateLimit("auth-test-ip");
   });
@@ -158,54 +157,13 @@ describe("auth — checkRateLimit", () => {
   });
 });
 
-describe("auth — clearRateLimit", () => {
+describe("rate limit — clearRateLimit", () => {
   it("resets the counter so next call is allowed", () => {
     for (let i = 0; i < 5; i++) checkRateLimit("clear-test");
     expect(checkRateLimit("clear-test")).toBe(false);
 
     clearRateLimit("clear-test");
     expect(checkRateLimit("clear-test")).toBe(true);
-  });
-});
-
-describe("auth — verifyAdminPassword", () => {
-  it("returns true for correct password", () => {
-    expect(verifyAdminPassword("test-password-123")).toBe(true);
-  });
-
-  it("returns false for wrong password", () => {
-    expect(verifyAdminPassword("wrong-password")).toBe(false);
-  });
-});
-
-describe("auth — createSessionToken", () => {
-  it("returns an object with token (containing '.') and maxAge", () => {
-    const result = createSessionToken();
-    expect(result).toHaveProperty("token");
-    expect(result).toHaveProperty("maxAge");
-    expect(result.token).toContain(".");
-    expect(result.maxAge).toBe(43200);
-  });
-});
-
-describe("auth — verifySessionToken", () => {
-  it("returns true for a valid fresh token", () => {
-    const { token } = createSessionToken();
-    expect(verifySessionToken(token)).toBe(true);
-  });
-
-  it("returns false for a tampered token", () => {
-    const { token } = createSessionToken();
-    const tampered = token.slice(0, -4) + "xxxx";
-    expect(verifySessionToken(tampered)).toBe(false);
-  });
-
-  it("returns false for empty string", () => {
-    expect(verifySessionToken("")).toBe(false);
-  });
-
-  it("returns false for undefined", () => {
-    expect(verifySessionToken(undefined)).toBe(false);
   });
 });
 

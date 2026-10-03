@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { NextRequest } from "next/server";
+import { authViewerMock, resetAuth, signInAsUser } from "../helpers/auth-mock";
 
 const mockGetJurisdictionIntelligence = vi.fn();
+vi.mock("@/lib/auth/viewer", () => authViewerMock());
 vi.mock("@/lib/search/jurisdiction-intelligence", () => ({
   getJurisdictionIntelligence: (...args: unknown[]) => mockGetJurisdictionIntelligence(...args),
 }));
@@ -16,6 +18,8 @@ const LEAK_RE = /stack|Error:|SELECT|FROM|WHERE|node_modules|src\//;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  resetAuth();
+  signInAsUser();
 });
 
 describe("GET /api/intelligence", () => {

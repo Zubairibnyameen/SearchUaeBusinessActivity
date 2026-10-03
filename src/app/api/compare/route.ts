@@ -4,6 +4,8 @@ import { activities, jurisdictions, licenceTypes, approvals, approvalAuthorities
 import { eq, and } from "drizzle-orm";
 import { searchUnified } from "@/lib/search/engine";
 import { getRegulatorySummaries } from "@/lib/search/enrichment";
+import { requireViewer } from "@/lib/auth/viewer";
+import { authErrorResponse } from "@/lib/auth/errors";
 import type { ComparisonRow } from "@/types";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -23,7 +25,8 @@ interface SearchComparisonRow {
   activity: {
     id: string;
     officialName: string;
-    activityCode: string | null;
+    /** Published ISIC classification. The internal `activityCode` is never returned. */
+    isicCode: string | null;
     approvalStatus: string;
     approvalSignal: string;
     verificationStatus: string;
@@ -53,6 +56,15 @@ interface SearchComparisonRow {
 }
 
 export async function GET(request: NextRequest) {
+  // Comparison is built on the search engine, so it is gated identically.
+  try {
+    await requireViewer();
+  } catch (error) {
+    const authResponse = authErrorResponse(error);
+    if (authResponse) return authResponse;
+    throw error;
+  }
+
   const { searchParams } = new URL(request.url);
   const activityName = searchParams.get("activity");
   const q = searchParams.get("q");
@@ -103,16 +115,21 @@ async function handleSearchComparison(
   }
 
   try {
+    // Comparison summarises the best match in EACH selected jurisdiction, so it is
+    // grouped analysis rather than a page: paging is opted out of so a
+    // jurisdiction whose matches rank past a page boundary still compares.
     const searchData = await searchUnified({
       q: trimmed,
-      limit: 50,
       groupLimit: 5,
+      allMatches: true,
     });
 
     const groups = validSlugs.length >= 2
       ? searchData.jurisdictionGroups.filter(g => validSlugs.includes(g.jurisdiction.slug))
       : searchData.jurisdictionGroups;
 
+    // Enriched from the groups actually rendered below, so every compared
+    // jurisdiction has a summary for the same activity it displays.
     const matchedIds = [
       ...new Set(
         groups
@@ -211,7 +228,7 @@ async function handleSearchComparison(
         activity: {
           id: best.activity.id,
           officialName: best.activity.officialName,
-          activityCode: best.activity.activityCode,
+          isicCode: best.activity.isicCode,
           approvalStatus: best.activity.approvalStatus,
           approvalSignal: best.activity.approvalSignal,
           verificationStatus: best.activity.verificationStatus,
@@ -350,7 +367,7 @@ async function handleLegacyComparison(
           ? {
               id: activityResults[0].activity.id,
               officialName: activityResults[0].activity.officialName,
-              activityCode: activityResults[0].activity.activityCode,
+              isicCode: activityResults[0].activity.isicCode,
               approvalStatus: activityResults[0].activity.approvalStatus,
               verificationStatus: activityResults[0].activity.verificationStatus,
             }

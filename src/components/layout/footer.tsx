@@ -40,7 +40,7 @@ export function Footer() {
             linkedin.com/in/ziydev
           </a>
         </div>
-        <div className="mt-3 text-center text-xs text-neutral-400">
+        <div className="mt-3 text-center text-xs text-neutral-500">
           Data sourced from official UAE government authorities. Approval signals
           are not verified approvals. Always verify regulatory requirements with
           the relevant authority.

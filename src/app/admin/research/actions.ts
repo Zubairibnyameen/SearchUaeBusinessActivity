@@ -21,7 +21,8 @@ import {
   approvalAuthorities,
   verificationHistory,
 } from "@/lib/db/schema";
-import { isAdminAuthenticated, logAdminEvent } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/viewer";
+import { logAdminEvent } from "@/lib/auth/audit";
 import { eq, and, or, isNull } from "drizzle-orm";
 import crypto from "node:crypto";
 import { z } from "zod";
@@ -155,20 +156,17 @@ async function safeFetch(url: string): Promise<{ ok: boolean; body: string | nul
 }
 
 /**
- * Stable admin identity for this single-admin system, derived from the trusted
- * authenticated session (the session token is server-signed and was verified by
- * `requireAdmin` / `isAdminAuthenticated`). It deliberately does NOT come from
- * any client-supplied header or body: never trust client-provided identity.
- * It also never contains an IP address, so it is safe to display in the admin UI.
+ * Stable admin identity for the research workflow, taken from the verified
+ * Supabase session via the shared `requireAdmin()` gate.
+ *
+ * It deliberately does NOT come from any client-supplied header or body: never
+ * trust client-provided identity. It resolves to a verified account e-mail,
+ * which is safe to write to the audit trail and to display in the admin UI
+ * (unlike an IP address).
  */
 async function getAdminIdentity(): Promise<string> {
-  return "admin";
-}
-
-async function requireAdmin(): Promise<void> {
-  if (!(await isAdminAuthenticated())) {
-    throw new Error("Unauthorized");
-  }
+  const admin = await requireAdmin();
+  return admin.email;
 }
 
 async function audit(event: string, details: Record<string, unknown>): Promise<void> {

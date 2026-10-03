@@ -50,15 +50,48 @@ export default async function AdminActivitiesPage({
         </p>
       </header>
 
+      {/*
+        * A stale or hand-edited `?page=` lands past the last page and returns no
+        * rows. Rendering the header over an empty `<tbody>` read as "there are no
+        * activities" directly above a pager saying "page 999 of 3", which is
+        * worse than useless — an admin would conclude the import had emptied the
+        * table. Say what actually happened.
+        */}
+      {rows.length === 0 ? (
+        <div className="rounded-lg border border-neutral-200 bg-white p-8">
+          <p className="text-sm font-semibold text-neutral-900">
+            {total === 0
+              ? "No activities have been indexed yet."
+              : `Nothing on page ${page}.`}
+          </p>
+          <p className="mt-1.5 text-sm text-neutral-600">
+            {total === 0
+              ? "Activities are created by the import pipeline. Start with Data Import to load an official source."
+              : `${total.toLocaleString()} ${
+                  total === 1 ? "activity is" : "activities are"
+                } indexed across ${totalPages} ${
+                  totalPages === 1 ? "page" : "pages"
+                }. This page is past the last one.`}
+          </p>
+          {total > 0 && page > 1 ? (
+            <Link
+              href="/admin/activities?page=1"
+              className="mt-4 inline-block rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+            >
+              Go to page 1
+            </Link>
+          ) : null}
+        </div>
+      ) : (
       <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
         <table className="w-full min-w-[860px] text-sm">
           <thead>
             <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-              <th className="px-4 py-2.5 font-medium">Activity</th>
-              <th className="px-4 py-2.5 font-medium">Jurisdiction</th>
-              <th className="px-4 py-2.5 font-medium">Licence type</th>
-              <th className="px-4 py-2.5 font-medium">Signal</th>
-              <th className="px-4 py-2.5 font-medium">Verification</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Activity</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Jurisdiction</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Licence type</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Signal</th>
+              <th scope="col" className="px-4 py-2.5 font-medium">Verification</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
@@ -72,7 +105,7 @@ export default async function AdminActivitiesPage({
                     {r.officialName}
                   </Link>
                   {r.activityCode && (
-                    <span className="ml-2 font-mono text-xs text-neutral-400">
+                    <span className="ml-2 font-mono text-xs text-neutral-500">
                       {r.activityCode}
                     </span>
                   )}
@@ -101,6 +134,7 @@ export default async function AdminActivitiesPage({
           </tbody>
         </table>
       </div>
+      )}
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center gap-3">

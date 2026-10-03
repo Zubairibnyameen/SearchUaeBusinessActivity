@@ -1,6 +1,12 @@
 import { SiteHeader } from "@/components/layout/site-header";
 import { Footer } from "@/components/layout/footer";
 
+// The header renders authentication state from the verified session, so every
+// public route must be rendered per request. Without this, a build that runs
+// before the Supabase environment variables are present would not see any
+// cookie read, and the page could be prerendered with a stale logged-out header.
+export const dynamic = "force-dynamic";
+
 export default function PublicLayout({
   children,
 }: {

@@ -1033,6 +1033,7 @@ type CandidateRow = {
     officialName: string;
     normalizedName: string;
     activityCode: string | null;
+    isicCode: string | null;
     description: string | null;
     officialCategory: string | null;
     activityGroup: string | null;
@@ -1079,6 +1080,7 @@ const CANDIDATE_SELECT = `
   activities.official_name AS a_official_name,
   activities.normalized_name AS a_normalized_name,
   activities.activity_code AS a_activity_code,
+  activities.isic_code AS a_isic_code,
   activities.description AS a_description,
   activities.official_category AS a_official_category,
   activities.activity_group AS a_activity_group,
@@ -1125,6 +1127,7 @@ function mapCandidateRow(r: Record<string, unknown>): CandidateRow {
       officialName: String(r.a_official_name),
       normalizedName: String(r.a_normalized_name),
       activityCode: r.a_activity_code == null ? null : String(r.a_activity_code),
+      isicCode: r.a_isic_code == null ? null : String(r.a_isic_code),
       description: d(r.a_description),
       officialCategory: d(r.a_official_category),
       activityGroup: d(r.a_activity_group),
@@ -1231,7 +1234,9 @@ async function fetchCandidates(
     branches.push(
       `(SELECT DISTINCT
         NULL::uuid AS a_id, NULL::text AS a_official_name, NULL::text AS a_normalized_name,
-        NULL::varchar AS a_activity_code, NULL::text AS a_description,
+        NULL::varchar AS a_activity_code,
+        NULL::varchar AS a_isic_code,
+        NULL::text AS a_description,
         NULL::varchar AS a_official_category, NULL::varchar AS a_activity_group,
         NULL::approval_signal AS a_approval_signal, NULL::approval_status AS a_approval_status,
         NULL::verification_status AS a_verification_status, NULL::date AS a_last_verified,
@@ -1399,6 +1404,7 @@ async function runPipeline(
         officialName: row.activity.officialName,
         normalizedName: row.activity.normalizedName,
         activityCode: row.activity.activityCode,
+        isicCode: row.activity.isicCode,
         description: row.activity.description,
         officialCategory: row.activity.officialCategory,
         activityGroup: row.activity.activityGroup,

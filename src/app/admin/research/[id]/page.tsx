@@ -12,6 +12,7 @@ import {
   verificationHistory,
 } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { parseUuid } from "@/lib/db/uuid";
 import {
   saveResearchNotes,
   startResearch,
@@ -43,7 +44,7 @@ interface ResearchDetailPageProps {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="border border-neutral-200 rounded-lg bg-white p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-4">{title}</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-4">{title}</h2>
       {children}
     </section>
   );
@@ -53,8 +54,18 @@ const inputCls =
   "w-full border border-neutral-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 const labelCls = "block text-xs font-medium text-neutral-500 mb-1";
 
+/**
+ * `id` is compared against a `uuid` column, so a hand-edited or mistyped path
+ * segment used to reach Postgres as `invalid input syntax for type uuid` — a
+ * 500 with a driver message, in development a raw Postgres error. Validating the
+ * shape first turns that into an honest 404.
+ *
+ * `/admin/review/[id]` and `/admin/users/[id]` share the same guard.
+ */
 export default async function ResearchDetailPage({ params }: ResearchDetailPageProps) {
   const { id } = await params;
+  const queueId = parseUuid(id);
+  if (!queueId) notFound();
 
   const [item] = await db
     .select({
@@ -65,7 +76,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
     .from(regulatoryResearchQueue)
     .innerJoin(activities, eq(activities.id, regulatoryResearchQueue.activityId))
     .innerJoin(jurisdictions, eq(jurisdictions.id, regulatoryResearchQueue.jurisdictionId))
-    .where(eq(regulatoryResearchQueue.id, id))
+    .where(eq(regulatoryResearchQueue.id, queueId))
     .limit(1);
 
   if (!item) notFound();
@@ -149,7 +160,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
           <p className="text-sm text-neutral-500">No structured signal rows.</p>
         )}
         {priorityReasons.length > 0 && (
-          <p className="text-xs text-neutral-400 mt-3">
+          <p className="text-xs text-neutral-500 mt-3">
             Priority factors:{" "}
             {priorityReasons.map((p) => `${p.factor} (+${p.points})`).join("; ")}
           </p>
@@ -200,7 +211,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
               >
                 {approval.source.title}
               </a>{" "}
-              <span className="text-xs text-neutral-400">
+              <span className="text-xs text-neutral-500">
                 (retrieved {approval.source.retrievedDate ?? "?"}
                 {approval.source.contentHash ? " · content hash recorded" : ""})
               </span>
@@ -400,7 +411,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
         </div>
       </Section>
 
-      <p className="text-xs text-neutral-400">
+      <p className="text-xs text-neutral-500">
         Data rules: signals are never promoted without an authoritative source; every workflow change is
         audit-logged; unresolved records are never deleted.
       </p>

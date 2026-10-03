@@ -53,13 +53,13 @@ export default async function AdminApprovalsPage() {
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-                <th className="px-4 py-2.5 font-medium">Approval</th>
-                <th className="px-4 py-2.5 font-medium">Activity</th>
-                <th className="px-4 py-2.5 font-medium">Authority</th>
-                <th className="px-4 py-2.5 font-medium">Requirement</th>
-                <th className="px-4 py-2.5 font-medium">Verification</th>
-                <th className="px-4 py-2.5 font-medium">Last verified</th>
-                <th className="px-4 py-2.5 font-medium">Source</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Approval</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Activity</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Authority</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Requirement</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Verification</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Last verified</th>
+                <th scope="col" className="px-4 py-2.5 font-medium">Source</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -75,7 +75,7 @@ export default async function AdminApprovalsPage() {
                     >
                       {r.activityName}
                     </Link>
-                    <span className="block text-xs text-neutral-400">
+                    <span className="block text-xs text-neutral-500">
                       {r.jurisdictionName}
                     </span>
                   </td>

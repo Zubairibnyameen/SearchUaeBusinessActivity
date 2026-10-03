@@ -20,7 +20,7 @@ const state = vi.hoisted(() => {
     insertValues: [] as Record<string, unknown>[],
   };
 
-  let isAdminAuthed = true;
+  let adminRole: "admin" | "user" | null = "admin";
   const auditEvents: string[] = [];
 
   function thenableWithReturning(rows: unknown[]) {
@@ -53,8 +53,9 @@ const state = vi.hoisted(() => {
   return {
     plan,
     dbMock,
-    setAdmin: (v: boolean) => (isAdminAuthed = v),
-    isAdminAuthed: () => isAdminAuthed,
+    setAdmin: (v: boolean) => (adminRole = v ? "admin" : "user"),
+    setAnonymous: () => (adminRole = null),
+    adminRole: () => adminRole,
     recordAudit: (event: string) => auditEvents.push(event),
     reset: () => {
       auditEvents.length = 0;
@@ -68,8 +69,34 @@ const state = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/db", () => ({ db: state.dbMock }));
-vi.mock("@/lib/auth", () => ({
-  isAdminAuthenticated: vi.fn(() => Promise.resolve(state.isAdminAuthed())),
+
+/**
+ * The research actions now share the real Supabase-backed gate. The mock
+ * reproduces its exact failure modes (401 when anonymous, 403 when signed in
+ * but not an admin) so these tests assert the same distinction production does.
+ */
+vi.mock("@/lib/auth/viewer", async () => {
+  const { AuthRequiredError, ForbiddenError } = await import(
+    "@/lib/auth/errors"
+  );
+  return {
+    requireAdmin: vi.fn(async () => {
+      const role = state.adminRole();
+      if (role === null) throw new AuthRequiredError();
+      if (role !== "admin") throw new ForbiddenError("Administrator access is required");
+      return {
+        id: "11111111-1111-4111-8111-111111111111",
+        email: "owner@example.com",
+        role: "admin",
+        status: "active",
+        isAdmin: true,
+        isActive: true,
+      };
+    }),
+  };
+});
+
+vi.mock("@/lib/auth/audit", () => ({
   logAdminEvent: vi.fn(async (input: { event: string }) => state.recordAudit(input.event)),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -103,9 +130,24 @@ describe("research workflow — authentication & authorization", () => {
   });
 
   it("rejects unauthenticated callers and performs no database writes", async () => {
+    state.setAnonymous();
+    await expect(claimResearch(form({ id: VALID_ID }))).rejects.toThrow(
+      /authentication required/i
+    );
+    await expect(saveResearchNotes(form({ id: VALID_ID, notes: "" }))).rejects.toThrow(
+      /authentication required/i
+    );
+    expect(state.dbMock.update).not.toHaveBeenCalled();
+    expect(state.dbMock.insert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a signed-in non-admin with a 403-level error and no writes", async () => {
+    // The case that matters most: an ordinary authenticated user poking at a
+    // server action must be refused, not merely redirected.
     state.setAdmin(false);
-    await expect(claimResearch(form({ id: VALID_ID }))).rejects.toThrow("Unauthorized");
-    await expect(saveResearchNotes(form({ id: VALID_ID, notes: "" }))).rejects.toThrow("Unauthorized");
+    await expect(claimResearch(form({ id: VALID_ID }))).rejects.toThrow(
+      /administrator access is required/i
+    );
     expect(state.dbMock.update).not.toHaveBeenCalled();
     expect(state.dbMock.insert).not.toHaveBeenCalled();
   });

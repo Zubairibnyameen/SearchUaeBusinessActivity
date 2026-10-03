@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import {
+  authViewerMock,
+  resetAuth,
+  signInAsUser,
+} from "../helpers/auth-mock";
 
 // ---------------------------------------------------------------------------
 // Shared constants & helpers
@@ -80,7 +85,11 @@ function dbSelect() {
 
 vi.mock("@/lib/db", () => ({
   get db() {
-    return { select: vi.fn(dbSelect) };
+    // `insert` is present so the search-usage recorder completes normally. If
+    // it were missing, the recorder's catch would swallow the resulting
+    // TypeError and these tests would still pass — which would hide a real
+    // change in recorder behaviour.
+    return { select: vi.fn(dbSelect), insert: vi.fn(() => ({ values: vi.fn() })) };
   },
 }));
 
@@ -91,25 +100,7 @@ vi.mock("@/lib/search/engine", () => ({
 }));
 
 // --- Auth mocks ---
-const mockCheckRateLimit = vi.fn().mockReturnValue(true);
-const mockVerifyAdminPassword = vi.fn().mockReturnValue(false);
-const mockCreateSessionToken = vi.fn().mockReturnValue({
-  token: "test-token.sig",
-  maxAge: 43200,
-});
-const mockLogAdminEvent = vi.fn().mockResolvedValue(undefined);
-
-vi.mock("@/lib/auth", () => ({
-  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
-  verifyAdminPassword: (...args: unknown[]) => mockVerifyAdminPassword(...args),
-  createSessionToken: (...args: unknown[]) => mockCreateSessionToken(...args),
-  logAdminEvent: (...args: unknown[]) => mockLogAdminEvent(...args),
-  ADMIN_COOKIE: "uaai_admin_session",
-}));
-
-// ---------------------------------------------------------------------------
-// Dynamic route imports
-// ---------------------------------------------------------------------------
+vi.mock("@/lib/auth/viewer", () => authViewerMock());
 
 let searchGET: typeof import("@/app/api/activities/search/route").GET;
 let activityGET: typeof import("@/app/api/activities/[id]/route").GET;
@@ -120,7 +111,6 @@ let jurisdictionsGET: typeof import("@/app/api/jurisdictions/route").GET;
 let slugGET: typeof import("@/app/api/jurisdictions/[slug]/route").GET;
 let categoriesGET: typeof import("@/app/api/categories/route").GET;
 let compareGET: typeof import("@/app/api/compare/route").GET;
-let loginPOST: typeof import("@/app/api/admin/login/route").POST;
 
 beforeAll(async () => {
   ({ GET: searchGET } = await import("@/app/api/activities/search/route"));
@@ -132,7 +122,6 @@ beforeAll(async () => {
   ({ GET: slugGET } = await import("@/app/api/jurisdictions/[slug]/route"));
   ({ GET: categoriesGET } = await import("@/app/api/categories/route"));
   ({ GET: compareGET } = await import("@/app/api/compare/route"));
-  ({ POST: loginPOST } = await import("@/app/api/admin/login/route"));
 });
 
 /** Reset dbState to defaults before every test */
@@ -140,6 +129,12 @@ function resetDb() {
   dbState.result = [];
   dbState.error = null;
   dbState.queue = [];
+}
+
+/** Sign in so the gated endpoints are reachable; 401 paths override this. */
+function resetAuthed() {
+  resetAuth();
+  signInAsUser();
 }
 
 // ===========================================================================
@@ -150,6 +145,7 @@ describe("GET /api/activities/search", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
     mockSearchUnified.mockResolvedValue({
       query: "test",
       total: 0,
@@ -280,6 +276,7 @@ describe("GET /api/activities/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 400 for invalid UUID", async () => {
@@ -366,6 +363,7 @@ describe("GET /api/activities/[id]/approvals", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 400 for invalid UUID", async () => {
@@ -433,6 +431,7 @@ describe("GET /api/activities/[id]/fees", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 400 for invalid UUID", async () => {
@@ -494,6 +493,7 @@ describe("GET /api/activities/[id]/jurisdictions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 400 for invalid UUID", async () => {
@@ -560,6 +560,7 @@ describe("GET /api/jurisdictions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 200 with all jurisdictions when no filters", async () => {
@@ -645,6 +646,7 @@ describe("GET /api/jurisdictions/[slug]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 400 for slug with spaces", async () => {
@@ -733,6 +735,7 @@ describe("GET /api/categories", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 200 with array of { category, count }", async () => {
@@ -775,6 +778,7 @@ describe("GET /api/compare", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetDb();
+    resetAuthed();
   });
 
   it("returns 400 when activity name is missing", async () => {
@@ -889,129 +893,3 @@ describe("GET /api/compare", () => {
   });
 });
 
-// ===========================================================================
-// 10. POST /api/admin/login
-// ===========================================================================
-
-describe("POST /api/admin/login", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockCheckRateLimit.mockReturnValue(true);
-    mockVerifyAdminPassword.mockReturnValue(false);
-    mockCreateSessionToken.mockReturnValue({ token: "test-token.sig", maxAge: 43200 });
-    mockLogAdminEvent.mockResolvedValue(undefined);
-  });
-
-  function makeReq(body: unknown, headers?: Record<string, string>) {
-    const init: RequestInit & { signal?: AbortSignal } = {
-      method: "POST",
-      headers: { "content-type": "application/json", ...headers },
-    };
-    if (body !== undefined) init.body = JSON.stringify(body);
-    return new NextRequest("http://localhost/api/admin/login", init);
-  }
-
-  it("returns 400 when body is missing", async () => {
-    const res = await loginPOST(
-      new NextRequest("http://localhost/api/admin/login", { method: "POST" })
-    );
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toBeDefined();
-  });
-
-  it("returns 400 for invalid JSON body", async () => {
-    const res = await loginPOST(
-      new NextRequest("http://localhost/api/admin/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: "not-json",
-      })
-    );
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toContain("Invalid JSON");
-  });
-
-  it("returns 400 when password field is missing", async () => {
-    const res = await loginPOST(makeReq({}));
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toBeDefined();
-  });
-
-  it("returns 400 when password is empty string", async () => {
-    const res = await loginPOST(makeReq({ password: "" }));
-    expect(res.status).toBe(400);
-  });
-
-  it("returns 401 on wrong password", async () => {
-    mockVerifyAdminPassword.mockReturnValue(false);
-    const res = await loginPOST(makeReq({ password: "wrong" }));
-    expect(res.status).toBe(401);
-    const body = await res.json();
-    expect(body.error).toContain("Invalid credentials");
-    expect(mockLogAdminEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ outcome: "failure" })
-    );
-  });
-
-  it("returns 200 and sets cookie on correct password", async () => {
-    mockVerifyAdminPassword.mockReturnValue(true);
-    const res = await loginPOST(makeReq({ password: "correct" }));
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.ok).toBe(true);
-    const setCookie = res.headers.get("set-cookie");
-    expect(setCookie).toContain("uaai_admin_session");
-    expect(setCookie).toContain("test-token.sig");
-    expect(mockCreateSessionToken).toHaveBeenCalledOnce();
-    expect(mockLogAdminEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ outcome: "success" })
-    );
-  });
-
-  it("returns 429 when rate limited", async () => {
-    mockCheckRateLimit.mockReturnValue(false);
-    const res = await loginPOST(makeReq({ password: "anything" }));
-    expect(res.status).toBe(429);
-    const body = await res.json();
-    expect(body.error).toContain("Too many attempts");
-    expect(mockLogAdminEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        outcome: "failure",
-        details: { reason: "rate_limited" },
-      })
-    );
-  });
-
-  it("rate limit check runs before body parsing", async () => {
-    mockCheckRateLimit.mockReturnValue(false);
-    await loginPOST(makeReq({ password: "anything" }));
-    // Rate limit was checked
-    expect(mockCheckRateLimit).toHaveBeenCalled();
-    // Body was never parsed (verifyAdminPassword not called)
-    expect(mockVerifyAdminPassword).not.toHaveBeenCalled();
-  });
-
-  it("logs failure with IP and user-agent on wrong password", async () => {
-    mockVerifyAdminPassword.mockReturnValue(false);
-    await loginPOST(
-      makeReq({ password: "wrong" }, { "x-forwarded-for": "1.2.3.4", "user-agent": "TestAgent/1.0" })
-    );
-    expect(mockLogAdminEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event: "admin_login",
-        outcome: "failure",
-        details: { reason: "invalid_password" },
-      })
-    );
-  });
-
-  it("never exposes internal error details on any failure path", async () => {
-    mockCheckRateLimit.mockReturnValue(false);
-    const res = await loginPOST(makeReq({ password: "anything" }));
-    const body = await res.json();
-    assertNoLeaks(body);
-  });
-});

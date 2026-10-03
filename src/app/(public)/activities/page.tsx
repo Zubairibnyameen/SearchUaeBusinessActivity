@@ -76,7 +76,7 @@ export default async function ActivitiesPage({
     .select({
       id: activities.id,
       officialName: activities.officialName,
-      activityCode: activities.activityCode,
+      isicCode: activities.isicCode,
       approvalSignal: activities.approvalSignal,
       verificationStatus: activities.verificationStatus,
       jurisdictionName: jurisdictions.name,
@@ -145,10 +145,16 @@ export default async function ActivitiesPage({
             </p>
           </div>
 
-          {/* Filters — Jurisdiction */}
+          {/* Filters — Jurisdiction.
+              The pills are visually distinct when selected, but a colour swap
+              carries no meaning to a screen reader: navigating this list read
+              out as twelve identical links with no way to tell which filter was
+              applied. `aria-current="true"` is the value for a filter state (not
+              `"page"`, which would wrongly claim these are separate pages). */}
           <nav aria-label="Filter by jurisdiction" className="flex flex-wrap gap-2">
             <Link
               href="/activities"
+              aria-current={!scopedJurisdiction ? "true" : undefined}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 !scopedJurisdiction
                   ? "border-neutral-900 bg-neutral-900 text-white"
@@ -161,6 +167,7 @@ export default async function ActivitiesPage({
               <Link
                 key={jo.slug}
                 href={pageHref(jo.slug, null, null)}
+                aria-current={scopedJurisdiction?.slug === jo.slug ? "true" : undefined}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   scopedJurisdiction?.slug === jo.slug
                     ? "border-neutral-900 bg-neutral-900 text-white"
@@ -177,6 +184,7 @@ export default async function ActivitiesPage({
             <nav aria-label="Filter by category" className="flex flex-wrap gap-2">
               <Link
                 href={pageHref(scopedJurisdiction?.slug, null, null)}
+                aria-current={!scopedCategory ? "true" : undefined}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   !scopedCategory
                     ? "border-neutral-900 bg-neutral-900 text-white"
@@ -189,6 +197,7 @@ export default async function ActivitiesPage({
                 <Link
                   key={co.category}
                   href={pageHref(scopedJurisdiction?.slug, null, co.category)}
+                  aria-current={scopedCategory === co.category ? "true" : undefined}
                   className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                     scopedCategory === co.category
                       ? "border-neutral-900 bg-neutral-900 text-white"
@@ -205,15 +214,22 @@ export default async function ActivitiesPage({
 
         {rows.length > 0 ? (
           <>
-            {/* Desktop table */}
-            <div className="mt-6 hidden overflow-hidden rounded-xl border border-neutral-200 bg-white md:block">
-              <table className="w-full text-sm">
+            {/* Desktop table.
+              `overflow-x-auto` rather than `overflow-hidden`: Activity is
+              varchar(1000) and official long names contain no spaces, so one
+              long row pushed the table past its container and `overflow-hidden`
+              clipped the right-hand columns off-screen with no way to scroll to
+              them. `min-w-[760px]` stops the columns crushing first. The mobile
+              list below is hidden at `md` and up, so this is the only view at
+              those widths. */}
+            <div className="mt-6 hidden overflow-x-auto rounded-xl border border-neutral-200 bg-white md:block">
+              <table className="w-full min-w-[760px] text-sm">
                 <thead>
-                  <tr className="border-b border-neutral-200 bg-neutral-50/80 text-left text-xs uppercase tracking-wide text-neutral-400">
-                    <th className="px-4 py-3 font-medium">Activity</th>
-                    <th className="px-4 py-3 font-medium">Jurisdiction</th>
-                    <th className="px-4 py-3 font-medium">Licence type</th>
-                    <th className="px-4 py-3 font-medium">Approval status</th>
+                  <tr className="border-b border-neutral-200 bg-neutral-50/80 text-left text-xs uppercase tracking-wide text-neutral-500">
+                    <th scope="col" className="px-4 py-3 font-medium">Activity</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Jurisdiction</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Licence type</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Approval status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
@@ -226,9 +242,9 @@ export default async function ActivitiesPage({
                         >
                           {r.officialName}
                         </Link>
-                        {r.activityCode && (
-                          <span className="ml-2 font-mono text-xs text-neutral-400">
-                            {r.activityCode}
+                        {r.isicCode && (
+                          <span className="ml-2 font-mono text-xs text-neutral-500">
+                            {r.isicCode}
                           </span>
                         )}
                       </td>
@@ -242,7 +258,7 @@ export default async function ActivitiesPage({
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
                         {r.licenceTypeName ?? (
-                          <span className="text-neutral-400">Not specified</span>
+                          <span className="text-neutral-500">Not specified</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -267,9 +283,9 @@ export default async function ActivitiesPage({
                   >
                     {r.officialName}
                   </Link>
-                  {r.activityCode && (
-                    <span className="ml-2 font-mono text-xs text-neutral-400">
-                      {r.activityCode}
+                  {r.isicCode && (
+                    <span className="ml-2 font-mono text-xs text-neutral-500">
+                      {r.isicCode}
                     </span>
                   )}
                   <p className="mt-1 text-xs text-neutral-500">
@@ -381,7 +397,7 @@ function ApprovalStatusInline({
   }
   if (signal === "no_signal") {
     return (
-      <span className="inline-flex items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+      <span className="inline-flex items-center rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
         No signal in source
       </span>
     );
