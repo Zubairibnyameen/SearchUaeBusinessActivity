@@ -5,6 +5,10 @@ import { enrichResponse } from "@/lib/search/enrichment";
 import { db } from "@/lib/db";
 import { jurisdictions } from "@/lib/db/schema";
 import { SearchResultCard } from "./search-results";
+import { SearchSignInWall } from "./search-sign-in-wall";
+import { getViewer } from "@/lib/auth/viewer";
+import { recordSearchUsageSafely } from "@/lib/auth/search-usage";
+import { AccountSuspendedNotice } from "@/components/auth/account-suspended-notice";
 import { MatchTypeBadge } from "@/components/ui/verification-badges";
 import { SearchCompareBar } from "@/components/compare/search-compare-bar";
 import type { UnifiedSearchResponse } from "@/lib/search/types";
@@ -14,7 +18,11 @@ interface SearchResultsProps {
 }
 
 const PAGE_SIZE = 10;
-const GROUP_LIMIT = 6;
+// The engine caps each jurisdiction group at `groupLimit`. A group can never
+// hold more than the page it came from, so capping at the page size means the
+// grouped view renders the page in full — no item can sit in `results` while
+// being hidden from the sections below.
+const GROUP_LIMIT = PAGE_SIZE;
 
 function pageHref(
   q: string,
@@ -24,6 +32,28 @@ function pageHref(
   const params = new URLSearchParams({ q, page: String(page) });
   if (jurisdiction) params.set("jurisdiction", jurisdiction);
   return `/search?${params.toString()}`;
+}
+
+/**
+ * Rebuild the current search URL so the sign-in round trip can return the user
+ * to exactly where they were. Every value is taken from the already-validated
+ * `searchParams` object, never from free-form input.
+ */
+function buildSearchHref(params: {
+  q?: string;
+  page?: string;
+  jurisdiction?: string;
+}): string {
+  const search = new URLSearchParams();
+  const q = params.q?.trim();
+  if (q) search.set("q", q);
+  const page = Number.parseInt(params.page ?? "1", 10);
+  if (Number.isFinite(page) && page > 1) search.set("page", String(page));
+  if (params.jurisdiction && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(params.jurisdiction)) {
+    search.set("jurisdiction", params.jurisdiction);
+  }
+  const qs = search.toString();
+  return qs ? `/search?${qs}` : "/search";
 }
 
 function CheckIcon({ className = "" }: { className?: string }) {
@@ -80,7 +110,7 @@ function AvailabilityStrip({ data }: { data: UnifiedSearchResponse }) {
                 >
                   {g.jurisdiction.name}
                 </a>
-                <span className="shrink-0 text-xs tabular-nums text-neutral-400">
+                <span className="shrink-0 text-xs tabular-nums text-neutral-500">
                   {g.totalMatches} {g.totalMatches === 1 ? "match" : "matches"}
                 </span>
               </li>
@@ -93,7 +123,7 @@ function AvailabilityStrip({ data }: { data: UnifiedSearchResponse }) {
 
       {unmatched.length > 0 && (
         <section className="border-t border-neutral-200 p-5 md:border-l md:border-t-0">
-          <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-400">
+          <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
             <CrossIcon className="h-4 w-4" />
             Not found in
           </h2>
@@ -109,7 +139,7 @@ function AvailabilityStrip({ data }: { data: UnifiedSearchResponse }) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs leading-relaxed text-neutral-400">
+          <p className="mt-3 text-xs leading-relaxed text-neutral-500">
             &quot;Not found&quot; applies to the official activity lists indexed
             so far — it does not mean the activity is prohibited or unavailable.
           </p>
@@ -123,6 +153,25 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
   const params = await searchParams;
   const query = params.q?.trim();
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+
+  // ── Authorization gate ──
+  // Resolved from the verified server-side session. The check sits here, in
+  // the component that owns the `searchUnified` call, so the engine is never
+  // reached without a session even if a new caller is added to this page.
+  const viewer = await getViewer();
+  if (viewer && !viewer.isActive) {
+    // Signed in, but suspended. Say so plainly — a sign-in prompt would be a
+    // dead end because re-authenticating does not lift a suspension.
+    return <AccountSuspendedNotice />;
+  }
+  if (!viewer) {
+    return (
+      <SearchSignInWall
+        nextPath={buildSearchHref(params)}
+        query={query}
+      />
+    );
+  }
 
   if (!query) {
     return <EmptyState />;
@@ -164,13 +213,20 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
     );
   }
 
+  // Usage bookkeeping, once the engine has answered and before any rendering.
+  // The viewer was resolved from the verified session above and is the only
+  // accepted source of the account id, and `recordSearchUsageSafely` cannot
+  // throw — so a failure here cannot turn a working search into an error page,
+  // and cannot alter the results, ranking or markup below.
+  await recordSearchUsageSafely(viewer, query);
+
   const summaries = await enrichResponse(data);
 
   if (data.results.length === 0 && page === 1) {
     return (
       <div className="rounded-xl border border-neutral-200 bg-white p-10 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6 text-neutral-400" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6 text-neutral-500" aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         </div>
@@ -193,9 +249,52 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
     );
   }
 
+  // The query matched, but this page is past the last one — a stale or
+  // hand-edited `?page=`. Say so instead of rendering an empty result list that
+  // looks like "nothing matched".
+  if (data.results.length === 0) {
+    const lastPage = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
+    return (
+      <div className="rounded-xl border border-neutral-200 bg-white p-10 text-center">
+        <h2 className="text-lg font-semibold text-neutral-900">
+          Nothing on page {page}
+        </h2>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-neutral-600">
+          {data.total.toLocaleString()}{" "}
+          {data.total === 1 ? "activity matches" : "activities match"}{" "}
+          &quot;{query}&quot;, which {data.total === 1 ? "is" : "are"} spread over{" "}
+          {lastPage} {lastPage === 1 ? "page" : "pages"}. This page is past the
+          last one.
+        </p>
+        <Link
+          href={pageHref(query, 1, slug)}
+          className="mt-6 inline-block rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+        >
+          Go to page 1
+        </Link>
+      </div>
+    );
+  }
+
   const matchedCount = data.availability.matchedJurisdictionSlugs.length;
   const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
+  // Availability is a property of the query, not of the page, so the strip and
+  // the compare bar keep using every matched jurisdiction. Only the result
+  // sections below are page-scoped, so groups whose matches all rank on other
+  // pages are skipped rather than rendered as empty headings.
   const matchGroups = data.jurisdictionGroups.filter(g => g.status === "match");
+  // `topResults` is the requested page, partitioned by jurisdiction. The
+  // intersection below is a no-op against the current engine and is kept as a
+  // guard at the render boundary: if a group ever reached outside the requested
+  // window again, the page would silently show results that were never paged
+  // through — the failure this page is built to avoid.
+  const pageIds = new Set(data.results.map(item => item.activity.id));
+  const pageGroups = matchGroups
+    .map(group => ({
+      ...group,
+      topResults: group.topResults.filter(item => pageIds.has(item.activity.id)),
+    }))
+    .filter(group => group.topResults.length > 0);
 
   return (
     <div>
@@ -223,8 +322,13 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
           for <span className="font-semibold">&quot;{query}&quot;</span>
         </h2>
         {scopedName ? null : (
-          <span className="text-xs tabular-nums text-neutral-400">
-            {data.meta.tookMs}ms
+          <span className="flex items-center gap-3 text-xs tabular-nums text-neutral-500">
+            {totalPages > 1 && (
+              <span>
+                Page {page} of {totalPages}
+              </span>
+            )}
+            <span>{data.meta.tookMs}ms</span>
           </span>
         )}
       </div>
@@ -244,7 +348,7 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
       )}
 
       <div className="space-y-10">
-        {matchGroups.map(group => (
+        {pageGroups.map(group => (
           <section key={group.jurisdiction.id} id={`jur-${group.jurisdiction.slug}`}>
             <div className="mb-4 flex flex-wrap items-end justify-between gap-2 border-b border-neutral-200 pb-3">
               <div>
@@ -267,8 +371,27 @@ export async function SearchResults({ searchParams }: SearchResultsProps) {
                 <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
                   {group.totalMatches} {group.totalMatches === 1 ? "match" : "matches"}
                   {group.topResults.length < group.totalMatches &&
-                    ` · showing top ${group.topResults.length}`}
+                    ` · ${group.topResults.length} on this page`}
                 </span>
+                {/* "See all" only when this page is holding back matches for
+                    this jurisdiction. The count is the engine's page-independent
+                    `totalMatches`, not a re-count of what is rendered, so the
+                    number can never disagree with the badge above it.
+                    `pageHref` carries the original query through and scopes to
+                    this jurisdiction, so the reader does not have to retype
+                    anything. Page 1 is deliberate: the filtered view restarts
+                    its own pagination from the top. */}
+                {group.topResults.length < group.totalMatches ? (
+                  <Link
+                    href={pageHref(query, 1, group.jurisdiction.slug)}
+                    className="rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900/20"
+                  >
+                    See all {group.totalMatches}
+                    <span className="sr-only">
+                      {` matching ${group.totalMatches === 1 ? "activity" : "activities"} in ${group.jurisdiction.name}`}
+                    </span>
+                  </Link>
+                ) : null}
               </div>
             </div>
             <div className="space-y-4">

@@ -7,8 +7,17 @@ import { appUsers } from "./auth";
  *
  * SCOPE
  *   One row per authenticated search, so a person can see their own activity on
- *   the account dashboard. Nothing in the application reads another user's rows,
- *   and this table is not reachable from the admin panel.
+ *   the account dashboard. Nothing in the application reads another user's
+ *   individual rows.
+ *
+ *   ADMIN ACCESS — AGGREGATE ONLY
+ *   The admin dashboard reads this table through `lib/admin/search-insights`,
+ *   but only as aggregates: totals, distinct-query counts, per-day volumes and
+ *   `COUNT(DISTINCT user_id)`. That module never projects `user_id` into a
+ *   returned object, has no "searches by user" query, and reads no email, name,
+ *   auth id, IP or user agent. The purpose is search-quality improvement, not
+ *   surveillance of individuals, so a per-user query here would need a
+ *   deliberate decision rather than a quiet addition.
  *
  * WHAT IS DELIBERATELY ABSENT
  *   No credential of any kind (passwords, OAuth tokens, session cookies live

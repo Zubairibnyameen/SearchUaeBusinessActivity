@@ -225,41 +225,62 @@ const FUZZY_VOCABULARY = new Set([
   "insurance", "carpentry", "electrical", "wholesale", "retail", "coffee",
   "bakery", "catering", "tailoring", "marble", "steel", "printing",
   "packaging", "travel", "tourism", "shipping", "freight", "storage",
+  // Terms that dominate real activity names in this dataset. Without these,
+  // a misspelling of the highest-volume query in the catalogue ("general
+  // trading") had no correction target and was passed through untouched.
+  "general", "trading", "licensing", "consulting", "maintenance",
+  "beauty", "education", "automobile", "fitness", "receive", "consultant",
 ]);
 
 /** Damerau–Levenshtein distance (allows transpositions). */
+/**
+ * Optimal string alignment distance (Damerau-Levenshtein restricted to adjacent
+ * transpositions), used to decide whether a query word is a typo of a known
+ * business term.
+ *
+ * The row/column sentinels MUST be `matrix[i][0] = i` and `matrix[0][j] = j`.
+ * Seeding them with `i - 1` / `j - 1` makes `matrix[0][0] = -1`, and every
+ * dynamic-programming path is then able to route through that free cell, so any
+ * matching prefix costs nothing. The metric then reports 0 for unrelated words
+ * and undercounts by one for genuine typos, which lets arbitrary vocabulary
+ * words win the correction pass - that is how "general trade" was being
+ * rewritten to "general travel" and losing every General Trading result.
+ */
 function damerauLevenshtein(a: string, b: string): number {
   const aLen = a.length;
   const bLen = b.length;
   if (aLen === 0) return bLen;
   if (bLen === 0) return aLen;
-  if (aLen > bLen) [a, b] = [b, a]; // symmetrical; keep smaller on rows
 
-  const aLen2 = a.length;
-  const bLen2 = b.length;
-  const maxDist = aLen2 + bLen2;
+  // Symmetric, so normalise to keep the row count minimal.
+  if (aLen > bLen) return damerauLevenshtein(b, a);
+
+  // Two extra rows/columns are allocated purely to hold the
+  // transposition case (matrix[i-2][j-2]) without bounds checks.
+  const rows = aLen + 2;
+  const cols = bLen + 2;
   const matrix: number[][] = [];
+  for (let i = 0; i < rows; i++) matrix[i] = new Array<number>(cols).fill(0);
 
-  for (let i = 0; i <= aLen2 + 1; i++) {
-    matrix[i] = new Array(bLen2 + 2).fill(maxDist);
-    matrix[i][0] = i - 1;
-  }
-  for (let j = 0; j <= bLen2 + 1; j++) matrix[0][j] = j - 1;
+  for (let i = 0; i <= aLen; i++) matrix[i][0] = i;
+  for (let j = 0; j <= bLen; j++) matrix[0][j] = j;
 
-  for (let i = 1; i <= aLen2; i++) {
-    for (let j = 1; j <= bLen2; j++) {
+  for (let i = 1; i <= aLen; i++) {
+    for (let j = 1; j <= bLen; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
+      let best = Math.min(
         matrix[i - 1][j] + 1,
         matrix[i][j - 1] + 1,
         matrix[i - 1][j - 1] + cost,
       );
       if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
-        matrix[i][j] = Math.min(matrix[i][j], matrix[i - 2][j - 2] + cost);
+        best = Math.min(best, matrix[i - 2][j - 2] + 1);
       }
+      matrix[i][j] = best;
     }
   }
-  return matrix[aLen2][bLen2];
+
+  return matrix[aLen][bLen];
 }
 
 /**

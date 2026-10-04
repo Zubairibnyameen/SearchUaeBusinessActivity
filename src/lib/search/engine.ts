@@ -112,9 +112,22 @@ const WORD_WEIGHTS: Record<string, number> = {
   veterinary: 0.60, vet: 0.50,
 };
 
+/**
+ * Domain weight of a query word.
+ *
+ * Falls back to the strongest weight across the word's singular/plural
+ * counterparts. `WORD_WEIGHTS` is written in the singular ("restaurant",
+ * "shop"), but users type both forms, and without this a plural query word
+ * scored the 0.20 unknown-word default and was then discarded by every
+ * weight gate downstream - which is why "restaurants" ranked unrelated
+ * activities above the exact "Restaurant" ones.
+ */
 function getWordWeight(word: string): number {
   const lower = word.toLowerCase();
   if (WORD_WEIGHTS[lower] !== undefined) return WORD_WEIGHTS[lower];
+  for (const variant of morphologicalVariants(lower)) {
+    if (WORD_WEIGHTS[variant] !== undefined) return WORD_WEIGHTS[variant];
+  }
   return 0.20;
 }
 
@@ -775,13 +788,83 @@ interface ScoreInput {
   officialName: string;
   normalizedName: string;
   activityCode: string | null;
+  /** Published ISIC classification code; searched as an exact-code tier. */
+  isicCode: string | null;
   description: string | null;
   officialCategory: string | null;
   activityGroup: string | null;
 }
 
+/** Regular plural -> singular. Null when the word has no confident singular. */
+function singularize(term: string): string | null {
+  const t = term.toLowerCase();
+  if (t.length < 4) return null;
+  if (t.endsWith("sses")) return t.slice(0, -2); // businesses -> business
+  if (/(?:shes|ches|xes|zes)$/.test(t)) return t.slice(0, -2); // dishes -> dish, boxes -> box
+  if (t.length > 4 && t.endsWith("ies")) return `${t.slice(0, -3)}y`; // categories -> category
+  // "ss"/"us"/"is" endings are left alone so business, campus and analysis
+  // are never cut down to busine/campu/analysi.
+  if (t.endsWith("s") && !/(?:ss|us|is)$/.test(t)) return t.slice(0, -1);
+  return null;
+}
+
+/** Regular singular -> plural. Null when not confidently pluralisable. */
+function pluralize(term: string): string | null {
+  const t = term.toLowerCase();
+  if (t.length < 3 || t.endsWith("s")) return null;
+  if (t.endsWith("y") && !/[aeiou]y$/.test(t)) return `${t.slice(0, -1)}ies`;
+  if (/(?:x|z|ch|sh)$/.test(t)) return `${t}es`;
+  return `${t}s`;
+}
+
+/**
+ * Both regular counterparts of a term, in either direction.
+ *
+ * Activity names in this catalogue are inconsistently pluralised - the same
+ * concept appears as both "Restaurant" and "Restaurants and mobile food service
+ * activities" - so a query for one form must reach the other. Without this,
+ * "restaurants" scored every "Restaurant" activity below unrelated results,
+ * because the scorer compares whole words and `\brestaurants\b` does not match
+ * "Restaurant".
+ */
+function morphologicalVariants(term: string): string[] {
+  const t = term.toLowerCase();
+  if (t.length < 3) return [];
+  const out: string[] = [];
+  const singular = singularize(t);
+  if (singular) out.push(singular);
+  const plural = pluralize(t);
+  if (plural) out.push(plural);
+  return out;
+}
+
+/**
+ * Reduces every token to its singular so two phrases differing only by
+ * pluralisation produce the SAME string.
+ *
+ * This has to normalise one way only. Folding each token to whichever form the
+ * rule happens to produce is not a canonical form: "restaurant" would become
+ * "restaurants" while "restaurants" became "restaurant", so an exact-equality
+ * comparison would still fail.
+ */
+function canonicalInflection(phrase: string): string {
+  return phrase
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => singularize(token) ?? token)
+    .join(" ");
+}
+
 /** Whole-word containment, ignoring occurrences negated by "non-X"/"not X". */
 function termAppearsUnnegated(haystack: string, term: string): boolean {
+  const variants = [term, ...morphologicalVariants(term)];
+  for (const variant of variants) {
+    if (wholeWordUnnegated(haystack, variant)) return true;
+  }
+  return false;
+}
+
+function wholeWordUnnegated(haystack: string, term: string): boolean {
   const esc = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const re = new RegExp(`\\b${esc}\\b`, "i");
   if (!re.test(haystack)) {
@@ -802,10 +885,23 @@ function termAppearsUnnegated(haystack: string, term: string): boolean {
 function scoreActivity(
   intent: BusinessIntent,
   keywords: ExtractedKeywords,
-  activity: ScoreInput
+  activity: ScoreInput,
+  rawQuery: string
 ): ScoredResult | null {
   const nn = activity.normalizedName;
   const nq = keywords.originalWords.join(" ");
+
+  /*
+    Codes must be compared against the raw query, not `nq`.
+
+    `nq` is the query re-joined from word tokens, so a published code such as
+    "1520-05" or "0160.00" arrives here as "1520 05" / "0160 00" and can never
+    equal the stored value. Retrieval already matched the row on the raw string;
+    the exact-code tier then rejected it and the row was dropped from the
+    results. Whitespace is the only thing removed on both sides - punctuation
+    stays significant, because "1520-05" and "1520.05" are different codes.
+  */
+  const rawCodeQuery = rawQuery.trim().replace(/\s/g, "").toLowerCase();
 
   // 0. NEGATIVE RELEVANCE
   if (isNegativeMatch(activity.officialName, intent)) {
@@ -829,9 +925,43 @@ function scoreActivity(
     return { activityId: activity.id, matchType: "exact", score: 1.0, reasons: [`Exact official activity match: "${activity.officialName}"`] };
   }
 
+  // Same name, differing only in pluralisation ("restaurants" vs "Restaurant").
+  // Scored identically so the plural form of a query is not a downgrade.
+  if (canonicalInflection(nn) === canonicalInflection(nq)) {
+    return {
+      activityId: activity.id,
+      matchType: "exact",
+      score: 1.0,
+      reasons: [`Exact official activity match (plural form): "${activity.officialName}"`],
+    };
+  }
+
   // LEVEL 2: EXACT CODE MATCH (0.98)
-  if (activity.activityCode && nq === activity.activityCode.replace(/\s/g, "")) {
+  // No shape test here: activity codes in this catalogue are alphanumeric
+  // ("abc123", "0160.00", "1520-05"). Comparing the whitespace-stripped raw
+  // query is already specific, and it only ever fires on a row that retrieval
+  // actually returned for this query.
+  if (
+    activity.activityCode &&
+    rawCodeQuery === activity.activityCode.replace(/\s/g, "").toLowerCase()
+  ) {
     return { activityId: activity.id, matchType: "exact", score: 0.98, reasons: ["Exact activity code match"] };
+  }
+
+  // LEVEL 2b: EXACT ISIC CLASSIFICATION CODE (0.97)
+  // Scored just below the activity code because a published ISIC code is a
+  // broader industry classification, while the activity code identifies the
+  // specific regulated activity.
+  if (
+    activity.isicCode &&
+    rawCodeQuery === activity.isicCode.replace(/\s/g, "").toLowerCase()
+  ) {
+    return {
+      activityId: activity.id,
+      matchType: "exact",
+      score: 0.97,
+      reasons: [`Exact ISIC classification code match: ${activity.isicCode}`],
+    };
   }
 
   // LEVEL 3: HIGH CONFIDENCE PHRASE (0.92)
@@ -1184,6 +1314,15 @@ async function fetchCandidates(
       `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.activity_code = ${sqlLit(trimmed)}\nLIMIT 10`
     );
   }
+  // Tier 2b: exact ISIC classification code.
+  // ISIC codes were previously selected but never searched, so a published
+  // classification code returned nothing at all. Gated to numeric-looking
+  // queries so ordinary word searches do not pay for another branch.
+  if (/^[0-9][0-9.\-/]*$/.test(trimmed) && trimmed.length <= 20) {
+    branches.push(
+      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.isic_code = ${sqlLit(trimmed)}\nLIMIT 10`
+    );
+  }
   // Tier 3: name contains full query phrase (shortest names first = most specific)
   if (nq.length >= 3) {
     branches.push(
@@ -1367,10 +1506,11 @@ async function runPipeline(
       officialName: row.activity.officialName,
       normalizedName: row.activity.normalizedName,
       activityCode: row.activity.activityCode,
+      isicCode: row.activity.isicCode,
       description: row.activity.description,
       officialCategory: row.activity.officialCategory,
       activityGroup: row.activity.activityGroup,
-    });
+    }, q);
     if (!scored) continue;
 
     scored = capGoodsContextMatch(row.activity.officialName, intent, scored, queryAsksForGoods);
@@ -1465,17 +1605,36 @@ export async function search(options: SearchOptions): Promise<SearchResultItem[]
  */
 export async function searchUnified(options: SearchOptions): Promise<UnifiedSearchResponse> {
   const startedAt = Date.now();
-  const { limit = 20, offset = 0, groupLimit = 8 } = options;
+  const { limit = 20, offset = 0, groupLimit = 8, allMatches = false } = options;
 
   const pipeline = await runPipeline(options, { includeAvailability: true });
 
   const { items, intent, parsed, candidatesEvaluated, availability: allJurisdictions } = pipeline;
 
-  // Flat page
-  const results = items.slice(offset, offset + limit);
+  // Grouped-analysis callers (jurisdiction comparison, jurisdiction intelligence)
+  // summarise the best match per jurisdiction across EVERY match rather than
+  // walking a page at a time, so they opt out of paging. Slicing is free here —
+  // the pipeline has already materialised the full ranked list.
+  const effectiveOffset = allMatches ? 0 : offset;
+  const effectiveLimit = allMatches ? items.length : limit;
 
-  // Group ALL matches by jurisdiction
+  // Flat page — THE slice this request is about.
+  const results = items.slice(effectiveOffset, effectiveOffset + effectiveLimit);
+
+  // Groups are built in two deliberate passes:
+  //
+  //  1. counts and best-match type run over EVERY match, so `totalMatches` and
+  //     `bestMatchType` stay truthful and the group ordering is identical on
+  //     every page;
+  //  2. `topResults` is filled from the PAGE only, so a group renders exactly
+  //     the slice that was requested.
+  //
+  // Both used to be filled from every match, which made `offset`/`limit` a no-op
+  // for the grouped view: page 2 rendered the same top hits as page 1 while the
+  // pager advertised the full match count.
+  const bestByJurisdiction = new Map<string, { type: MatchType; score: number }>();
   const grouped = new Map<string, JurisdictionGroup>();
+
   for (const item of items) {
     let group = grouped.get(item.jurisdiction.id);
     if (!group) {
@@ -1487,16 +1646,33 @@ export async function searchUnified(options: SearchOptions): Promise<UnifiedSear
         topResults: [],
       };
       grouped.set(item.jurisdiction.id, group);
+      bestByJurisdiction.set(item.jurisdiction.id, {
+        type: item.matchType,
+        score: item.matchScore,
+      });
     }
     group.totalMatches += 1;
-    const currentBest = group.bestMatchType ? TYPE_PRIORITY[group.bestMatchType] : 99;
+
+    const incumbent = bestByJurisdiction.get(item.jurisdiction.id)!;
     if (
-      TYPE_PRIORITY[item.matchType] < currentBest ||
-      (TYPE_PRIORITY[item.matchType] === currentBest &&
-        item.matchScore > (group.topResults[0]?.matchScore ?? 0))
+      TYPE_PRIORITY[item.matchType] < TYPE_PRIORITY[incumbent.type] ||
+      (TYPE_PRIORITY[item.matchType] === TYPE_PRIORITY[incumbent.type] &&
+        item.matchScore > incumbent.score)
     ) {
+      bestByJurisdiction.set(item.jurisdiction.id, {
+        type: item.matchType,
+        score: item.matchScore,
+      });
       group.bestMatchType = item.matchType;
     }
+  }
+
+  // Second pass: `topResults` is the rendered slice, taken from the page only.
+  for (const item of results) {
+    const group = grouped.get(item.jurisdiction.id);
+    // `results` is a slice of `items`, so the group always exists here. Guarded
+    // anyway: a missing group must never silently drop a result from the page.
+    if (!group) continue;
     if (group.topResults.length < groupLimit) {
       group.topResults.push(item);
     }

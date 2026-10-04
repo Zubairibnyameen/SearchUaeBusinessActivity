@@ -9,6 +9,7 @@ import {
   ResearchRequiredBadge,
 } from "@/components/ui/verification-badges";
 import { formatAed, formatEmirate, formatJurisdictionType, titleCaseEnum } from "@/lib/format";
+import { ShareButton } from "@/components/activities/share-button";
 
 /**
  * Approval presentation is strictly 3-state:
@@ -33,6 +34,26 @@ function ApprovalStatusCell({
   )
     return <ApprovalSignalBadgeSmall />;
   return <ResearchRequiredBadge />;
+}
+
+/**
+ * Regulatory figures are shown ONLY when a summary was loaded for this exact
+ * activity.
+ *
+ * Three outcomes, kept strictly apart:
+ *  - a figure exists → show it;
+ *  - a summary exists but is empty → the verified tables were searched and hold
+ *    nothing for this activity, which is a real, reportable finding;
+ *  - no summary at all → this card was never enriched. That is a wiring fault,
+ *    and saying "not verified" here would assert a regulatory finding the system
+ *    never actually made. It renders as an explicit unknown instead.
+ */
+function NotEnriched() {
+  return (
+    <span className="text-xs text-neutral-500" title="Not loaded for this result">
+      Not checked
+    </span>
+  );
 }
 
 /**
@@ -64,7 +85,7 @@ function RelevanceMeter({ score }: { score: number }) {
           style={{ width: `${pct}%` }}
         />
       </span>
-      <span className="text-xs tabular-nums text-neutral-400">{pct}%</span>
+      <span className="text-xs tabular-nums text-neutral-500">{pct}%</span>
     </span>
   );
 }
@@ -92,7 +113,7 @@ export function SearchResultCard({
           : MATCH_ACCENT[result.matchType] ?? ""
       )}
     >
-      {/* Header row: match badge + name + code */}
+      {/* Header row: match badge + name + published ISIC classification */}
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -107,19 +128,28 @@ export function SearchResultCard({
               {a.officialName}
             </Link>
           </h3>
-          {a.activityCode && (
-            <p className="mt-0.5 font-mono text-xs text-neutral-500">
-              Code {a.activityCode}
+          {a.isicCode ? (
+            <p className="mt-0.5 text-xs text-neutral-500">
+              ISIC Code{" "}
+              <span className="font-mono text-neutral-700">{a.isicCode}</span>
             </p>
-          )}
+          ) : null}
         </div>
-        <Link
-          href={`/activities/${a.id}`}
-          className="shrink-0 self-center rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-          aria-hidden={false}
-        >
-          View details
-        </Link>
+        {/* Primary action first; share is a quiet icon beside it, never a peer
+            row that outweighs the activity name. */}
+        <div className="flex shrink-0 items-center gap-2 self-center">
+          <ShareButton
+            activityId={a.id}
+            title={a.officialName}
+            variant="compact"
+          />
+          <Link
+            href={`/activities/${a.id}`}
+            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+          >
+            View details
+          </Link>
+        </div>
       </div>
 
       {/* Context row: jurisdiction · emirate · FZ/mainland · licence */}
@@ -138,7 +168,7 @@ export function SearchResultCard({
           {result.licenceType ? (
             result.licenceType.name
           ) : (
-            <span className="text-neutral-400">Not specified in source</span>
+            <span className="text-neutral-500">Not specified in source</span>
           )}
         </Field>
       </dl>
@@ -146,7 +176,7 @@ export function SearchResultCard({
       {/* Regulatory row: approval status + fees + costs */}
       <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1.5 border-t border-neutral-100 pt-3 text-sm sm:grid-cols-3">
         <div>
-          <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
             Approval status
           </dt>
           <dd className="mt-1">
@@ -154,26 +184,28 @@ export function SearchResultCard({
           </dd>
         </div>
         <div>
-          <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
             Government fee
           </dt>
           <dd className="mt-1 text-neutral-700">
             {govFee ? (
               <>
                 <span className="font-semibold">{formatAed(govFee.amount)}</span>{" "}
-                <span className="text-xs text-neutral-400">
+                <span className="text-xs text-neutral-500">
                   ({titleCaseEnum(govFee.feeType)})
                 </span>
               </>
-            ) : (
+            ) : summary ? (
               <span className="text-xs text-neutral-500">
                 Not verified/published in indexed official sources.
               </span>
+            ) : (
+              <NotEnriched />
             )}
           </dd>
         </div>
         <div>
-          <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
             Third-party cost
           </dt>
           <dd className="mt-1 text-neutral-700">
@@ -183,8 +215,10 @@ export function SearchResultCard({
               ) : (
                 `${tpc.currency || ""} varies (${titleCaseEnum(tpc.costType)})`
               )
-            ) : (
+            ) : summary ? (
               <span className="text-xs text-neutral-500">Not verified</span>
+            ) : (
+              <NotEnriched />
             )}
           </dd>
         </div>
@@ -194,7 +228,7 @@ export function SearchResultCard({
       {(result.matchReasons.length > 0 || result.source) && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-t border-neutral-100 pt-3">
           {result.matchReasons.length > 0 && (
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-neutral-500">
               Match reason: {result.matchReasons.join(" · ")}
             </p>
           )}
@@ -218,7 +252,7 @@ export function SearchResultCard({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
         {label}
       </dt>
       <dd className="mt-0.5 truncate text-neutral-700" title={typeof children === "string" ? children : undefined}>

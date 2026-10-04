@@ -11,7 +11,8 @@ import {
   regulatoryResearchQueue,
 } from "@/lib/db/schema";
 import { eq, sql, and, inArray, isNull } from "drizzle-orm";
-import { getUserStats } from "@/lib/auth/viewer";
+import { getUserStats, requireAdmin } from "@/lib/auth/viewer";
+import { SearchInsightsPanel } from "@/components/admin/search-insights-panel";
 
 async function getCounts() {
   const [
@@ -106,6 +107,15 @@ function StatCard({
 }
 
 export default async function AdminDashboardPage() {
+  // Defence in depth, matching every other admin route. The admin layout is
+  // already the single authorization gate for this tree, but a layout only runs
+  // on render; this page reads `search_usage` aggregates and dataset counts, and
+  // `getSearchInsights()` documents that its caller must have run `requireAdmin()`
+  // rather than re-deriving it. Calling it here makes that precondition true
+  // instead of merely implied, so adding a new data read below cannot silently
+  // rely on the layout alone.
+  await requireAdmin();
+
   // Dataset counts are cheap and always available; the SaaS user stats depend on
   // `app_users`, which may not exist on a deployment that has not run the auth
   // migration yet. Degrade to a notice rather than 500-ing the whole dashboard.
@@ -154,11 +164,11 @@ export default async function AdminDashboardPage() {
           />
           <StatCard
             value={userStats.newLast7Days}
-            label="New users ┬╖ 7 days"
+            label="New users · 7 days"
             href="/admin/users"
           />
-          <StatCard value={userStats.newLast30Days} label="New users ┬╖ 30 days" />
-          <StatCard value={userStats.signInsLast7Days} label="Sign-ins ┬╖ 7 days" />
+          <StatCard value={userStats.newLast30Days} label="New users · 30 days" />
+          <StatCard value={userStats.signInsLast7Days} label="Sign-ins · 7 days" />
         </div>
       ) : (
         <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
@@ -225,6 +235,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
+      <SearchInsightsPanel />
 
       <div className="mt-8 p-6 rounded-lg bg-neutral-50 border border-neutral-200 text-sm text-neutral-600 space-y-1">
         <p className="font-medium text-neutral-700">Data rules enforced</p>
