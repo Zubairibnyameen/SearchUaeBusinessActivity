@@ -61,12 +61,16 @@ export interface TopQuery {
   searches: number;
   /** Distinct accounts that ran it. A count, never an identity. */
   searchers: number;
-  lastSearchedAt: Date;
+  /**
+   * `null` when the driver gave back a value that is not a usable date, so the
+   * panel can say "Unknown" rather than render an invented timestamp.
+   */
+  lastSearchedAt: Date | null;
 }
 
 export interface RecentSearch {
   query: string;
-  searchedAt: Date;
+  searchedAt: Date | null;
 }
 
 export interface DailySearchVolume {
@@ -137,7 +141,10 @@ export async function getSearchInsights(): Promise<{
           query: NORMALISED_QUERY,
           searches: sql<number>`count(*)::int`,
           searchers: sql<number>`count(distinct ${searchUsage.userId})::int`,
-          lastSearchedAt: sql<Date>`max(${searchUsage.createdAt})`,
+          // `sql<Date>` is a compile-time cast only: an aggregate has no column
+          // for Drizzle to map, so the driver hands back a raw string. It is
+          // normalised to a real Date in `toDate` below.
+          lastSearchedAt: sql<unknown>`max(${searchUsage.createdAt})`,
         })
         .from(searchUsage)
         .groupBy(NORMALISED_QUERY)
@@ -181,6 +188,25 @@ export async function getSearchInsights(): Promise<{
 
   const row = overview[0];
 
+  /**
+   * Normalise a driver value to a real `Date`, or `null` when it is not one.
+   *
+   * `max(created_at)` is a SQL aggregate, so there is no column for Drizzle to
+   * map and the value arrives as a string. Passing that string straight to
+   * `Intl.DateTimeFormat.format` throws `RangeError: Invalid time value` and
+   * 500s the whole dashboard, so the conversion happens once here.
+   */
+  function toDate(value: unknown): Date | null {
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+    if (typeof value === "string" || typeof value === "number") {
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return null;
+  }
+
   // `groupBy` on an empty table yields no rows; an empty top-query list is a
   // truthful "nobody has searched yet", not an error.
   return {
@@ -196,11 +222,11 @@ export async function getSearchInsights(): Promise<{
           query: clip(t.query),
           searches: t.searches,
           searchers: t.searchers,
-          lastSearchedAt: t.lastSearchedAt,
+          lastSearchedAt: toDate(t.lastSearchedAt),
         })),
       recentSearches: recentSearches.map(r => ({
         query: clip(r.query),
-        searchedAt: r.searchedAt,
+        searchedAt: toDate(r.searchedAt),
       })),
       dailyVolume: dailyVolume.map(d => ({
         day: d.day,

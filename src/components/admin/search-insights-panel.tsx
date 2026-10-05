@@ -49,7 +49,13 @@ function shortDay(day: string): string {
   return month ? `${Number(match[3])} ${month}` : day;
 }
 
-function formatWhen(value: Date): string {
+/**
+ * `Intl.DateTimeFormat.format` throws `RangeError: Invalid time value` on
+ * anything it cannot read as a time, so an unexpected value is rendered as
+ * "Unknown" instead of taking the whole admin dashboard down with it.
+ */
+function formatWhen(value: Date | null): string {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return "Unknown";
   return new Intl.DateTimeFormat("en-AE", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -98,9 +104,16 @@ function PanelBody({ insights }: { insights: SearchInsights }) {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        {/* Most searched. Links straight into the product so an administrator
-            can see what the person actually saw. */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
+        {/*
+          Most searched. Links straight into the product so an administrator can
+          see what the person actually saw.
+
+          `min-w-0` on the card matters: a grid item defaults to `min-width:
+          auto`, which floors it at the table's `min-w-[30rem]`. Without it the
+          card itself grows past a 320px viewport and the inner scroll container
+          never engages.
+        */}
+        <div className="min-w-0 rounded-lg border border-neutral-200 bg-white p-5">
           <h3 className="text-sm font-semibold text-neutral-900">Most searched</h3>
           <p className="mt-1 text-xs text-neutral-500">
             Top {Math.min(insights.topQueries.length, TOP_QUERY_LIMIT)} queries of{" "}
@@ -109,48 +122,53 @@ function PanelBody({ insights }: { insights: SearchInsights }) {
           {insights.topQueries.length === 0 ? (
             <p className="mt-4 text-sm text-neutral-600">No queries recorded.</p>
           ) : (
-            <table className="mt-4 w-full text-sm">
-              <caption className="sr-only">
-                Most searched queries, with search counts and the number of
-                distinct accounts that ran each one
-              </caption>
-              <thead>
-                <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500">
-                  <th scope="col" className="py-2 pr-3 font-medium">Query</th>
-                  <th scope="col" className="py-2 pr-3 text-right font-medium">Searches</th>
-                  <th scope="col" className="py-2 pr-3 text-right font-medium">Accounts</th>
-                  <th scope="col" className="py-2 text-right font-medium">Last</th>
-                </tr>
-              </thead>
-              <tbody>
-                {insights.topQueries.map(row => (
-                  <tr key={row.query} className="border-b border-neutral-100 last:border-0">
-                    <td className="py-2 pr-3">
-                      <Link
-                        href={`/search?q=${encodeURIComponent(row.query)}`}
-                        className="text-neutral-900 underline-offset-2 hover:underline"
-                      >
-                        {row.query}
-                      </Link>
-                    </td>
-                    <td className="py-2 pr-3 text-right tabular-nums text-neutral-700">
-                      {row.searches}
-                    </td>
-                    <td className="py-2 pr-3 text-right tabular-nums text-neutral-500">
-                      {row.searchers}
-                    </td>
-                    <td className="py-2 text-right text-xs whitespace-nowrap text-neutral-500">
-                      {formatWhen(row.lastSearchedAt)}
-                    </td>
+            // Four numeric columns plus a free-text query cannot compress into
+            // 320px without crushing the numbers, so the table scrolls inside
+            // the card instead of widening the page.
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[30rem] text-sm">
+                <caption className="sr-only">
+                  Most searched queries, with search counts and the number of
+                  distinct accounts that ran each one
+                </caption>
+                <thead>
+                  <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-neutral-500">
+                    <th scope="col" className="py-2 pr-3 font-medium">Query</th>
+                    <th scope="col" className="py-2 pr-3 text-right font-medium">Searches</th>
+                    <th scope="col" className="py-2 pr-3 text-right font-medium">Accounts</th>
+                    <th scope="col" className="py-2 text-right font-medium">Last</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {insights.topQueries.map(row => (
+                    <tr key={row.query} className="border-b border-neutral-100 last:border-0">
+                      <td className="py-2 pr-3">
+                        <Link
+                          href={`/search?q=${encodeURIComponent(row.query)}`}
+                          className="break-words text-neutral-900 underline-offset-2 hover:underline"
+                        >
+                          {row.query}
+                        </Link>
+                      </td>
+                      <td className="py-2 pr-3 text-right tabular-nums text-neutral-700">
+                        {row.searches}
+                      </td>
+                      <td className="py-2 pr-3 text-right tabular-nums text-neutral-500">
+                        {row.searchers}
+                      </td>
+                      <td className="py-2 text-right text-xs whitespace-nowrap text-neutral-500">
+                        {formatWhen(row.lastSearchedAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* Recent searches, with no account attached. */}
-        <div className="rounded-lg border border-neutral-200 bg-white p-5">
+        <div className="min-w-0 rounded-lg border border-neutral-200 bg-white p-5">
           <h3 className="text-sm font-semibold text-neutral-900">Recent searches</h3>
           <p className="mt-1 text-xs text-neutral-500">
             Newest first, without account identity.
@@ -160,10 +178,12 @@ function PanelBody({ insights }: { insights: SearchInsights }) {
           ) : (
             <ul className="mt-4 space-y-2">
               {insights.recentSearches.map((row, i) => (
-                <li key={`${row.searchedAt.toISOString()}-${i}`} className="text-sm">
+                <li key={`${row.searchedAt?.getTime() ?? "unknown"}-${i}`} className="text-sm">
                   <Link
                     href={`/search?q=${encodeURIComponent(row.query)}`}
-                    className="text-neutral-900 underline-offset-2 hover:underline"
+                    // `break-words`: a query is free text, so a long unbroken
+                    // token must wrap instead of widening the card.
+                    className="break-words text-neutral-900 underline-offset-2 hover:underline"
                   >
                     {row.query}
                   </Link>
@@ -187,22 +207,28 @@ function PanelBody({ insights }: { insights: SearchInsights }) {
             No searches in this window.
           </p>
         ) : (
-          <ul className="mt-4 flex items-end gap-1" aria-label="Daily search volume">
-            {insights.dailyVolume.map(d => (
-              <li key={d.day} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-                <span className="text-[10px] tabular-nums text-neutral-500">
-                  {d.searches}
-                </span>
-                <span
-                  className="w-full rounded-t bg-neutral-300"
-                  style={{ height: `${peak > 0 ? Math.max(4, (d.searches / peak) * 64) : 4}px` }}
-                />
-                <span className="text-[10px] whitespace-nowrap text-neutral-500">
-                  {shortDay(d.day)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          // 14 days of `flex-1` columns inside a 248px card leaves ~14px each,
+          // while a `whitespace-nowrap` "12 Jun" label is ~29px, so the labels
+          // overlapped each other below roughly a 536px viewport. The chart
+          // scrolls inside its card instead, matching the table above.
+          <div className="mt-4 overflow-x-auto">
+            <ul className="flex min-w-[26rem] items-end gap-1" aria-label="Daily search volume">
+              {insights.dailyVolume.map(d => (
+                <li key={d.day} className="flex min-w-[2rem] flex-1 flex-col items-center gap-1">
+                  <span className="text-[10px] tabular-nums text-neutral-500">
+                    {d.searches}
+                  </span>
+                  <span
+                    className="w-full rounded-t bg-neutral-300"
+                    style={{ height: `${peak > 0 ? Math.max(4, (d.searches / peak) * 64) : 4}px` }}
+                  />
+                  <span className="text-[10px] whitespace-nowrap text-neutral-500">
+                    {shortDay(d.day)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 

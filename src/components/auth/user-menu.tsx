@@ -87,7 +87,14 @@ export function UserMenu({ user }: { user: HeaderUser }) {
         </span>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" sideOffset={6} className="w-60">
+      {/* `max-w-[calc(100vw-2rem)]`: `w-60` is a hard 240px. Base UI keeps the
+          panel on screen by collision avoidance today, but on a very narrow
+          viewport that clamp is what guarantees it. */}
+      <DropdownMenuContent
+        align="end"
+        sideOffset={6}
+        className="w-60 max-w-[calc(100vw-2rem)]"
+      >
         <DropdownMenuLabel className="font-normal">
           <span className="block truncate font-medium text-neutral-900">
             {user.fullName?.trim() || "Signed in"}

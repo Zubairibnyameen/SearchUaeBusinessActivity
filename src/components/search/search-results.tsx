@@ -120,7 +120,10 @@ export function SearchResultCard({
             <MatchTypeBadge matchType={result.matchType} />
             <RelevanceMeter score={result.matchScore} />
           </div>
-          <h3 className="mt-2 text-base font-semibold leading-snug text-neutral-900">
+          {/* `break-words`: `officialName` is free text up to 1000 characters and
+              may contain no spaces, so a single unbroken token must wrap rather
+              than push the card and the page sideways. */}
+          <h3 className="mt-2 text-base font-semibold leading-snug break-words text-neutral-900">
             <Link
               href={`/activities/${a.id}`}
               className="transition-colors hover:text-blue-700"

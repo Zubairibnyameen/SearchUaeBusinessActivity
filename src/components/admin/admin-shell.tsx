@@ -81,14 +81,20 @@ export function AdminShell({
             render={
               <button
                 type="button"
-                className="-ml-1 inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                /* `py-2`: the only way into the admin nav on a phone, and a
+                   32px target is fiddly to hit with a thumb. */
+                className="-ml-1 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
               />
             }
           >
             <Menu aria-hidden className="size-5" />
             Menu
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
+          {/* No width class here: `SheetContent` already supplies
+              `data-[side=left]:w-3/4` capped by `sm:max-w-sm`, and a bare `w-72`
+              lost to that variant on specificity, so it was dead code that looked
+              like it was doing something. */}
+          <SheetContent side="left" className="p-0">
             <SheetHeader className="border-b border-neutral-200 p-4">
               <SheetTitle className="text-sm font-semibold text-neutral-900">
                 Admin menu

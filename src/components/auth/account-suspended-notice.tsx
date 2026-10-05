@@ -26,7 +26,9 @@ export function AccountSuspendedNotice({
         className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900"
       >
         <ShieldAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
-        <p className="leading-relaxed">
+        {/* `min-w-0`: the surrounding flex row would otherwise floor this
+            paragraph at min-content and widen the strip. */}
+        <p className="min-w-0 leading-relaxed">
           <span className="font-semibold">Your account is suspended.</span>{" "}
           Searching is unavailable. Public activity pages still work.{" "}
           <Link href="/account" className="underline underline-offset-2">

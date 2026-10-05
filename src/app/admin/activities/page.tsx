@@ -137,7 +137,9 @@ export default async function AdminActivitiesPage({
       )}
 
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center gap-3">
+        /* `flex-wrap`: three inline controls fit at 320px only by a ~14px
+           margin, so a 5-digit page count would push the row sideways. */
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           {page > 1 && (
             <Link
               href={`/admin/activities?page=${page - 1}`}

@@ -88,9 +88,13 @@ export default async function ImportPage() {
         </p>
         {queue.items.length > 0 ? (
           <ul className="mt-3 divide-y divide-neutral-100 text-sm">
+            {/* `min-w-0 break-words` on the text column, `shrink-0` on the action:
+                `normalizedName` is free text up to 1000 characters and activity codes
+                can be a single unbreakable token. A flex item is floored at
+                min-content, so the row would otherwise widen the card. */}
             {queue.items.map(item => (
-              <li key={item.id} className="flex items-center justify-between py-2">
-                <span className="text-neutral-700">
+              <li key={item.id} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0 break-words text-neutral-700">
                   <span className="font-medium">{item.activityCode ?? "—"}</span>{" "}
                   <span className="text-neutral-500">
                     {item.normalizedName ?? "(no name)"} · {item.reason}
@@ -98,7 +102,7 @@ export default async function ImportPage() {
                 </span>
                 <Link
                   href={`/admin/review/${item.id}`}
-                  className="text-sm font-medium text-neutral-900 underline"
+                  className="shrink-0 text-sm font-medium text-neutral-900 underline"
                 >
                   Review
                 </Link>

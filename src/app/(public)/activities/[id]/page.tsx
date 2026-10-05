@@ -265,7 +265,7 @@ export default async function ActivityDetailPage({
                 {hasVerifiedAnything && <VerifiedBadge label="Contains verified regulatory data" />}
                 {primarySource?.url && <OfficialSourceBadge href={primarySource.url} title={primarySource.title} />}
               </div>
-              <h1 className="text-2xl font-bold leading-snug tracking-tight text-neutral-900 sm:text-3xl">
+              <h1 className="text-2xl font-bold leading-snug tracking-tight break-words text-neutral-900 sm:text-3xl">
                 {a.officialName}
               </h1>
               {a.officialNameAr && (
@@ -286,7 +286,11 @@ export default async function ActivityDetailPage({
                 </p>
               ) : null}
             </div>
-            <div className="flex shrink-0 flex-col items-start gap-2.5 sm:items-end">
+            {/* `shrink-0` only from `sm` up. Below that the column's max-content
+                width (the jurisdiction link plus the share button on one line)
+                is wider than a 320px viewport, and refusing to shrink pushed the
+                page sideways. Letting it shrink lets the column wrap instead. */}
+            <div className="flex flex-col items-start gap-2.5 sm:shrink-0 sm:items-end">
               <Link
                 href={`/jurisdictions/${j.slug}`}
                 className="rounded-lg border border-neutral-200 px-3.5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
@@ -742,7 +746,12 @@ export default async function ActivityDetailPage({
                     <dl className="mt-2 grid gap-x-8 gap-y-1 text-xs sm:grid-cols-2">
                       <div className="flex gap-1">
                         <dt className="text-neutral-500">Authority:</dt>
-                        <dd className="text-neutral-700">{source.authority ?? j.name}</dd>
+                        {/* `min-w-0 break-words`: an authority name is free text and
+                            a flex item is floored at min-content, so without a break
+                            opportunity a long single-token name cannot wrap. */}
+                        <dd className="min-w-0 break-words text-neutral-700">
+                          {source.authority ?? j.name}
+                        </dd>
                       </div>
                       <div className="flex gap-1">
                         <dt className="text-neutral-500">Retrieved:</dt>
@@ -802,7 +811,7 @@ export default async function ActivityDetailPage({
                       href={`/activities/${r.id}`}
                       className="block rounded-lg border border-neutral-200 bg-white px-4 py-3 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
                     >
-                      <span className="text-sm font-medium text-neutral-800">
+                      <span className="text-sm font-medium break-words text-neutral-800">
                         {r.officialName}
                       </span>
                       {r.isicCode && (

@@ -289,7 +289,9 @@ export default async function AdminUsersPage({
           <p className="text-neutral-500">
             Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} of {total}
           </p>
-          <div className="flex items-center gap-2">
+          {/* `flex-wrap`: the outer nav wraps, but this inner row did not, so a
+              4-digit page count would overflow a 320px screen. */}
+          <div className="flex flex-wrap items-center gap-2">
             {page > 1 ? (
               <Link
                 href={pageHref(page - 1)}

@@ -279,7 +279,7 @@ export default async function ActivitiesPage({
                 <li key={r.id} className="rounded-xl border border-neutral-200 bg-white p-4">
                   <Link
                     href={`/activities/${r.id}`}
-                    className="font-medium leading-snug text-neutral-900"
+                    className="font-medium leading-snug break-words text-neutral-900"
                   >
                     {r.officialName}
                   </Link>

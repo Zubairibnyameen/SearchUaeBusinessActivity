@@ -72,10 +72,12 @@ export function AdminNav({
               // announceable; the background change is the visual counterpart.
               aria-current={isActive ? "page" : undefined}
               onClick={onNavigate}
+              // `py-2.5`: 36px -> 40px per nav row. In the drawer these links are
+              // the entire navigation on a phone, and the page is used one-handed.
               className={
                 isActive
-                  ? "block rounded-md bg-neutral-900 px-3 py-2 text-sm font-semibold text-white"
-                  : "block rounded-md px-3 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+                  ? "block rounded-md bg-neutral-900 px-3 py-2.5 text-sm font-semibold text-white"
+                  : "block rounded-md px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
               }
             >
               {item.label}

@@ -46,7 +46,9 @@ export default async function AccountProfilePage() {
       <div className="mx-auto max-w-3xl px-6 py-12">
         <Link
           href="/account"
-          className="text-sm text-neutral-500 hover:text-neutral-700"
+          /* `py-1.5`: a bare `text-sm` link is a 20px-tall target, below the
+             WCAG 2.2 SC 2.5.8 floor. This is the only way back from the page. */
+          className="inline-flex items-center gap-1.5 py-1.5 text-sm text-neutral-500 hover:text-neutral-700"
         >
           &larr; Your account
         </Link>

@@ -122,12 +122,16 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      {/* `flex-wrap` + `min-w-0`: the action link is `shrink-0` (~122px), leaving
+          ~150px on a 320px screen, and `officialName` is free text up to 1000
+          characters. Without a break opportunity the heading could not wrap and
+          the card would overflow. */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
           <Link href="/admin/research" className="text-sm text-neutral-500 hover:text-neutral-700">
             ← Back to research queue
           </Link>
-          <h1 className="text-2xl font-bold mt-2">{act.officialName}</h1>
+          <h1 className="text-2xl font-bold break-words mt-2">{act.officialName}</h1>
           <p className="text-sm text-neutral-500 mt-1">
             {act.activityCode ?? "no code"} · <span className="uppercase">{j.slug}</span> ({j.name}) ·{" "}
             Status: <strong>{STATUS_LABELS[q.researchStatus]}</strong> · Priority {q.priorityScore}

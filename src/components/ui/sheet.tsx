@@ -63,10 +63,13 @@ function SheetContent({
           <SheetPrimitive.Close
             data-slot="sheet-close"
             render={
+              /* `size="icon-lg"` rather than `icon-sm`: on a phone this close
+                 button is the only way out of the drawer, and `icon-sm` is a
+                 28px target. */
               <Button
                 variant="ghost"
-                className="absolute top-3 right-3"
-                size="icon-sm"
+                className="absolute top-2.5 right-2.5"
+                size="icon-lg"
               />
             }
           >

@@ -178,8 +178,14 @@ export default async function ReviewQueuePage({
         </div>
       )}
 
+      {/* `flex-wrap`: `← Previous`, the page count and `Next →` measured ~288px
+          against 288px of room on a 320px screen, and overflowed as soon as the
+          total exceeded 999 pages. */}
       {queue.totalPages > 1 ? (
-        <nav className="mt-4 flex items-center gap-3" aria-label="Review queue pages">
+        <nav
+          className="mt-4 flex flex-wrap items-center gap-3"
+          aria-label="Review queue pages"
+        >
           {queue.page > 1 && (
             <Link
               href={pageHref(queue.page - 1, status)}

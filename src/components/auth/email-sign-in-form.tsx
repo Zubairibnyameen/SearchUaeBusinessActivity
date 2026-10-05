@@ -102,7 +102,11 @@ export function EmailSignInForm({ nextPath }: { nextPath: string }) {
         <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
           <Link
             href={`/forgot-password${nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""}`}
-            className="font-medium text-neutral-600 underline underline-offset-2 hover:text-neutral-900"
+            /* `inline-block py-1.5`: a standalone `text-sm` link is a 20px-tall
+               target, below the WCAG 2.2 SC 2.5.8 floor. The sibling "Create
+               one" link is inline in a sentence and is exempt, so it is left
+               unpadded to keep the two visually level. */
+            className="inline-block py-1.5 font-medium text-neutral-600 underline underline-offset-2 hover:text-neutral-900"
           >
             Forgot password?
           </Link>

@@ -506,10 +506,13 @@ async function ComparisonResults({
                 c.available ? "bg-emerald-50/60" : "bg-neutral-50"
               }`}
             >
-              <div>
+              {/* `min-w-0`: the badge beside this column is `shrink-0` and wide, so
+                  without it the jurisdiction name is squeezed to a few characters
+                  per line on a 320px screen. */}
+              <div className="min-w-0">
                 <Link
                   href={`/jurisdictions/${c.slug}`}
-                  className="font-semibold text-neutral-900 hover:text-blue-700"
+                  className="font-semibold break-words text-neutral-900 hover:text-blue-700"
                 >
                   {c.name}
                 </Link>
@@ -530,7 +533,7 @@ async function ComparisonResults({
             {c.available ? (
               <dl className="divide-y divide-neutral-100 text-sm">
                 <MobileRow label="Activity">
-                  <Link href={`/activities/${c.activityId}`} className="font-medium text-blue-700">
+                  <Link href={`/activities/${c.activityId}`} className="font-medium break-words text-blue-700">
                     {c.officialName}
                   </Link>
                 </MobileRow>

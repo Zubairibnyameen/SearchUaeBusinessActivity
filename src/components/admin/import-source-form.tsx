@@ -53,7 +53,9 @@ function Counter({
         ? "text-amber-700"
         : "text-neutral-900";
   return (
-    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3">
+    /* `min-w-0`: a grid item is floored at min-content, so a 6+ figure count
+       would otherwise widen the cell instead of fitting its track. */
+    <div className="min-w-0 rounded-md border border-neutral-200 bg-neutral-50 p-3">
       <div className={`text-xl font-bold tabular-nums ${toneClass}`}>
         {value.toLocaleString()}
       </div>
@@ -76,7 +78,10 @@ function ResultSummary({ state }: { state: ImportActionState }) {
       </h3>
       <p className="mt-1 text-sm text-emerald-900">{state.message}</p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      {/* Two columns at 320px leaves ~74px of content per cell after the nested
+          `p-4`/`p-3` padding, which wraps every label over 4-5 lines. Below 380px
+          the counters stack instead. */}
+      <div className="mt-4 grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:grid-cols-5">
         <Counter label="Rows discovered" value={s.rowsDiscovered} />
         <Counter label="Rows accepted" value={s.rowsAccepted} tone="positive" />
         <Counter label="Rows rejected" value={s.rowsRejected} tone="warn" />

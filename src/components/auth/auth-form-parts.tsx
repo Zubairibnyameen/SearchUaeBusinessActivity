@@ -143,7 +143,10 @@ export function AuthNotice({
       )}
     >
       <Icon aria-hidden className="mt-0.5 size-4 shrink-0" />
-      <span>{children}</span>
+      {/* `min-w-0`: children can be caller-supplied (an email address, a URL),
+          and a flex item is floored at min-content, so without it the notice
+          would widen the page instead of wrapping. */}
+      <span className="min-w-0">{children}</span>
     </p>
   );
 }

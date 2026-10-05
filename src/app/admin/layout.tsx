@@ -85,7 +85,11 @@ export default async function AdminLayout({
           <>
             <p className="flex items-start gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
               <UserCog aria-hidden className="mt-0.5 size-3.5 shrink-0" />
-              <span className="min-w-0">
+              {/* `break-all`: an address is a single unbreakable token. `min-w-0`
+                  lets the flex item shrink, but without a break opportunity the
+                  glyphs spill through the panel border and past the 240px drawer
+                  edge with nothing to scroll to. */}
+              <span className="min-w-0 break-all">
                 Signed in as{" "}
                 <Link
                   href="/admin/profile"
@@ -99,7 +103,13 @@ export default async function AdminLayout({
           </>
         }
       >
-        <div id="admin-main">{children}</div>
+        {/* `tabIndex={-1}`: the skip link targets this div. Modern browsers move
+            the sequential focus starting point to a non-focusable target, but
+            making it programmatically focusable keeps the behaviour deterministic
+            across engines and screen readers. */}
+        <div id="admin-main" tabIndex={-1}>
+          {children}
+        </div>
       </AdminShell>
     </div>
   );

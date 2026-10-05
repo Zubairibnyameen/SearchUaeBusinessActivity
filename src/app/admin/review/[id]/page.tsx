@@ -32,9 +32,13 @@ const REASON_LABELS: Record<string, string> = {
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
+    /* `min-w-0` + `break-words`: `Field` is a grid item, which defaults to
+       `min-width: auto` and is therefore floored at min-content. Some of the
+       values fed here are filesystem paths and codes with no break opportunity,
+       so without both the grid — and with it the page — would widen. */
+    <div className="min-w-0">
       <dt className="text-xs uppercase tracking-wide text-neutral-500">{label}</dt>
-      <dd className="mt-0.5 text-sm text-neutral-900">{value}</dd>
+      <dd className="mt-0.5 break-words text-sm text-neutral-900">{value}</dd>
     </div>
   );
 }

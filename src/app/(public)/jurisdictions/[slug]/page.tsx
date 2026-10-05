@@ -252,7 +252,7 @@ export default async function JurisdictionDetailPage({
                     href={j.officialWebsite}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-medium text-blue-700 hover:underline"
+                    className="font-medium break-all text-blue-700 hover:underline"
                   >
                     {j.officialWebsite.replace(/^https?:\/\//, "")} ↗
                   </a>
@@ -437,7 +437,9 @@ export default async function JurisdictionDetailPage({
                 <li key={s.id} className="rounded-lg border border-neutral-100 bg-neutral-50/60 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <OfficialSourceBadge href={s.url} title={s.title} />
-                    <span className="text-sm font-medium text-neutral-800">
+                    {/* `break-all`: the fallback is a bare URL, which is a single
+                        unbreakable token that wrapping alone cannot split. */}
+                    <span className="text-sm font-medium break-all text-neutral-800">
                       {s.title || s.url}
                     </span>
                     {idx === 0 && <VerifiedBadge />}

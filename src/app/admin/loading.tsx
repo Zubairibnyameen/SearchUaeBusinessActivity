@@ -15,7 +15,7 @@ export default function AdminLoading() {
     <div aria-busy="true" aria-label="Loading admin page">
       {/* Mirrors the real page rhythm — title, then cards — so the layout does
           not jump when the content replaces the skeleton. */}
-      <div className="h-8 w-56 animate-pulse rounded-lg bg-neutral-200" />
+      <div className="h-8 w-56 max-w-full animate-pulse rounded-lg bg-neutral-200" />
       <div className="mt-3 h-4 w-80 max-w-full animate-pulse rounded bg-neutral-200/70" />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

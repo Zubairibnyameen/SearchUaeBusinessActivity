@@ -141,7 +141,7 @@ export function AccountIdentityCard({
       {!account.isActive ? (
         <p className="mt-5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <Info aria-hidden className="mt-0.5 size-4 shrink-0" />
-          <span className="leading-relaxed">
+          <span className="min-w-0 leading-relaxed">
             This account is suspended, so searching and other protected features
             are unavailable. You can still review your details and sign out.
           </span>
@@ -250,10 +250,13 @@ export function AccountUsageCard({ usage }: { usage: AccountUsage }) {
           {usage.searches.available ? (
             <Link
               href="/account/search-history"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-900 underline underline-offset-4 transition-colors hover:text-neutral-600"
+              /* `py-1.5`: without vertical padding this was a 20px-tall target,
+                 below the WCAG 2.2 SC 2.5.8 floor, and the only route into search
+                 history. */
+              className="mt-4 inline-flex items-center gap-1.5 py-1.5 text-sm font-semibold text-neutral-900 underline underline-offset-4 transition-colors hover:text-neutral-600"
             >
               View your search history
-              <ArrowRight aria-hidden className="size-4" />
+              <ArrowRight aria-hidden className="size-4 shrink-0" />
             </Link>
           ) : null}
         </div>
@@ -296,7 +299,12 @@ export function AccountUsageCard({ usage }: { usage: AccountUsage }) {
                     className="mt-0.5 size-4 shrink-0 text-neutral-500"
                   />
                 )}
-                <span className={item.complete ? "text-neutral-700" : "text-neutral-500"}>
+                {/* `min-w-0`: a flex item is floored at min-content, so the label
+                    (which is caller-supplied free text) could otherwise widen the
+                    row instead of wrapping. */}
+                <span
+                  className={`min-w-0 ${item.complete ? "text-neutral-700" : "text-neutral-500"}`}
+                >
                   <span className="font-medium text-neutral-800">{item.label}</span>
                   {!item.complete ? (
                     <span className="block text-xs">{item.hint}</span>

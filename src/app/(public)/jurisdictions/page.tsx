@@ -190,7 +190,10 @@ function JurisdictionCard({
         </div>
       )}
 
-      <div className="mt-4 flex items-center gap-1.5 border-t border-neutral-100 pt-3">
+      {/* `flex-wrap`: the uppercase badge plus a full date measures ~229px, which
+          is the entire content box on a 320px screen. Without wrapping a longer
+          locale date would push the card past the viewport. */}
+      <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-neutral-100 pt-3">
         {j.lastVerified ? (
           <>
             <VerifiedBadge label="Source data dated" />
