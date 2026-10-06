@@ -120,9 +120,12 @@ export interface ComparisonRow {
     id: string;
     officialName: string;
     /**
-     * Published ISIC classification. The internal `activityCode` is an admin /
-     * ranking field and is deliberately not part of this outbound type.
+     * The jurisdiction's own catalogue code. It is surfaced publicly as the
+     * "License Number" for non-AFZ jurisdictions (AFZ shows the ISIC code
+     * instead) — see `src/lib/activities/identifier.ts`.
      */
+    activityCode: string | null;
+    /** Published ISIC classification. */
     isicCode: string | null;
     approvalStatus: string;
     verificationStatus: string;

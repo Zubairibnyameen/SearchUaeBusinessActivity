@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/verification-badges";
 import { formatAed, formatEmirate, formatJurisdictionType, titleCaseEnum } from "@/lib/format";
 import { ShareButton } from "@/components/activities/share-button";
+import { PrimaryIdentifier } from "@/components/activities/primary-identifier";
+import { CopyIdentifierButton } from "@/components/activities/copy-identifier-button";
 
 /**
  * Approval presentation is strictly 3-state:
@@ -113,7 +115,7 @@ export function SearchResultCard({
           : MATCH_ACCENT[result.matchType] ?? ""
       )}
     >
-      {/* Header row: match badge + name + published ISIC classification */}
+      {/* Header row: match badge + name + jurisdiction-aware identifier */}
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -131,16 +133,28 @@ export function SearchResultCard({
               {a.officialName}
             </Link>
           </h3>
-          {a.isicCode ? (
-            <p className="mt-0.5 text-xs text-neutral-500">
-              ISIC Code{" "}
-              <span className="font-mono text-neutral-700">{a.isicCode}</span>
-            </p>
-          ) : null}
+          {/*
+            Jurisdiction-aware primary identifier: AFZ shows the published ISIC
+            classification, all other jurisdictions show the License Number
+            (activity's own catalogue code). Hidden entirely when the required
+            identifier is missing.
+          */}
+          <PrimaryIdentifier
+            jurisdictionSlug={j.slug}
+            isicCode={a.isicCode}
+            activityCode={a.activityCode}
+            className="mt-0.5 text-xs text-neutral-500"
+          />
         </div>
-        {/* Primary action first; share is a quiet icon beside it, never a peer
-            row that outweighs the activity name. */}
+        {/* Primary action first; copy and share are quiet icons beside it,
+            never peers that outweigh the activity name. */}
         <div className="flex shrink-0 items-center gap-2 self-center">
+          <CopyIdentifierButton
+            activityName={a.officialName}
+            jurisdictionSlug={j.slug}
+            isicCode={a.isicCode}
+            activityCode={a.activityCode}
+          />
           <ShareButton
             activityId={a.id}
             title={a.officialName}

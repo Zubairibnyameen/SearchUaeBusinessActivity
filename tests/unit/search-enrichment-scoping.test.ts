@@ -79,6 +79,13 @@ vi.mock("@/components/activities/share-button", () => ({
   ShareButton: () => null,
 }));
 
+// The identifier copy control is a client component for the same reason; its
+// jurisdiction-aware behaviour is covered in
+// tests/unit/copy-identifier-button.test.ts.
+vi.mock("@/components/activities/copy-identifier-button", () => ({
+  CopyIdentifierButton: () => null,
+}));
+
 import {
   collectRenderedActivityIds,
   enrichResponse,

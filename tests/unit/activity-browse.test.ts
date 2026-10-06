@@ -48,6 +48,13 @@ const dbMock = { select: vi.fn((): Record<string, unknown> => makeChain()) };
 
 vi.mock("@/lib/db", () => ({ db: dbMock }));
 
+// The identifier copy control is a client component (hooks). This harness walks
+// the server tree and calls function components directly, so hooks cannot run —
+// it is stubbed here and covered by tests/unit/copy-identifier-button.test.ts.
+vi.mock("@/components/activities/copy-identifier-button", () => ({
+  CopyIdentifierButton: () => null,
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function renderToString(element: unknown): string {
@@ -88,6 +95,19 @@ const DEFAULT_JURISDICTION_OPTIONS = [
   { slug: "ifza", name: "IFZA", activityCount: 80 },
   { slug: "rakez", name: "RAKEZ", activityCount: 200 },
 ];
+
+const DEFAULT_AFZ_ACTIVITY = {
+  id: "act-afz",
+  officialName: "General Trading Import & Export",
+  activityCode: "AM-03942",
+  isicCode: "4690018",
+  approvalSignal: "unknown",
+  verificationStatus: "unverified",
+  jurisdictionName: "Ajman Free Zone",
+  jurisdictionSlug: "afz",
+  emirate: "ajman",
+  licenceTypeName: "General Trading Licence",
+};
 
 const DEFAULT_CATEGORY_OPTIONS = [
   { category: "Trading", count: 150 },
@@ -215,10 +235,11 @@ describe("activities browse page — STEP 11", () => {
     const html = await renderPage();
     expect(html).toContain("General Trading");
     expect(html).toContain("DMCC");
-    // The published ISIC classification is shown; the internal activity code
-    // is never rendered on a public surface.
-    expect(html).toContain("4651");
-    expect(html).not.toContain("TRD-001");
+    // Non-AFZ jurisdictions surface the License Number (the activity's own
+    // catalogue code); the ISIC classification is not shown for them.
+    expect(html).toContain("License Number");
+    expect(html).toContain("TRD-001");
+    expect(html).not.toContain("4651");
   });
 
   it("T2: page title shows activity count", async () => {
@@ -298,14 +319,27 @@ describe("activities browse page — STEP 11", () => {
     expect(html).toContain("Clear filters");
   });
 
-  it("T8: activity name and ISIC code are shown as links in listing", async () => {
+  it("T8: activity name and License Number are shown as links in listing", async () => {
     allData = noFilterSlots();
     const html = await renderPage();
-    // Activity names and the published ISIC code appear in the listing as
-    // linked text. The internal activity code must not leak.
+    // Activity names and the jurisdiction's License Number appear in the
+    // listing as linked text; the ISIC classification is not shown for a
+    // non-AFZ jurisdiction.
     expect(html).toContain("General Trading");
-    expect(html).toContain("4651");
-    expect(html).not.toContain("TRD-001");
+    expect(html).toContain("TRD-001");
+    expect(html).not.toContain("4651");
+  });
+
+  it("T8b: AFZ activities show ISIC Code, not the License Number", async () => {
+    allData = noFilterSlots({ rows: [DEFAULT_AFZ_ACTIVITY] });
+    const html = await renderPage();
+    // AFZ's primary identifier is the published ISIC classification; its
+    // catalogue code (AM-…) is not shown as the primary identifier.
+    expect(html).toContain("General Trading Import & Export");
+    expect(html).toContain("ISIC Code");
+    expect(html).toContain("4690018");
+    expect(html).not.toContain("AM-03942");
+    expect(html).not.toContain("License Number");
   });
 
   it("T9: 'All' jurisdiction pill appears to clear jurisdiction filter", async () => {

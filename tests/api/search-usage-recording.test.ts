@@ -123,7 +123,7 @@ describe("authenticated active user search records usage", () => {
     expect(body.total).toBe(3);
   });
 
-  it("still strips the internal activity code from the response", async () => {
+  it("keeps the jurisdiction's activityCode (License Number) in the response", async () => {
     signInAsUser({ id: LAYLA_ID });
     mockSearchUnified.mockResolvedValue({
       query: "cafe",
@@ -162,11 +162,12 @@ describe("authenticated active user search records usage", () => {
     const res = await searchGET(req("/api/activities/search?q=cafe"));
     const body = await res.json();
 
-    // Recording usage must not have disturbed the public projection.
-    expect(body.results[0].activity.activityCode).toBeUndefined();
+    // Recording usage must not have disturbed the public projection: the
+    // jurisdiction's own code is now a legal public identifier.
+    expect(body.results[0].activity.activityCode).toBe("DMCC-0001");
     expect(body.results[0].activity.name).toBe("Cafe");
-    expect(body.jurisdictionGroups[0].topResults[0].activity.activityCode).toBeUndefined();
-    expect(JSON.stringify(body)).not.toContain("DMCC-0001");
+    expect(body.jurisdictionGroups[0].topResults[0].activity.activityCode).toBe("DMCC-0001");
+    expect(JSON.stringify(body)).toContain("DMCC-0001");
   });
 });
 

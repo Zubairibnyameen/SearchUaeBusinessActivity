@@ -25,7 +25,12 @@ interface SearchComparisonRow {
   activity: {
     id: string;
     officialName: string;
-    /** Published ISIC classification. The internal `activityCode` is never returned. */
+    /**
+     * The jurisdiction's own catalogue code, surfaced publicly as the "License
+     * Number" for non-AFZ jurisdictions — see `src/lib/activities/identifier.ts`.
+     */
+    activityCode: string | null;
+    /** Published ISIC classification. */
     isicCode: string | null;
     approvalStatus: string;
     approvalSignal: string;
@@ -228,6 +233,7 @@ async function handleSearchComparison(
         activity: {
           id: best.activity.id,
           officialName: best.activity.officialName,
+          activityCode: best.activity.activityCode,
           isicCode: best.activity.isicCode,
           approvalStatus: best.activity.approvalStatus,
           approvalSignal: best.activity.approvalSignal,
@@ -367,6 +373,7 @@ async function handleLegacyComparison(
           ? {
               id: activityResults[0].activity.id,
               officialName: activityResults[0].activity.officialName,
+              activityCode: activityResults[0].activity.activityCode,
               isicCode: activityResults[0].activity.isicCode,
               approvalStatus: activityResults[0].activity.approvalStatus,
               verificationStatus: activityResults[0].activity.verificationStatus,

@@ -6,14 +6,16 @@ import type {
 } from "@/lib/search/types";
 
 /**
- * The internal `activityCode` is a ranking/catalogue aid. It is not published by
- * any authority and it is NOT an ISIC classification, so it must never reach a
- * client. These tests pin that contract, including for the fields a client
- * legitimately does need.
+ * The jurisdiction's `activityCode` is a public identifier: non-AFZ
+ * jurisdictions surface it as the "License Number" and AFZ surfaces the ISIC
+ * classification instead (see `src/lib/activities/identifier.ts`). The search
+ * projection therefore keeps BOTH codes, together with their jurisdiction, and
+ * lets the jurisdiction-aware display/copy logic decide which is the primary
+ * identifier for a given jurisdiction.
  *
  * The fixtures are fully typed rather than cast. An `as unknown as` here would
  * let a renamed response field slip through silently, which is exactly how a
- * test for a security property can quietly stop testing anything.
+ * test for a contract can quietly stop testing anything.
  */
 
 const ACTIVITY: SearchResultItem["activity"] = {
@@ -39,33 +41,32 @@ const JURISDICTION: SearchResultItem["jurisdiction"] = {
   jurisdictionType: "free_zone",
 };
 
-const RESULT: SearchResultItem = {
-  activity: ACTIVITY,
-  jurisdiction: JURISDICTION,
-  licenceType: { id: "lt", name: "Commercial", code: "COM" },
-  matchType: "exact",
-  matchScore: 1,
-  matchReasons: [],
-  source: {
-    id: "src-1",
-    url: "https://example.com/source",
-    title: "Official listing",
-    lastVerified: "2026-01-01",
-  },
-};
+/** A fresh result/response every call, so a mutation in one test never leaks. */
+function makeResultItem(): SearchResultItem {
+  return {
+    activity: { ...ACTIVITY },
+    jurisdiction: { ...JURISDICTION },
+    licenceType: { id: "lt", name: "Commercial", code: "COM" },
+    matchType: "exact",
+    matchScore: 1,
+    matchReasons: [],
+    source: { id: "src-1", url: "https://example.com/source", title: "Official listing", lastVerified: "2026-01-01" },
+  };
+}
 
 function makeResponse(): UnifiedSearchResponse {
+  const result = makeResultItem();
   return {
     query: "trading",
     total: 1,
-    results: [RESULT],
+    results: [result],
     jurisdictionGroups: [
       {
-        jurisdiction: JURISDICTION,
+        jurisdiction: { ...JURISDICTION },
         status: "match",
         totalMatches: 1,
         bestMatchType: "exact",
-        topResults: [RESULT],
+        topResults: [result],
       },
     ],
     availability: { matchedJurisdictionSlugs: ["dmcc"], unmatched: [] },
@@ -95,17 +96,24 @@ describe("toPublicSearchResponse", () => {
     response = makeResponse();
   });
 
-  it("removes activityCode from flat search results", () => {
+  it("keeps activityCode (the License Number) in flat search results", () => {
     const projected = toPublicSearchResponse(response);
-    const activity = projected.results[0].activity as Record<string, unknown>;
-    expect(activity).not.toHaveProperty("activityCode");
+    expect(projected.results[0].activity.activityCode).toBe("GT-01");
   });
 
-  it("removes activityCode from per-jurisdiction top results", () => {
+  it("keeps activityCode in per-jurisdiction top results", () => {
     const projected = toPublicSearchResponse(response);
-    const activity = projected.jurisdictionGroups[0].topResults[0]
-      .activity as Record<string, unknown>;
-    expect(activity).not.toHaveProperty("activityCode");
+    expect(
+      projected.jurisdictionGroups[0].topResults[0].activity.activityCode
+    ).toBe("GT-01");
+  });
+
+  it("keeps activityCode together with its jurisdiction so AFZ detection works", () => {
+    const projected = toPublicSearchResponse(response);
+    const flat = projected.results[0];
+    expect(flat.jurisdiction.slug).toBe("dmcc");
+    expect(flat.activity.activityCode).toBe("GT-01");
+    expect(flat.activity.isicCode).toBe("4651");
   });
 
   it("keeps the published ISIC code", () => {
@@ -141,7 +149,6 @@ describe("toPublicSearchResponse", () => {
 
   it("preserves the evidence source, which the UI renders as provenance", () => {
     const projected = toPublicSearchResponse(response);
-    // Stripping must not cost the provenance link users rely on.
     expect(projected.results[0].source).toEqual({
       id: "src-1",
       url: "https://example.com/source",
@@ -150,15 +157,12 @@ describe("toPublicSearchResponse", () => {
     });
   });
 
-  it("never leaves the internal code anywhere in the serialised payload", () => {
-    // A structural assertion on one known path can be bypassed by a new field
-    // added later; this one cannot.
-    expect(JSON.stringify(toPublicSearchResponse(response))).not.toContain(
-      "GT-01"
-    );
-    expect(JSON.stringify(toPublicSearchResponse(response))).not.toContain(
-      "activityCode"
-    );
+  it("keeps the identifier codes in the serialised payload", () => {
+    // A structural assertion on one known path can be fooled by a re-shape; this
+    // one proves the codes survive JSON serialisation end to end.
+    const serialized = JSON.stringify(toPublicSearchResponse(response));
+    expect(serialized).toContain("GT-01");
+    expect(serialized).toContain("4651");
   });
 
   it("preserves a null ISIC code rather than inventing one", () => {
@@ -168,9 +172,14 @@ describe("toPublicSearchResponse", () => {
     expect(projected.results[0].activity.isicCode).toBeNull();
   });
 
+  it("preserves a null activityCode rather than inventing one", () => {
+    response = makeResponse();
+    response.results[0].activity.activityCode = null;
+    const projected = toPublicSearchResponse(response);
+    expect(projected.results[0].activity.activityCode).toBeNull();
+  });
+
   it("does not mutate the engine's internal response", () => {
-    // The engine result is reused for scoring; stripping must be non-destructive
-    // so internal callers keep the code.
     toPublicSearchResponse(response);
     expect(response.results[0].activity.activityCode).toBe("GT-01");
   });
@@ -190,15 +199,13 @@ describe("toPublicSearchResponse", () => {
 
 describe("search engine internal code contract", () => {
   it("keeps activityCode available to the matcher (server-only)", async () => {
-    // Guards against someone "fixing" the leak by deleting the field from the
-    // shared type, which would silently break exact-code ranking.
+    // Guards against someone "fixing" the field by deleting it from the shared
+    // type, which would silently break exact-code ranking.
     const { searchUnified: _searchUnified } = await import("@/lib/search/engine");
     expect(_searchUnified).toBeTypeOf("function");
   });
 
-  it("does not expose a public re-export of the internal code", async () => {
-    // `public-projection` must be the only outbound path, and it must not hand
-    // the raw activity back.
+  it("keeps the projection as the single outbound path", async () => {
     const mod = await import("@/lib/search/public-projection");
     expect(Object.keys(mod)).toEqual(["toPublicSearchResponse"]);
   });

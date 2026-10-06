@@ -4,6 +4,8 @@ import { asc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { activities, jurisdictions, licenceTypes } from "@/lib/db/schema";
 import { VerifiedBadge, ApprovalSignalBadgeSmall } from "@/components/ui/verification-badges";
+import { PrimaryIdentifier } from "@/components/activities/primary-identifier";
+import { CopyIdentifierButton } from "@/components/activities/copy-identifier-button";
 
 export const metadata: Metadata = {
   title: "Browse Business Activities",
@@ -77,6 +79,7 @@ export default async function ActivitiesPage({
       id: activities.id,
       officialName: activities.officialName,
       isicCode: activities.isicCode,
+      activityCode: activities.activityCode,
       approvalSignal: activities.approvalSignal,
       verificationStatus: activities.verificationStatus,
       jurisdictionName: jurisdictions.name,
@@ -236,17 +239,26 @@ export default async function ActivitiesPage({
                   {rows.map(r => (
                     <tr key={r.id} className="transition-colors hover:bg-neutral-50/70">
                       <td className="px-4 py-3">
-                        <Link
-                          href={`/activities/${r.id}`}
-                          className="font-medium text-neutral-900 hover:text-blue-700 hover:underline"
-                        >
-                          {r.officialName}
-                        </Link>
-                        {r.isicCode && (
-                          <span className="ml-2 font-mono text-xs text-neutral-500">
-                            {r.isicCode}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/activities/${r.id}`}
+                            className="font-medium text-neutral-900 hover:text-blue-700 hover:underline"
+                          >
+                            {r.officialName}
+                          </Link>
+                          <PrimaryIdentifier
+                            jurisdictionSlug={r.jurisdictionSlug}
+                            isicCode={r.isicCode}
+                            activityCode={r.activityCode}
+                            className="font-mono text-xs text-neutral-500"
+                          />
+                          <CopyIdentifierButton
+                            activityName={r.officialName}
+                            jurisdictionSlug={r.jurisdictionSlug}
+                            isicCode={r.isicCode}
+                            activityCode={r.activityCode}
+                          />
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-neutral-600">
                         <Link
@@ -283,11 +295,20 @@ export default async function ActivitiesPage({
                   >
                     {r.officialName}
                   </Link>
-                  {r.isicCode && (
-                    <span className="ml-2 font-mono text-xs text-neutral-500">
-                      {r.isicCode}
-                    </span>
-                  )}
+                  <div className="mt-1 flex items-center gap-2">
+                    <PrimaryIdentifier
+                      jurisdictionSlug={r.jurisdictionSlug}
+                      isicCode={r.isicCode}
+                      activityCode={r.activityCode}
+                      className="font-mono text-xs text-neutral-500"
+                    />
+                    <CopyIdentifierButton
+                      activityName={r.officialName}
+                      jurisdictionSlug={r.jurisdictionSlug}
+                      isicCode={r.isicCode}
+                      activityCode={r.activityCode}
+                    />
+                  </div>
                   <p className="mt-1 text-xs text-neutral-500">
                     {r.jurisdictionName} · {r.emirate.replace(/_/g, " ")}
                   </p>

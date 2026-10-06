@@ -50,6 +50,9 @@ vi.mock("@/components/compare/search-compare-bar", () => ({
 vi.mock("@/components/activities/share-button", () => ({
   ShareButton: () => null,
 }));
+vi.mock("@/components/activities/copy-identifier-button", () => ({
+  CopyIdentifierButton: () => null,
+}));
 
 import { SearchResults } from "@/components/search/search-results-list";
 import { renderElement } from "../helpers/render";

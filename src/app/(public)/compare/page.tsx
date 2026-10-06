@@ -16,6 +16,8 @@ import { formatAed, formatEmirate, formatJurisdictionType, titleCaseEnum } from 
 import { JurisdictionSelector } from "@/components/compare/jurisdiction-selector";
 import { SearchSignInWall } from "@/components/search/search-sign-in-wall";
 import { getViewer } from "@/lib/auth/viewer";
+import { PrimaryIdentifier } from "@/components/activities/primary-identifier";
+import { CopyIdentifierButton } from "@/components/activities/copy-identifier-button";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +101,7 @@ interface ComparisonColumn {
   available: boolean;
   activityId?: string;
   officialName?: string;
+  activityCode?: string | null;
   isicCode?: string | null;
   licenceTypeName?: string | null;
   matchType?: string;
@@ -232,6 +235,7 @@ async function ComparisonResults({
         available: true,
         activityId: top.activity.id,
         officialName: top.activity.officialName,
+        activityCode: top.activity.activityCode,
         isicCode: top.activity.isicCode,
         licenceTypeName: top.licenceType?.name ?? null,
         matchType: top.matchType,
@@ -329,23 +333,35 @@ async function ComparisonResults({
               {columns.map(c =>
                 c.available ? (
                   <td key={c.slug} className="px-4 py-3">
-                    <Link
-                      href={`/activities/${c.activityId}`}
-                      className="font-medium text-neutral-900 hover:text-blue-700 hover:underline"
-                    >
-                      {c.officialName}
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/activities/${c.activityId}`}
+                        className="font-medium text-neutral-900 hover:text-blue-700 hover:underline"
+                      >
+                        {c.officialName}
+                      </Link>
+                      <CopyIdentifierButton
+                        activityName={c.officialName ?? ""}
+                        jurisdictionSlug={c.slug}
+                        isicCode={c.isicCode}
+                        activityCode={c.activityCode}
+                      />
+                    </div>
                   </td>
                 ) : (
                   <UnavailableCell key={c.slug} />
                 )
               )}
             </Row>
-            <Row label="ISIC Code">
+            <Row label="Primary identifier">
               {columns.map(c =>
                 c.available ? (
-                  <td key={c.slug} className="px-4 py-3 font-mono text-xs text-neutral-600">
-                    {c.isicCode ?? "—"}
+                  <td key={c.slug} className="px-4 py-3">
+                    <PrimaryIdentifier
+                      jurisdictionSlug={c.slug}
+                      isicCode={c.isicCode}
+                      activityCode={c.activityCode}
+                    />
                   </td>
                 ) : (
                   <UnavailableCell key={c.slug} />
@@ -533,12 +549,24 @@ async function ComparisonResults({
             {c.available ? (
               <dl className="divide-y divide-neutral-100 text-sm">
                 <MobileRow label="Activity">
-                  <Link href={`/activities/${c.activityId}`} className="font-medium break-words text-blue-700">
-                    {c.officialName}
-                  </Link>
+                  <div className="flex items-center justify-end gap-2">
+                    <Link href={`/activities/${c.activityId}`} className="font-medium break-words text-blue-700">
+                      {c.officialName}
+                    </Link>
+                    <CopyIdentifierButton
+                      activityName={c.officialName ?? ""}
+                      jurisdictionSlug={c.slug}
+                      isicCode={c.isicCode}
+                      activityCode={c.activityCode}
+                    />
+                  </div>
                 </MobileRow>
-                <MobileRow label="ISIC Code">
-                  <span className="font-mono text-xs">{c.isicCode ?? "—"}</span>
+                <MobileRow label="Primary identifier">
+                  <PrimaryIdentifier
+                    jurisdictionSlug={c.slug}
+                    isicCode={c.isicCode}
+                    activityCode={c.activityCode}
+                  />
                 </MobileRow>
                 <MobileRow label="Licence type">
                   {c.licenceTypeName ?? "Not specified in source"}
