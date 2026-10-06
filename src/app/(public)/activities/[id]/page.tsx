@@ -33,7 +33,8 @@ import {
   formatJurisdictionType,
   titleCaseEnum,
 } from "@/lib/format";
-import { IsicCode } from "@/components/activities/isic-code";
+import { PrimaryIdentifier } from "@/components/activities/primary-identifier";
+import { CopyIdentifierButton } from "@/components/activities/copy-identifier-button";
 import { ShareButton } from "@/components/activities/share-button";
 import { parseUuid } from "@/lib/db/uuid";
 
@@ -277,14 +278,20 @@ export default async function ActivityDetailPage({
                 {j.name} · {formatEmirate(j.emirate)} ·{" "}
                 {formatJurisdictionType(j.jurisdictionType)}
               </p>
-              {a.isicCode ? (
-                <p className="mt-1.5 text-sm text-neutral-500">
-                  ISIC Code{" "}
-                  <span className="font-mono text-neutral-800">
-                    {a.isicCode}
-                  </span>
-                </p>
-              ) : null}
+              <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                <PrimaryIdentifier
+                  jurisdictionSlug={j.slug}
+                  isicCode={a.isicCode}
+                  activityCode={a.activityCode}
+                  className="text-sm"
+                />
+                <CopyIdentifierButton
+                  activityName={a.officialName}
+                  jurisdictionSlug={j.slug}
+                  isicCode={a.isicCode}
+                  activityCode={a.activityCode}
+                />
+              </span>
             </div>
             {/* `shrink-0` only from `sm` up. Below that the column's max-content
                 width (the jurisdiction link plus the share button on one line)
@@ -316,9 +323,25 @@ export default async function ActivityDetailPage({
           <Section number={1} title="Activity overview">
             <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Official name">{a.officialName}</Field>
-              <Field label="ISIC Code">
-                <IsicCode code={a.isicCode} />
-              </Field>
+              <div>
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  Primary identifier
+                </dt>
+                <dd className="mt-2 flex flex-wrap items-center gap-2">
+                  <PrimaryIdentifier
+                    jurisdictionSlug={j.slug}
+                    isicCode={a.isicCode}
+                    activityCode={a.activityCode}
+                    className="text-sm text-neutral-700"
+                  />
+                  <CopyIdentifierButton
+                    activityName={a.officialName}
+                    jurisdictionSlug={j.slug}
+                    isicCode={a.isicCode}
+                    activityCode={a.activityCode}
+                  />
+                </dd>
+              </div>
               <Field label="Activity group">
                 {a.activityGroup ?? <Muted>Not specified</Muted>}
               </Field>

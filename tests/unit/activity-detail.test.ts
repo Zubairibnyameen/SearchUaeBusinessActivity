@@ -65,6 +65,13 @@ vi.mock("@/components/activities/share-button", () => ({
   ShareButton: () => null,
 }));
 
+// The copy control is likewise a client component (hooks) that the hand-rolled
+// renderer cannot run, so it is stubbed. Its own behaviour is covered by
+// tests/unit/copy-identifier-button.test.ts.
+vi.mock("@/components/activities/copy-identifier-button", () => ({
+  CopyIdentifierButton: () => null,
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function renderToString(element: unknown): string {
@@ -425,5 +432,26 @@ describe("activity detail page — STEP 10", () => {
     allData = pageQuerySlots();
     const html = await renderPage();
     expect(html).toContain("not verified/published");
+  });
+
+  it("T19: non-AFZ jurisdiction shows License Number and never ISIC", async () => {
+    allData = pageQuerySlots();
+    const html = await renderPage();
+    // Default fixture is DMCC with activityCode "REST-001" and no isicCode.
+    expect(html).toContain("License Number");
+    expect(html).toContain("REST-001");
+    expect(html).not.toContain("ISIC Code");
+  });
+
+  it("T20: AFZ jurisdiction shows ISIC Code with no license number", async () => {
+    allData = pageQuerySlots(
+      { isicCode: "4690", activityCode: "AFZ-001" },
+      { slug: "afz", name: "Ajman Free Zone" }
+    );
+    const html = await renderPage();
+    expect(html).toContain("ISIC Code");
+    expect(html).toContain("4690");
+    expect(html).not.toContain("License Number");
+    expect(html).not.toContain("AFZ-001");
   });
 });
