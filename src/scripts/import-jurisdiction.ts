@@ -14,13 +14,19 @@
 import fs from "fs";
 import path from "path";
 import { runImport } from "../lib/ingestion/importer";
+import { loadEnvFile } from "../lib/db/env";
 import {
   IMPORTABLE_SOURCES,
   KNOWN_SOURCE_SLUGS,
   loadAdapterFor,
 } from "../lib/ingestion/registry";
+import { assertDatabaseWritable } from "./db-safety";
 
 async function main() {
+  // Load `.env` (never `ALLOW_PROD_DB`) before the write gate so a real,
+  // non-dry-run import is blocked against a production-like host by default.
+  loadEnvFile();
+
   const slug = process.argv[2];
   const dryRun = process.argv.includes("--dry-run");
   const backfillSignals = process.argv.includes("--backfill-signals");
@@ -37,6 +43,12 @@ async function main() {
   console.log(
     `Running import for '${slug}'${dryRun ? " (DRY RUN)" : ""}${backfillSignals ? " (BACKFILL SIGNALS)" : ""}\n`
   );
+
+  // A dry run performs no writes and is a safe read-only inspection of any
+  // host; a real import mutates and must clear the production-safety gate.
+  if (!dryRun) {
+    assertDatabaseWritable("import-jurisdiction");
+  }
 
   try {
     const adapter = await loadAdapterFor(slug);

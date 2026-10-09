@@ -21,7 +21,9 @@ import {
 } from "../lib/db/schema";
 type ApprovalStatus = (typeof approvalStatusEnum.enumValues)[number];
 import { eq, and } from "drizzle-orm";
+import { assertDatabaseWritable } from "./db-safety";
 
+assertDatabaseWritable("import-dmcc");
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString, { max: 1 });
 const db = drizzle(client);

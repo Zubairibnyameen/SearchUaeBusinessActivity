@@ -9,10 +9,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * Public, unauthenticated activity detail — the JSON counterpart of the public
  * `/activities/[id]` page, so a shared link works with no account.
  *
- * The projection is EXPLICIT rather than `select({ activity: activities })`
- * (which is what this used to do). Selecting the whole row returned the
- * internal `activity_code` to anyone who asked, on a field that must never be
- * public. Only the published ISIC classification is exposed.
+ * The projection is EXPLICIT rather than `select({ activity: activities })`,
+ * which is what this used to do. The whole-row form returned `sourceExtra` (the
+ * authority's raw row, e.g. import bookkeeping) and `activityCode` to anyone who
+ * asked. `sourceExtra` is internal and is never exposed. `activityCode` is a
+ * public identifier for non-AFZ jurisdictions (shown as the "License Number" on
+ * the page — see `src/lib/activities/identifier.ts`); it is intentionally left
+ * out of this JSON endpoint, so this response is narrower than the rendered
+ * page. Only the published ISIC classification is carried here.
  */
 export async function GET(
   _request: NextRequest,

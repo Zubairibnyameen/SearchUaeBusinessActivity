@@ -22,10 +22,11 @@
  * Requires DMCC_LOCAL_FILE to point at the verified official XLSX.
  */
 
-import fs from "fs";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { eq, inArray } from "drizzle-orm";
+import { loadEnvFile } from "../lib/db/env";
+import { assertDatabaseWritable } from "./db-safety";
 import {
   activities,
   jurisdictions,
@@ -44,15 +45,6 @@ const EXPECTED_EVIDENCE = 345;
 const ACTIVITY_TOLERANCE = 8;
 const EVIDENCE_TOLERANCE = 5;
 
-function loadEnv() {
-  const envFile = `${process.cwd()}/.env`;
-  if (!fs.existsSync(envFile)) return;
-  for (const line of fs.readFileSync(envFile, "utf-8").split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?([^"]*)"?\s*$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-}
-
 function assertScope(cond: boolean, message: string) {
   if (!cond) throw new Error(`SCOPE GUARD FAILED: ${message}`);
 }
@@ -66,7 +58,8 @@ function countEvidence(normalized: NormalizedActivity[]): number {
 }
 
 async function main() {
-  loadEnv();
+  loadEnvFile();
+  assertDatabaseWritable("backfill-dmcc-signals");
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL not set");
   }

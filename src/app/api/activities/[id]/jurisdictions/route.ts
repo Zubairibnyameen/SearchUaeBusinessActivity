@@ -5,6 +5,27 @@ import { eq } from "drizzle-orm";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Explicit public projection (this endpoint is unauthenticated).
+ * `select({ jurisdiction: jurisdictions })` returns every column; the list is
+ * spelled out so a future internal field cannot leak by default. The returned
+ * field set is unchanged.
+ */
+const PUBLIC_JURISDICTION_COLUMNS = {
+  id: jurisdictions.id,
+  name: jurisdictions.name,
+  slug: jurisdictions.slug,
+  emirate: jurisdictions.emirate,
+  jurisdictionType: jurisdictions.jurisdictionType,
+  authorityId: jurisdictions.authorityId,
+  officialWebsite: jurisdictions.officialWebsite,
+  officialActivityUrl: jurisdictions.officialActivityUrl,
+  description: jurisdictions.description,
+  status: jurisdictions.status,
+  createdAt: jurisdictions.createdAt,
+  updatedAt: jurisdictions.updatedAt,
+} as const;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,7 +39,7 @@ export async function GET(
   try {
     const results = await db
       .select({
-        jurisdiction: jurisdictions,
+        jurisdiction: PUBLIC_JURISDICTION_COLUMNS,
       })
       .from(activities)
       .innerJoin(jurisdictions, eq(activities.jurisdictionId, jurisdictions.id))

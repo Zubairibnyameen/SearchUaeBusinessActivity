@@ -1,44 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import fs from "fs";
 import path from "path";
+import { isSafeUrl, looksOfficial } from "@/lib/security/url-safety";
 
 // ─── Constants replicated from source (pure, no imports from app code) ────
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_QUERY_LENGTH = 2000;
 
-const PRIVATE_IP_RE =
-  /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.|169\.254\.|::1|fc|fd|fe80)/i;
-
-const OFFICIAL_HOST_PATTERNS = [
-  /\.gov\.ae$/,
-  /\.(gov|mil)$/,
-  /^(www\.)?(dmcc|ifza|rakez|spcfz|spcfreezone|ajmanfreezones|afz)\./,
-  /^(www\.)?(mohap|dha|tdra|khda|dcaa|sira|ded|municipality|centralbank|vara|scasec|uiae)\./,
-];
-
-function isSafeUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
-    // Strip IPv6 brackets: new URL("http://[::1]/").hostname === "[::1]"
-    const host = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
-    if (PRIVATE_IP_RE.test(host)) return false;
-    if (host === "localhost" || host.endsWith(".localhost")) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function looksOfficial(url: string): boolean {
-  try {
-    const host = new URL(url).hostname.toLowerCase();
-    return OFFICIAL_HOST_PATTERNS.some((p) => p.test(host));
-  } catch {
-    return false;
-  }
-}
+// SSRF helpers are the REAL production implementation, imported from
+// `@/lib/security/url-safety`. They were previously re-implemented here — with
+// the IPv6 bracket-stripping the source lacked — which is exactly how the IPv6
+// bypass stayed green. Importing the source makes drift impossible.
 
 // ─── A. Fee Isolation ─────────────────────────────────────────────────────
 
@@ -209,10 +182,28 @@ describe("SSRF protection — isSafeUrl", () => {
     ["http://10.0.0.1/secret", false],
     ["http://192.168.1.1/internal", false],
     ["http://172.16.0.1/test", false],
+    ["http://169.254.169.254/latest/meta-data/", false],
+    ["http://0.0.0.0/", false],
     ["file:///etc/passwd", false],
     ["ftp://example.com/file", false],
     ["javascript:alert(1)", false],
+    // IPv6 literals arrive bracketed from `new URL(...).hostname`.
     ["http://[::1]/test", false],
+    ["http://[::]/", false],
+    ["http://[fd00::1]/internal", false],
+    // Full link-local /10 (fe80–febf) — not just the fe80 literal.
+    ["http://[fe80::1]/link-local", false],
+    ["http://[fe90::1]/link-local", false],
+    ["http://[fea0::1]/link-local", false],
+    ["http://[feb0::1]/link-local", false],
+    // Deprecated site-local /10 (fec0–feff).
+    ["http://[fec0::1]/site-local", false],
+    ["http://[feff::1]/site-local", false],
+    // Multicast /8 (ff00–ffff).
+    ["http://[ff00::1]/multicast", false],
+    ["http://[ff02::1]/multicast", false],
+    ["http://[::ffff:127.0.0.1]/", false],
+    ["http://[::ffff:10.0.0.1]/", false],
   ])("isSafeUrl(%j) === false", (url, expected) => {
     expect(isSafeUrl(url)).toBe(expected);
   });
@@ -222,6 +213,11 @@ describe("SSRF protection — isSafeUrl", () => {
     ["https://afz.gov.ae/activity-list", true],
     ["https://www.ifza.com/activities", true],
     ["https://example.com/some-page", true],
+    ["http://[2606:4700:4700::1111]/", true],
+    // A domain that merely *starts* like a private IPv6 prefix must not be
+    // mistaken for a literal (only colon-bearing hosts are address-checked).
+    ["https://fca.example.com/", true],
+    ["https://fe80records.example.org/", true],
   ])("isSafeUrl(%j) === true", (url, expected) => {
     expect(isSafeUrl(url)).toBe(expected);
   });

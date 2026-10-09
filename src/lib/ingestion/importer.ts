@@ -17,10 +17,10 @@
  * wrapper that opens its own connection.
  */
 
-import fs from "fs";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { eq, and, isNull } from "drizzle-orm";
+import { loadEnvFile } from "../db/env";
 import {
   activities,
   activitySources,
@@ -46,15 +46,6 @@ import type {
 
 /** The pooled application client this pipeline is typed against. */
 type ImportDatabase = typeof AppDatabase;
-
-function loadEnv() {
-  const envFile = `${process.cwd()}/.env`;
-  if (!fs.existsSync(envFile)) return;
-  for (const line of fs.readFileSync(envFile, "utf-8").split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?(.*?)"?\s*$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-}
 
 export interface ImportOptions {
   dryRun?: boolean;
@@ -528,7 +519,7 @@ export async function runImport(
   adapter: OfficialActivitySourceAdapter,
   opts: { dryRun?: boolean; backfillSignals?: boolean } = {}
 ): Promise<ImportReport> {
-  loadEnv();
+  loadEnvFile();
   const client = postgres(process.env.DATABASE_URL!, { max: 1 });
   // Schema passed so this handle has the same type as the pooled app client.
   const db = drizzle(client, { schema: { ...schemaTables } });

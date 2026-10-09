@@ -15,7 +15,7 @@
  */
 
 import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import type {
   MatchType,
   BusinessIntent,
@@ -1241,12 +1241,19 @@ const CANDIDATE_FROM = `
       AND activity_sources.source_id = sources.id
   )`;
 
-/** SQL string literal (quotes escaped). ILIKE wildcards are intentional. */
-function sqlLit(s: string): string {
-  return `'${s.replace(/'/g, "''")}'`;
-}
-function likeLit(term: string): string {
-  return `'%${term.replace(/'/g, "''")}%'`;
+/**
+ * ILIKE pattern for a bind parameter. The `%` wildcards are added here, in JS,
+ * so the term itself crosses the boundary as a value — never as SQL text. (The
+ * `%`/`_` inside a user term remain LIKE wildcards, which is the intended fuzzy
+ * behaviour of a search box, not an injection vector.)
+ *
+ * This replaced `sqlLit`/`likeLit` string-building: under Postgres'
+ * `standard_conforming_strings=on` those were not exploitable, but a trailing
+ * backslash produced `LIKE pattern must not end with escape character` and the
+ * whole construction was one `sql.raw` away from injection.
+ */
+function likeParam(term: string): string {
+  return `%${term}%`;
 }
 
 function mapCandidateRow(r: Record<string, unknown>): CandidateRow {
@@ -1302,16 +1309,17 @@ async function fetchCandidates(
     .filter(t => t.length > 3 && !isGenericWord(t))
     .slice(0, 4);
 
-  const branches: string[] = [];
+  const branches: SQL[] = [];
+  const selectFrom = sql`${sql.raw(CANDIDATE_SELECT)} ${sql.raw(CANDIDATE_FROM)}`;
 
   // Tier 1: exact normalised name
   branches.push(
-    `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.normalized_name = ${sqlLit(nq)}\nLIMIT 20`
+    sql`SELECT ${selectFrom} WHERE activities.normalized_name = ${nq} LIMIT 20`
   );
   // Tier 2: exact activity code
   if (trimmed.length <= 20) {
     branches.push(
-      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.activity_code = ${sqlLit(trimmed)}\nLIMIT 10`
+      sql`SELECT ${selectFrom} WHERE activities.activity_code = ${trimmed} LIMIT 10`
     );
   }
   // Tier 2b: exact ISIC classification code.
@@ -1320,45 +1328,46 @@ async function fetchCandidates(
   // queries so ordinary word searches do not pay for another branch.
   if (/^[0-9][0-9.\-/]*$/.test(trimmed) && trimmed.length <= 20) {
     branches.push(
-      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.isic_code = ${sqlLit(trimmed)}\nLIMIT 10`
+      sql`SELECT ${selectFrom} WHERE activities.isic_code = ${trimmed} LIMIT 10`
     );
   }
   // Tier 3: name contains full query phrase (shortest names first = most specific)
   if (nq.length >= 3) {
     branches.push(
-      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.normalized_name ILIKE ${likeLit(nq)}\nORDER BY length(activities.normalized_name)\nLIMIT 200`
+      sql`SELECT ${selectFrom} WHERE activities.normalized_name ILIKE ${likeParam(nq)} ORDER BY length(activities.normalized_name) LIMIT 200`
     );
   }
   // Tier 4: name contains primary noun (skipped for generic words)
   if (intent.primaryNoun.length > 2 && !isGenericWord(intent.primaryNoun)) {
     branches.push(
-      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE activities.normalized_name ILIKE ${likeLit(intent.primaryNoun)}\nORDER BY length(activities.normalized_name)\nLIMIT 150`
+      sql`SELECT ${selectFrom} WHERE activities.normalized_name ILIKE ${likeParam(intent.primaryNoun)} ORDER BY length(activities.normalized_name) LIMIT 150`
     );
   }
   // Tier 5: name contains expanded domain terms
   if (nonGenericExpanded.length > 0) {
+    const nameConds = nonGenericExpanded.map(
+      t => sql`activities.normalized_name ILIKE ${likeParam(t)}`
+    );
     branches.push(
-      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE (${nonGenericExpanded
-        .map(t => `activities.normalized_name ILIKE ${likeLit(t)}`)
-        .join(" OR ")})\nORDER BY length(activities.normalized_name)\nLIMIT 120`
+      sql`SELECT ${selectFrom} WHERE (${sql.join(nameConds, sql` OR `)}) ORDER BY length(activities.normalized_name) LIMIT 120`
     );
   }
   // Tier 6: official category or activity group mentions an original word / primary noun
   if (nq.length >= 3) {
     const categoryConjs = keywords.originalWords.slice(0, 4).map(
-      w => `(activities.official_category ILIKE ${likeLit(w)} OR activities.activity_group ILIKE ${likeLit(w)})`
+      w => sql`(activities.official_category ILIKE ${likeParam(w)} OR activities.activity_group ILIKE ${likeParam(w)})`
     );
     categoryConjs.push(
-      `activities.official_category ILIKE ${likeLit(intent.primaryNoun)} OR activities.activity_group ILIKE ${likeLit(intent.primaryNoun)}`
+      sql`activities.official_category ILIKE ${likeParam(intent.primaryNoun)} OR activities.activity_group ILIKE ${likeParam(intent.primaryNoun)}`
     );
     branches.push(
-      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE (${categoryConjs.join(" OR ")})\nLIMIT 80`
+      sql`SELECT ${selectFrom} WHERE (${sql.join(categoryConjs, sql` OR `)}) LIMIT 80`
     );
   }
   // Tier 7: authority's own description mentions the phrase or primary noun
   if (nq.length >= 3) {
     branches.push(
-      `SELECT ${CANDIDATE_SELECT} ${CANDIDATE_FROM}\nWHERE (activities.description ILIKE ${likeLit(nq)} OR activities.description ILIKE ${likeLit(intent.primaryNoun)})\nLIMIT 80`
+      sql`SELECT ${selectFrom} WHERE (activities.description ILIKE ${likeParam(nq)} OR activities.description ILIKE ${likeParam(intent.primaryNoun)}) LIMIT 80`
     );
   }
 
@@ -1371,7 +1380,7 @@ async function fetchCandidates(
   // response costs exactly ONE network round trip instead of two.
   if (includeAvailability) {
     branches.push(
-      `(SELECT DISTINCT
+      sql.raw(`SELECT DISTINCT
         NULL::uuid AS a_id, NULL::text AS a_official_name, NULL::text AS a_normalized_name,
         NULL::varchar AS a_activity_code,
         NULL::varchar AS a_isic_code,
@@ -1384,15 +1393,19 @@ async function fetchCandidates(
         NULL::uuid AS lt_id, NULL::varchar AS lt_name, NULL::varchar AS lt_code,
         NULL::uuid AS s_id, NULL::varchar AS s_url, NULL::varchar AS s_title, NULL::date AS s_last_verified
         FROM jurisdictions
-        INNER JOIN activities ON activities.jurisdiction_id = jurisdictions.id)`
+        INNER JOIN activities ON activities.jurisdiction_id = jurisdictions.id`)
     );
   }
 
   // Parentheses around every branch are REQUIRED so each SELECT's own
-  // ORDER BY / LIMIT is honoured inside the set operation.
-  const unionSql = branches.map(b => `(${b})`).join("\nUNION ALL\n");
+  // ORDER BY / LIMIT is honoured inside the set operation. Every user-derived
+  // value crosses into the query as a bind parameter ($1, $2, ...), not text.
+  const unionQuery = sql.join(
+    branches.map(b => sql`(${b})`),
+    sql`\nUNION ALL\n`
+  );
 
-  const result = await db.execute(sql.raw(unionSql));
+  const result = await db.execute(unionQuery);
   const arr = Array.isArray(result)
     ? result
     : (result as { rows?: unknown[] }).rows ?? (result as unknown[])[0] ?? [];

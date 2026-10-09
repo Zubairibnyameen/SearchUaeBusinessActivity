@@ -8,26 +8,17 @@
  * Usage: npx tsx src/scripts/backfill-review-queue.ts <slug>
  */
 
-import fs from "fs";
-import path from "path";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { eq, and } from "drizzle-orm";
+import { loadEnvFile } from "../lib/db/env";
+import { assertDatabaseWritable } from "./db-safety";
 import {
   jurisdictions,
   importReviewQueue,
 } from "../lib/db/schema";
 import { detectBatchDuplicates } from "../lib/ingestion/validate";
 import type { OfficialActivitySourceAdapter, NormalizedActivity } from "../lib/ingestion/types";
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), ".env");
-  if (!fs.existsSync(envPath)) return;
-  for (const line of fs.readFileSync(envPath, "utf-8").split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?(.*?)"?\s*$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-}
 
 interface AdapterModule {
   adapter: OfficialActivitySourceAdapter;
@@ -48,7 +39,8 @@ async function main() {
     process.exit(1);
   }
 
-  loadEnv();
+  loadEnvFile();
+  assertDatabaseWritable("backfill-review-queue");
   const client = postgres(process.env.DATABASE_URL!, { max: 1 });
   const db = drizzle(client);
 

@@ -5,28 +5,20 @@
  * Usage: npx tsx src/scripts/seed-ifza.ts
  */
 
-import fs from "fs";
-import path from "path";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { eq } from "drizzle-orm";
+import { loadEnvFile } from "../lib/db/env";
 import {
   jurisdictions,
   licensingAuthorities,
   licenceTypes,
 } from "../lib/db/schema";
-
-function loadEnv() {
-  const envPath = path.join(process.cwd(), ".env");
-  if (!fs.existsSync(envPath)) return;
-  for (const line of fs.readFileSync(envPath, "utf-8").split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?(.*?)"?\s*$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
-  }
-}
+import { assertDatabaseWritable } from "./db-safety";
 
 async function main() {
-  loadEnv();
+  loadEnvFile();
+  assertDatabaseWritable("seed-ifza");
   const client = postgres(process.env.DATABASE_URL!, { max: 1 });
   const db = drizzle(client);
 

@@ -110,8 +110,12 @@ export async function GET(request: NextRequest) {
     // the insert succeeds or fails.
     await recordSearchUsageSafely(viewer, q);
 
-    // Strip the internal activity code before it reaches the wire. The matcher
-    // needs it, the browser never does.
+    // Public projection. `toPublicSearchResponse` is a pass-through by design:
+    // every field the engine returns is already indexed-source public data, and
+    // `activityCode`/`isicCode` are both public identifiers (non-AFZ shows the
+    // code as "License Number", AFZ shows the ISIC code — see
+    // `src/lib/activities/identifier.ts`). The projection remains the single
+    // place to redact if a future field stops being public.
     return NextResponse.json(toPublicSearchResponse(response), {
       headers: { "cache-control": "private, no-store" },
     });

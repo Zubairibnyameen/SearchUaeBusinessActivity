@@ -9,7 +9,9 @@ import postgres from "postgres";
 import path from "path";
 import { activities, jurisdictions } from "../lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { assertDatabaseWritable } from "./db-safety";
 
+assertDatabaseWritable("map-dmcc-approvals-v2");
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString, { max: 1 });
 const db = drizzle(client);

@@ -26,6 +26,7 @@ import { logAdminEvent } from "@/lib/auth/audit";
 import { eq, and, or, isNull } from "drizzle-orm";
 import crypto from "node:crypto";
 import { z } from "zod";
+import { isSafeUrl, looksOfficial } from "@/lib/security/url-safety";
 
 const UUID_SCHEMA = z.string().uuid();
 const NOTES_SCHEMA = z.string().max(4000);
@@ -89,38 +90,8 @@ function parseForm<T extends z.ZodTypeAny>(
   return parsed.data as z.infer<T>;
 }
 
-const OFFICIAL_HOST_PATTERNS = [
-  /\.gov\.ae$/,
-  /\.(gov|mil)$/,
-  /^(www\.)?(dmcc|ifza|rakez|spcfz|spcfreezone|ajmanfreezones|afz)\./,
-  /^(www\.)?(mohap|dha|tdra|khda|dcaa|sira|ded|municipality|centralbank|vara|scasec|uiae)\./,
-];
-
-const PRIVATE_IP_RE = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.|169\.254\.|::1|fc|fd|fe80)/i;
 const MAX_FETCH_BYTES = 512 * 1024;
 const FETCH_TIMEOUT_MS = 10_000;
-
-function looksOfficial(url: string): boolean {
-  try {
-    const host = new URL(url).hostname.toLowerCase();
-    return OFFICIAL_HOST_PATTERNS.some((p) => p.test(host));
-  } catch {
-    return false;
-  }
-}
-
-function isSafeUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
-    const host = parsed.hostname.toLowerCase();
-    if (PRIVATE_IP_RE.test(host)) return false;
-    if (host === "localhost" || host.endsWith(".localhost")) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 async function safeFetch(url: string): Promise<{ ok: boolean; body: string | null }> {
   if (!isSafeUrl(url)) return { ok: false, body: null };

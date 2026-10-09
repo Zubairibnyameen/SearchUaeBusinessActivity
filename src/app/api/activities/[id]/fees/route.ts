@@ -5,6 +5,26 @@ import { eq, inArray } from "drizzle-orm";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Explicit public projection (this endpoint is unauthenticated). `db.select()`
+ * returns every column of `approvalFees`; the columns are listed so a future
+ * internal field cannot leak by default. The returned field set is unchanged.
+ */
+const PUBLIC_FEE_COLUMNS = {
+  id: approvalFees.id,
+  approvalId: approvalFees.approvalId,
+  feeType: approvalFees.feeType,
+  amount: approvalFees.amount,
+  currency: approvalFees.currency,
+  feeBasis: approvalFees.feeBasis,
+  conditions: approvalFees.conditions,
+  isMandatory: approvalFees.isMandatory,
+  sourceId: approvalFees.sourceId,
+  effectiveDate: approvalFees.effectiveDate,
+  lastVerified: approvalFees.lastVerified,
+  createdAt: approvalFees.createdAt,
+} as const;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -28,7 +48,7 @@ export async function GET(
     const approvalIds = activityApprovals.map((a) => a.id);
 
     const fees = await db
-      .select()
+      .select(PUBLIC_FEE_COLUMNS)
       .from(approvalFees)
       .where(inArray(approvalFees.approvalId, approvalIds));
 

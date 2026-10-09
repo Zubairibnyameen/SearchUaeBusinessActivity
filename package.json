@@ -19,8 +19,8 @@
     "ci": "npm run lint && npm run typecheck && npm run test && npm run build",
     "verify": "tsx src/scripts/verify.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:migrate:local": "tsx src/scripts/db-guard.ts db:migrate && drizzle-kit migrate",
+    "db:migrate": "tsx src/scripts/db-guard.ts db:migrate && drizzle-kit migrate",
+    "db:migrate:local": "tsx src/scripts/db-guard.ts db:migrate:local && drizzle-kit migrate",
     "db:push": "tsx src/scripts/db-guard.ts db:push && drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/scripts/db-guard.ts db:seed && tsx src/lib/db/seed.ts"

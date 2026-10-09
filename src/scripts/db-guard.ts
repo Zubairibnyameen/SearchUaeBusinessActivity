@@ -10,8 +10,12 @@
  *
  * Never performs any schema/data mutation itself — this is a gate only.
  */
-import "dotenv/config";
+import { loadEnvFile } from "../lib/db/env";
 import { classifyHost, decideGuard } from "../lib/db/guard";
+
+// Loads `.env` but deliberately never lets a file-sourced ALLOW_PROD_DB opt
+// into production writes — see src/lib/db/env.ts.
+loadEnvFile();
 
 const command = process.argv[2] ?? "db:push";
 const flaggedProd = process.argv.includes("--allow") || process.env.ALLOW_PROD_DB === "1";
@@ -45,8 +49,9 @@ function main(): void {
   console.error(
     `[db-guard] BLOCKED: "${command}" targets a production-like database host (${hint}).\n` +
       `  This is a potentially destructive/dev command and will not run against production.\n` +
-      `  If you are certain, set ALLOW_PROD_DB=1 (or pass --allow) — but verify you are\n` +
-      `  pointing at the correct sandbox/staging database first.`
+      `  If you are certain, pass --allow (or export ALLOW_PROD_DB=1 in the invoking\n` +
+      `  shell) — but verify you are pointing at the correct sandbox/staging database\n` +
+      `  first. A value only present in .env is intentionally ignored.`
   );
   process.exit(1);
 }

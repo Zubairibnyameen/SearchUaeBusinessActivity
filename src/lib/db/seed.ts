@@ -11,11 +11,19 @@
 
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { loadEnvFile } from "./env";
+import { assertDatabaseWritable } from "../../scripts/db-safety";
 import {
   jurisdictions,
   licensingAuthorities,
   licenceTypes,
 } from "./schema";
+
+// Works both via `npm run db:seed` (which also gates through db-guard) and via
+// direct execution (`npx tsx src/lib/db/seed.ts`). The gate runs before any
+// connection is opened, so a remote/production host is refused by default.
+loadEnvFile();
+assertDatabaseWritable("db:seed");
 
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString, { max: 1 });

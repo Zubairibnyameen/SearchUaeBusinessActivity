@@ -18,8 +18,11 @@
  *
  * Usage: npx tsx src/scripts/research-batch-001.ts
  */
-import "dotenv/config";
 import crypto from "node:crypto";
+import { loadEnvFile } from "../lib/db/env";
+import { assertDatabaseWritable } from "./db-safety";
+
+loadEnvFile();
 
 interface VerifiedItem {
   jurisdictionSlug: string;
@@ -183,6 +186,7 @@ async function tryHash(url: string): Promise<string | null> {
 }
 
 async function main() {
+  assertDatabaseWritable("research-batch-001");
   const { db } = await import("../lib/db");
   const {
     regulatoryResearchQueue,

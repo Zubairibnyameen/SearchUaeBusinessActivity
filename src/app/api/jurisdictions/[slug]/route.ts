@@ -5,6 +5,38 @@ import { eq } from "drizzle-orm";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i;
 
+/**
+ * Explicit public projections (this endpoint is unauthenticated). `db.select()`
+ * and `select({ jurisdiction: jurisdictions })` return every column of the row;
+ * the columns are spelled out here so a future internal field cannot leak by
+ * default. The returned field set is unchanged.
+ */
+const PUBLIC_JURISDICTION_COLUMNS = {
+  id: jurisdictions.id,
+  name: jurisdictions.name,
+  slug: jurisdictions.slug,
+  emirate: jurisdictions.emirate,
+  jurisdictionType: jurisdictions.jurisdictionType,
+  authorityId: jurisdictions.authorityId,
+  officialWebsite: jurisdictions.officialWebsite,
+  officialActivityUrl: jurisdictions.officialActivityUrl,
+  description: jurisdictions.description,
+  status: jurisdictions.status,
+  createdAt: jurisdictions.createdAt,
+  updatedAt: jurisdictions.updatedAt,
+} as const;
+
+const PUBLIC_AUTHORITY_COLUMNS = {
+  id: licensingAuthorities.id,
+  name: licensingAuthorities.name,
+  slug: licensingAuthorities.slug,
+  emirate: licensingAuthorities.emirate,
+  officialWebsite: licensingAuthorities.officialWebsite,
+  description: licensingAuthorities.description,
+  createdAt: licensingAuthorities.createdAt,
+  updatedAt: licensingAuthorities.updatedAt,
+} as const;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -18,8 +50,8 @@ export async function GET(
   try {
     const results = await db
       .select({
-        jurisdiction: jurisdictions,
-        authority: licensingAuthorities,
+        jurisdiction: PUBLIC_JURISDICTION_COLUMNS,
+        authority: PUBLIC_AUTHORITY_COLUMNS,
       })
       .from(jurisdictions)
       .leftJoin(

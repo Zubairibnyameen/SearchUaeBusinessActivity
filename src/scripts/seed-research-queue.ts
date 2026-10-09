@@ -16,9 +16,12 @@
  *
  * Usage: npx tsx src/scripts/seed-research-queue.ts [limit=120]
  */
-import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
+import { loadEnvFile } from "../lib/db/env";
+import { assertDatabaseWritable } from "./db-safety";
+
+loadEnvFile();
 
 interface CategoryRule {
   label: string;
@@ -51,6 +54,7 @@ const CATEGORY_RULES: CategoryRule[] = [
 ];
 
 async function main() {
+  assertDatabaseWritable("seed-research-queue");
   const limit = Number(process.argv[2]) || 120;
   const { db } = await import("../lib/db");
   const {
